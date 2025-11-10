@@ -1,0 +1,60 @@
+# --------------------------
+# Python cache & compiled files
+# --------------------------
+__pycache__/
+*.py[cod]
+*.so
+
+# --------------------------
+# Virtual environments
+# --------------------------
+venv/
+env/
+.venv/
+.env/
+
+# --------------------------
+# Package distribution
+# --------------------------
+build/
+dist/
+*.egg-info/
+
+# --------------------------
+# Logs and temporary files
+# --------------------------
+*.log
+*.tmp
+*.bak
+
+# --------------------------
+# Project data outputs
+# --------------------------
+data/
+models/
+notebooks/__pycache__/
+
+# --------------------------
+# Jupyter Notebook checkpoints
+# --------------------------
+.ipynb_checkpoints/
+
+# --------------------------
+# IDE & system files
+# --------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --------------------------
+# Environment
+# --------------------------
+*.env
+*.json
+*.yaml
+*.yml
+
+# --------------------------
+# --------------------------
+site-packages/

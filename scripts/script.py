@@ -26,11 +26,13 @@ def fetch_all_stock_data(tickers, max_workers=5, cache_folder=None):
                 print(f"Error fetching data for {ticker}: {e}")
     return results
 
-def main():
+def main(to_csv=False):
     tickers = load_tickers()
-    tickers_data = fetch_all_stock_data(tickers)
+    cache_folder = r"yfinance_cache"
+    tickers_data = fetch_all_stock_data(tickers,cache_folder=cache_folder)
     df = pd.DataFrame(tickers_data)
-    df.to_csv("stock_data.csv", index=False)
+    if to_csv:
+        df.to_csv("stock_data.csv", index=False)
     return df
     
 if __name__ == "__main__":

@@ -7,12 +7,16 @@ import joblib
 
 
 def load_data(df):
-    df = pd.json_normalize(df[0])
-    df = df.dropna(axis=1)
+    df = df.dropna(axis=0)
+    df["Current Price"].round(3)
+    y = df["Current Price"]
     #Dropping Ticker and Current stock price
-    X = df.drop(coloums=["Ticker","Current Price"],axis=1)
-    # y is only the stock price
-    y = df.iloc[:,1]
+    X = df.drop(columns=["Ticker", "Current Price"], axis=1)
+    for col in X:
+        X[col].round(3)
+    mask = y.notna()
+    X = X[mask]
+    y = y[mask]
     return X , y
 
 def split_data(X,y,test_size=0.2,random_state=42):
@@ -36,12 +40,26 @@ def evaluate_model(model, X_test,y_test):
 #Pickle the model
 def save_model(model,path=r'model\finalized_model.joblib'):
     joblib.dump(model, path)
+
 def run():
-    df = main(True)
+    df = pd.read_csv(r"scripts\dataset\Ticker_data.csv")
+    print("Complete reading")
     X, y = load_data(df)
+    print("Complete loading data")
     x_train , x_test , y_train , y_test = split_data(X,y,0.2)
+    x_test = x_test.apply(pd.to_numeric, errors='coerce')
+    y_test = y_test.apply(pd.to_numeric, errors='coerce')
+    mask = x_test.notna().all(axis=1) & y_test.notna()
+    x_test = x_test[mask]
+    y_test = y_test[mask]
+    print("Complete splitting train and test data")
     model = train_model(x_train,y_train)
+    print("Model is done training")
     evaluate_model(model,x_test,y_test)
     save_model(model=model)
+    print("model saved")
+
+if __name__ == "__main__":
+    run()
 
     

@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import yfinance as yf 
 import os
 
-def load_tickers(filepath="nasdaq_tickers.txt"):
+def load_tickers(filepath=r"scripts\nasdaq_tickers.txt"):
     with open(filepath, 'r') as f:
         return [line.strip() for line in f if line.strip()]
 
@@ -22,6 +22,7 @@ def fetch_all_stock_data(tickers, max_workers=5, cache_folder=None):
             try:
                 data = future.result()
                 results.append(data)
+                print(f"{ticker} added")
             except Exception as e:
                 print(f"Error fetching data for {ticker}: {e}")
     return results
@@ -29,10 +30,10 @@ def fetch_all_stock_data(tickers, max_workers=5, cache_folder=None):
 def main(to_csv=False):
     tickers = load_tickers()
     cache_folder = r"yfinance_cache"
-    tickers_data = fetch_all_stock_data(tickers,cache_folder=cache_folder)
+    tickers_data = fetch_all_stock_data(tickers,cache_folder=cache_folder,max_workers=1)
     df = pd.DataFrame(tickers_data)
     if to_csv:
-        df.to_csv("stock_data.csv", index=False)
+        df.to_csv(r"/scripts/dataset/Ticker.csv", index=False)
     return df
     
 if __name__ == "__main__":

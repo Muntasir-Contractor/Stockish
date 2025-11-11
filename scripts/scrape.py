@@ -9,8 +9,10 @@ def create_link(ticker):
 
 def get_stock_data(ticker):
     
+    
     #Fetch key stock metrics using yfinance safely with .get().
     #Returns a dictionary of metrics or None if ticker fails.
+    
     
     data = yf.Ticker(ticker)
     try:
@@ -22,7 +24,7 @@ def get_stock_data(ticker):
     tickerData = {
         "Ticker": ticker,
         "Current Price": info.get("currentPrice"),
-        "Market Price": info.get("regularMarketPrice"),
+        #"Market Price": info.get("regularMarketPrice"),
         "Regular Market Change": info.get("regularMarketChangePercent"),
         "52 Week High": info.get("fiftyTwoWeekHigh"),
         "52 Week Low": info.get("fiftyTwoWeekLow"),

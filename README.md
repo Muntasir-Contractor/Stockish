@@ -2,16 +2,16 @@
 A quantitative research tool that automates stock data extraction from Yahoo Finance and leverages machine learning algorithms for predictive modeling of price behavior.
 
 ## 🧠 Overview
-QuantTicker is a Python-based application that scrapes real-time and historical stock data from **Yahoo Finance**, saves it as structured **CSV files**, and uses **machine learning models** to predict future stock prices.
+StockInsight-ML is a Python-based application that scrapes real-time and historical stock data from **Yahoo Finance**, saves it as structured **CSV files**, and uses **machine learning models** to predict future stock prices.
 
 This project is designed for data science and finance enthusiasts who want to explore **feature engineering**, **financial data extraction**, and **ML-based forecasting** — all in one pipeline.
 
 ---
 
 ## ⚙️ Features
-- 🔍 **Automated Web Scraping:** Fetches live and historical stock metrics (price, volume, PE ratio, etc.) from Yahoo Finance.  
+- 🔍 **Fetches Live Stock Data:** Fetches live and historical stock metrics (price, volume, PE ratio, etc.) from Yahoo Finance.  
 - 💾 **CSV Export:** Organizes scraped data into clean CSVs for reproducibility and analysis.  
-- 🤖 **Machine Learning Prediction:** Uses models (e.g. Linear Regression, Random Forest, or LSTM) to predict future stock prices.  
+- 🤖 **Machine Learning Prediction:** Uses models (e.g. Linear Regression, Random Forest, LSTM) to determine stock valuation.  
 - 📊 **Data Visualization:** Generates trend graphs and performance metrics to evaluate prediction accuracy.  
 - 🧩 **Modular Design:** Easy to extend with new data sources or ML algorithms.
 
@@ -20,10 +20,10 @@ This project is designed for data science and finance enthusiasts who want to ex
 ## 🧰 Tech Stack
 - **Language:** Python 3.10+  
 - **Libraries:**  
-  - `requests`, `beautifulsoup4` – for web scraping  
   - `pandas`, `numpy` – for data handling  
   - `scikit-learn` – for machine learning models  
-  - `matplotlib`, `seaborn` – for data visualization  
+  - `matplotlib`, `seaborn` – for data visualization
+  - `yfinance` - Yahoo Finance API call
 
 ---
 
@@ -31,8 +31,8 @@ This project is designed for data science and finance enthusiasts who want to ex
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/QuantTicker.git
-cd QuantTicker
+git clone https://github.com/<your-username>/StockInsight-ML.git
+cd StockInsight-ML
 ```
 ---
 ### 2. Install dependencies

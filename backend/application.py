@@ -1,0 +1,83 @@
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error , r2_score
+from sklearn.linear_model import LinearRegression
+import yfinance as yf
+import pandas as pd
+import joblib
+from scripts.scrape import get_stock_data
+
+FEATURES = [
+    "Regular Market Change", "52 Week High", "52 Week Low", "52 Week Change Percent",
+    "50 Day Average", "200 Day Average", "Volume", "Market Volume", "Beta",
+    "Market Cap", "Forward PE", "Trailing PE", "Price to Book", "Price To Sales 12 Months",
+    "Enterprise Value", "Enterprise To EBITA", "Enterprise To Revenue",
+    "Gross Margins", "Profit Margins", "Operating Margins", "EBITA Margins",
+    "Return on Assets", "Return on Equity", "Net Income to Common", "EBITA",
+    "Earnings Growth", "Total Debt", "Debt to Equity", "Total Cash", "Free Cashflow",
+    "Operating Cashflow", "Current Ratio", "Quick Ratio", "Revenue Growth",
+    "Total Cash Per Share", "Recommendation Mean", "Target Mean Price"
+]
+
+def load_model(path=r'model\finalized_model.joblib'):
+    model = joblib.load(path)
+    return model
+
+def is_ticker(ticker):
+    stock = yf.Ticker(ticker)
+    if len(stock.info) <= 1:
+        return False
+    return True
+
+#Takes in the dataframe of stockdata and returns it into two different dataframes, the stock metrics, and stock price
+def prepare_data(df):
+    """Ensure input is one-row DataFrame with correct columns."""
+    if isinstance(df, dict):
+        df = pd.DataFrame([df])
+    else:
+        df = df.copy()
+
+    for col in FEATURES:
+        if col not in df.columns:
+            df[col] = 0
+
+    return df[FEATURES]
+
+
+def valuation(ticker):
+    if not is_ticker(ticker):
+        return
+    model = load_model()
+    stock_data = get_stock_data(ticker)
+    stock_price = stock_data["Current Price"] 
+    if pd.isna(stock_price):
+        print(f"No price data available for {ticker}")
+        return None
+    stock_data = pd.DataFrame(stock_data,index=[0])
+    stock_data = stock_data.dropna(axis=1)
+    processed_stock_data = prepare_data(stock_data)
+    stock_prediction = round((model.predict(processed_stock_data))[0],2)
+    print(f"Predicted {ticker} price : ${stock_prediction}")
+    print(f"Actual {ticker} price: {stock_price}")
+    relative_error = (stock_prediction-stock_price)/stock_price
+    if 0.05<relative_error<=0.10:
+        print("This stock is slightly undervalued")
+        return relative_error
+    elif 0.1<relative_error<=0.2:
+        print("This stock is moderately undervalued")
+        return relative_error
+    elif relative_error>0.20:
+        print("This stock is significantly undervalued")
+    elif -0.10<relative_error<=-0.05:
+        print("This stock is slightly overvalued")
+        return relative_error
+    elif -0.2<relative_error<=-0.1:
+        print("This stock is moderately overvalued")
+        return relative_error
+    elif relative_error < -0.2:
+        print("This stock is significantly overvalued")
+        return relative_error
+    
+valuation("BYND")
+
+
+    

@@ -77,7 +77,8 @@ def valuation(ticker):
         print("This stock is significantly overvalued")
         return relative_error
     
-valuation("BYND")
+valuation("AMD")
+#python -m backend.application
 
 
     

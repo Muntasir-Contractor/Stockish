@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error , r2_score
 from script import main
 import joblib
-
+from xgboost import XGBRegressor
 
 def load_data(df):
     df = df.dropna(axis=0)
@@ -29,6 +29,18 @@ def train_model(X_train,y_train):
     model.fit(X_train,y_train)
     return model
 
+#Switching from a linear regression model to an XGboost model
+def train_xgboost_model(X_train,y_train):
+    model = XGBRegressor(
+        n_estimators = 300,
+        learning_rate = 0.05,
+        max_depth=5,
+        subsample=0.8
+        )
+    model.fit(X_train, y_train)
+    return model
+
+
 #Evaluate with means squared error and r2 score
 def evaluate_model(model, X_test,y_test):
     y_prediction = model.predict(X_test)
@@ -37,6 +49,7 @@ def evaluate_model(model, X_test,y_test):
     print(f"MSE: {means_square_err}")
     print(f"R^2 score : {r2}")
     return means_square_err , r2
+
 #Pickle the model
 def save_model(model,path=r'model\finalized_model.joblib'):
     joblib.dump(model, path)
@@ -53,10 +66,10 @@ def run():
     x_test = x_test[mask]
     y_test = y_test[mask]
     print("Complete splitting train and test data")
-    model = train_model(x_train,y_train)
+    model = train_xgboost_model(x_train,y_train)
     print("Model is done training")
     evaluate_model(model,x_test,y_test)
-    save_model(model=model)
+    save_model(model=model,path=r'model\XGboost_model.joblib')
     print("model saved")
 
 if __name__ == "__main__":

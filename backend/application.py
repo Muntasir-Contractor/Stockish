@@ -43,12 +43,32 @@ def prepare_data(df):
 
     return df[FEATURES]
 
+def get_stock_price(ticker):
+    if not is_ticker(ticker):
+        return
+    stock_data = get_stock_data(ticker)
+    return stock_data["Current Price"]
 
-
+def price_prediction(ticker) -> float:
+    if not is_ticker(ticker):
+        return
+    model = load_model(path=r'model\XGboost_model.joblib')
+    stock_data = get_stock_data(ticker)
+    stock_price = stock_data["Current Price"]
+    if pd.isna(stock_price):
+        raise Exception("Stock price not found")
+    stock_data = pd.DataFrame(stock_data,index=[0])
+    stock_data = stock_data.dropna(axis=1)
+    processed_stock_data = prepare_data(stock_data)
+    stock_prediction = (model.predict(processed_stock_data))[0] #XGBOOST
+    stock_prediction = numpy.round(stock_prediction,decimals=2)
+    return stock_prediction
+    
 
 def valuation(ticker):
     if not is_ticker(ticker):
         return
+    """
     model = load_model(path=r'model\XGboost_model.joblib') #xgboost
     model2 = load_model()
     stock_data = get_stock_data(ticker)
@@ -64,15 +84,9 @@ def valuation(ticker):
     stock_prediction = numpy.round(stock_prediction,decimals=2)
 
     stock_prediction_linear_regressor = (model.predict(processed_stock_data))[0]
-
-    print("XGBOOST: ")
-    print(f"Predicted {ticker} price : ${round(stock_prediction,2)}")
-    print(f"Actual {ticker} price: {stock_price}")
-    print("-" * 20)
-    print("Linear regressor:")
-    print(f"Predicted {ticker} price : ${stock_prediction_linear_regressor}")
-    print(f"Actual {ticker} price: {stock_price}")
-
+    """
+    stock_prediction = price_prediction(ticker)
+    stock_price = get_stock_price(ticker)
     relative_error = (stock_prediction-stock_price)/stock_price
     if 0.05<relative_error<=0.10:
         print("This stock is slightly undervalued")

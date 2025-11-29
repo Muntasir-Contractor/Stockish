@@ -5,7 +5,6 @@ from sklearn.metrics import mean_squared_error , r2_score
 from script import main
 import joblib
 from xgboost import XGBRegressor
-
 def load_data(df):
     df = df.dropna(axis=0)
     df["Current Price"].round(3)

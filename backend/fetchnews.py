@@ -8,7 +8,7 @@ API_KEY = os.getenv("NEWS_API_KEY")
 newsapi = NewsApiClient(API_KEY)
 
 top_headlines = newsapi.get_top_headlines(
-    q="Tech",
+    q="AMD",
     country="us",
     category="business",
     page_size=10

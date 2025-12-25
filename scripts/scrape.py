@@ -3,6 +3,9 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import yfinance as yf # pyright: ignore[reportMissingImports]
 
+def get_industry_sector(ticker : str) -> list:
+    data = yf.Ticker(ticker).info
+    return [data["sector"] , data["industry"]]
 
 def create_link(ticker):
     return f"https://ca.finance.yahoo.com/quote/{ticker}/"

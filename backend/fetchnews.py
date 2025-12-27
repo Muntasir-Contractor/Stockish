@@ -2,6 +2,8 @@ from newsapi import NewsApiClient
 import os
 from dotenv import load_dotenv
 
+# How can i fetch news from CNBC????
+
 load_dotenv()
 API_KEY = os.getenv("NEWS_API_KEY")
 

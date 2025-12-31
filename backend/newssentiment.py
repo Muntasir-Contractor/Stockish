@@ -2,25 +2,40 @@
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+from fetchnews import get_ticker_news
 
 load_dotenv()
 
 API_KEY = os.getenv("OPENAI_API_KEY")
 
-def get_news_headlines(ticker):
-    headlines = []
-    #fetch data from a news api (NewsAPI) about recent financial/market news about a ticker from the last 7 days
-    return headlines
-
 def get_news_scalar(ticker):
+    top_headlines=get_ticker_news(ticker)
+
     prompt = f"""
-    You are a financial analyst assistant.
+    You are a financial analyst evaluating news impact on stock valuation.
 
-    1. Summarize recent news about the company with the ticker symbol ${ticker}, limited to the last 7 days. Provide only relevant financial or market news.
+    COMPANY: {ticker}
+    RECENT HEADLINES (last 7 days):
 
-    2. Based on the news summary and the company's current fair value (assume you are given it), calculate a scalar multiplier that reflects how the news might adjust the company's value, calculate scalar multiplier that reflects how the news might adjust the company's value.
+    {top_headlines}
 
-    3. Return ONLY the scalar multiplier as numbers, without additional explaination.
+    TASK:
+    Analyze these headlines and determine their collect impact on the company's fair value.
+
+    OUTPUT REQUIREMENTS:
+    Return ONLY a scalar multiplier as a decimal number betwen 0.5 and 1.5, where:
+    - 1.0 = neutral (no change to fair value)
+    - > 1.0 = poistive news (increase fair value)
+    - < 1.0 = negative news (decreases fair value)
+
+    Examples:
+    - Major positive news (earnings beat, big contract): 1.15
+    - Minor positive news: 1.03
+    - Neutral/mixed news: 1.0
+    - Minor negative news: 0.97
+    - Major negative news (lawsuit, earnings miss): 0.83
+
+    Reply with ONLY the scalar multiplier as a number, without additional explaination.
     """
 
     client = OpenAI(
@@ -32,7 +47,8 @@ def get_news_scalar(ticker):
         input=prompt,
         store=True,
     )
-    return response.output_text
+    scalar = response.output_text
+    
+    return scalar
 
-print(get_news_scalar("NVDA"))
 

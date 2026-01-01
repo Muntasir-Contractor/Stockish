@@ -52,7 +52,7 @@ def get_stock_price(ticker):
 def price_prediction(ticker) -> float:
     if not is_ticker(ticker):
         return
-    model = load_model(path=r'model\XGboost_model.joblib')
+    model = load_model(path=r'model\\XGboost_model.joblib')
     stock_data = get_stock_data(ticker)
     stock_price = stock_data["Current Price"]
     if pd.isna(stock_price):
@@ -69,7 +69,6 @@ def valuation(ticker):
     if not is_ticker(ticker):
         return
     """
-    model = load_model(path=r'model\XGboost_model.joblib') #xgboost
     model2 = load_model()
     stock_data = get_stock_data(ticker)
     stock_price = stock_data["Current Price"] 
@@ -88,6 +87,8 @@ def valuation(ticker):
     stock_prediction = price_prediction(ticker)
     stock_price = get_stock_price(ticker)
     relative_error = (stock_prediction-stock_price)/stock_price
+    print(stock_price)
+    print(stock_prediction)
     if 0.05<relative_error<=0.10:
         print("This stock is slightly undervalued")
     
@@ -105,10 +106,12 @@ def valuation(ticker):
 
     elif relative_error < -0.2:
         print("This stock is significantly overvalued")
+    else:
+        print("This stock correctly valued")
     
     return relative_error
     
-valuation("NVDA")
+valuation("AAPL")
 #python -m backend.application
 
 

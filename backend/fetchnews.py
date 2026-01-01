@@ -7,6 +7,10 @@ def get_ticker_news(ticker):
     """
     Get news for specific stocks via Yahoo Finance
     """
+    # Connect news to an sql data base to avoid repeat use of llm
+    # If news was collected say, in the past 36 hours, use the same sentiment score
+    # Otherwise, collect newer news and get new sentiment score
+
     stock = yf.Ticker(ticker)
     news = stock.news
 

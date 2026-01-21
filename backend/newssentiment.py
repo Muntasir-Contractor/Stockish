@@ -2,13 +2,34 @@
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
-from fetchnews import get_ticker_news
+from backend.fetchnews import get_ticker_news
+import sqlite3
 
 load_dotenv()
 
 API_KEY = os.getenv("OPENAI_API_KEY")
 
+#Gets time stamp of when news scalar was produced
+def stock_time_stamp(ticker : str) -> bool:
+    connection = sqlite3.connect("newsentiment.db")
+    cursor = connection.cursor()
+    command = f"""SELECT date_stamp 
+    FROM stock_info 
+    WHERE ticker = '{ticker}';"""
+    cursor.execute(command)
+    date = (cursor.fetchone())[0]
+    print(date)
+    return False
+
 def get_news_scalar(ticker):
+
+     # Connect news to an sql data base to avoid repeat use of llm
+    # If news was collected say, in the past 36 hours, use the same sentiment score
+    # Otherwise, collect newer news and get new sentiment score
+    
+    f = stock_time_stamp(ticker)
+    return None #Testing out the sql querying, do not want to run rest of code, delete this later
+    
     top_headlines=get_ticker_news(ticker)
 
     prompt = f"""
@@ -52,3 +73,4 @@ def get_news_scalar(ticker):
     return scalar
 
 
+get_news_scalar("NVD")

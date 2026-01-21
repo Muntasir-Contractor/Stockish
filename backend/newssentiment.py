@@ -13,6 +13,7 @@ API_KEY = os.getenv("OPENAI_API_KEY")
 def stock_time_stamp(ticker : str) -> bool:
     connection = sqlite3.connect("newsentiment.db")
     cursor = connection.cursor()
+    # Fetching date stamp of the ticker, if None return none
     command = f"""SELECT date_stamp 
     FROM stock_info 
     WHERE ticker = '{ticker}';"""
@@ -23,7 +24,8 @@ def stock_time_stamp(ticker : str) -> bool:
 
 def get_news_scalar(ticker):
 
-     # Connect news to an sql data base to avoid repeat use of llm
+
+    # Connect news to an sql data base to avoid repeat use of llm
     # If news was collected say, in the past 36 hours, use the same sentiment score
     # Otherwise, collect newer news and get new sentiment score
     

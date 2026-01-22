@@ -38,12 +38,9 @@ def insert_stock(ticker : str, scalar : float, notes = ""):
     cursor = conn.cursor()
     today = date.today()
     date_stamp = today.strftime("%Y-%m-%d")
-    command = "INSERT INTO stock_info (ticker, scalar, notes, date_stamp) VALUES (?, ?, ?, ?)",
-    (ticker, scalar, notes or None, date_stamp)
-    conn.execute(command)
-
-        
-        
-
-
-print(exists_in_db("NVD"))
+    cursor.execute(
+        "INSERT INTO stock_info (ticker, scalar, notes, date_stamp) VALUES (?, ?, ?, ?)",
+        (ticker, scalar, notes or None, date_stamp)
+    )
+    conn.commit()
+    conn.close()

@@ -37,7 +37,9 @@ def get_date(ticker : str):
     cursor = conn.cursor()
     cursor.execute(f"SELECT date_stamp FROM stock_info WHERE ticker = ?" , (ticker,))
     #Unpacking the date
-    return (cursor.fetchone())[0]
+    date = (cursor.fetchone())[0]
+    conn.close()
+    return date
 
 #returns The difference in days
 # Use .total_seconds() / 3600 to get hour difference
@@ -53,7 +55,9 @@ def get_scalar(ticker : str):
     conn = sqlite3.connect(CONNECTION)
     cursor = conn.cursor()
     cursor.execute("SELECT scalar FROM stock_info WHERE ticker = ?", (ticker,))
-    return (cursor.fetchone())[0]
+    res = (cursor.fetchone())[0]
+    conn.close()
+    return res
 
 def update_ticker(ticker : str, scalar, note=""):
     conn = sqlite3.connect(CONNECTION)

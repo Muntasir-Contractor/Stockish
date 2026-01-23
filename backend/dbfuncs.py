@@ -59,7 +59,10 @@ def get_scalar(ticker : str):
     conn.close()
     return res
 
-def update_ticker(ticker : str, scalar, note=""):
+def update_row(ticker : str, scalar, note=""):
     conn = sqlite3.connect(CONNECTION)
     cursor = conn.cursor()
-    pass
+    cursor.execute("UPDATE stock_info SET scalar = ? , notes = ? WHERE ticker = ?" , (scalar, None if not note else note, ticker))
+    conn.commit()
+    conn.exit()
+    return

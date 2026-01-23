@@ -61,4 +61,9 @@ def update_scalar(ticker : str):
         difference_hours = difference.total_seconds() // 3600
         if difference_hours < 24:
             return get_scalar(ticker)
-    
+        else:
+            pass
+
+    #If the difference in hours is less than 24 hours get the scalar from database
+    #If the difference is greater than 24 hours AND it exists in db, get new scalar and update db
+    # Otherwise get new scalar and insert into db

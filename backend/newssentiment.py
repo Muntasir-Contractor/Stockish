@@ -51,8 +51,7 @@ def get_news_scalar(ticker):
     )
     scalar = response.output_text
     scalar = float(scalar)
-    insert_stock(ticker,scalar)
-
+    return scalar
 def update_scalar(ticker : str):
     #NOT FINISHED
     #Create an update_row functions in dbfuncs to continue this function
@@ -62,7 +61,8 @@ def update_scalar(ticker : str):
         if difference_hours < 24:
             return get_scalar(ticker)
         else:
-            pass
+            scalar = get_news_scalar(ticker)
+            
 
     #If the difference in hours is less than 24 hours get the scalar from database
     #If the difference is greater than 24 hours AND it exists in db, get new scalar and update db

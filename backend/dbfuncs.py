@@ -3,18 +3,6 @@ from datetime import date , datetime
 
 CONNECTION = "newsentiment.db"
 
-#Gets time stamp of when news scalar was produced
-def stock_time_stamp(ticker : str) -> str:
-    connection = sqlite3.connect(CONNECTION)
-    cursor = connection.cursor()
-    # Fetching date stamp of the ticker, if None return none
-    command = f"""SELECT date_stamp 
-    FROM stock_info 
-    WHERE ticker = '{ticker}';"""
-    cursor.execute(command)
-    date = (cursor.fetchone())[0]
-    print(date)
-    return False
 
 def exists_in_db(ticker : str) -> bool:
     conn = sqlite3.connect(CONNECTION)
@@ -51,7 +39,8 @@ def get_date(ticker : str):
     #Unpacking the date
     return (cursor.fetchone())[0]
 
-#returns
+#returns The difference in days
+# Use .total_seconds() / 3600 to get hour difference
 def date_difference(date_stamp : str):
     today = date.today()
     current_date = today.strftime("%Y-%m-%d")
@@ -59,3 +48,9 @@ def date_difference(date_stamp : str):
     date_stamp = datetime(int(date_stamp[:4]) , int(date_stamp[5:7]) , int(date_stamp[8:]))
     current_date = datetime(int(current_date[:4]) , int(current_date[5:7]) , int(current_date[8:]))
     return (current_date - date_stamp)
+
+def get_scalar(ticker : str):
+    conn = sqlite3.connect(CONNECTION)
+    cursor = conn.cursor()
+    cursor.execute("SELECT scalar FROM stock_info WHERE ticker = ?", (ticker,))
+    return (cursor.fetchone())[0]

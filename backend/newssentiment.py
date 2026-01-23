@@ -3,37 +3,16 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 from backend.fetchnews import get_ticker_news
+from backend.dbfuncs import *
 import sqlite3
 
 load_dotenv()
 
 API_KEY = os.getenv("OPENAI_API_KEY")
 
-#Gets time stamp of when news scalar was produced
-def stock_time_stamp(ticker : str) -> bool:
-    connection = sqlite3.connect("newsentiment.db")
-    cursor = connection.cursor()
-    # Fetching date stamp of the ticker, if None return none
-    command = f"""SELECT date_stamp 
-    FROM stock_info 
-    WHERE ticker = '{ticker}';"""
-    cursor.execute(command)
-    date = (cursor.fetchone())[0]
-    print(date)
-    return False
 
 def get_news_scalar(ticker):
-
-
-    # Connect news to an sql data base to avoid repeat use of llm
-    # If news was collected say, in the past 36 hours, use the same sentiment score
-    # Otherwise, collect newer news and get new sentiment score
-    
-    f = stock_time_stamp(ticker)
-    return None #Testing out the sql querying, do not want to run rest of code, delete this later
-    
     top_headlines=get_ticker_news(ticker)
-
     prompt = f"""
     You are a financial analyst evaluating news impact on stock valuation.
 
@@ -71,8 +50,15 @@ def get_news_scalar(ticker):
         store=True,
     )
     scalar = response.output_text
+    scalar = float(scalar)
+    insert_stock(ticker,scalar)
+
+def update_scalar(ticker : str):
+    #NOT FINISHED
+    #Create an update_row functions in dbfuncs to continue this function
+    if exists_in_db(ticker):
+        difference = date_difference(get_date(ticker))
+        difference_hours = difference.total_seconds() // 3600
+        if difference_hours < 24:
+            return get_scalar(ticker)
     
-    return scalar
-
-
-get_news_scalar("NVD")

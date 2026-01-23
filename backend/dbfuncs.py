@@ -54,3 +54,8 @@ def get_scalar(ticker : str):
     cursor = conn.cursor()
     cursor.execute("SELECT scalar FROM stock_info WHERE ticker = ?", (ticker,))
     return (cursor.fetchone())[0]
+
+def update_ticker(ticker : str, scalar, note=""):
+    conn = sqlite3.connect(CONNECTION)
+    cursor = conn.cursor()
+    pass

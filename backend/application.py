@@ -87,8 +87,6 @@ def valuation(ticker):
     stock_prediction = price_prediction(ticker)
     stock_price = get_stock_price(ticker)
     relative_error = (stock_prediction-stock_price)/stock_price
-    print(stock_price)
-    print(stock_prediction)
     if 0.05<relative_error<=0.10:
         print("This stock is slightly undervalued")
     

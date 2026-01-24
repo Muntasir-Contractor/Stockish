@@ -51,7 +51,7 @@ def date_difference(date_stamp : str):
     current_date = datetime(int(current_date[:4]) , int(current_date[5:7]) , int(current_date[8:]))
     return (current_date - date_stamp)
 
-def get_scalar(ticker : str):
+def get_scalar_from_db(ticker : str):
     conn = sqlite3.connect(CONNECTION)
     cursor = conn.cursor()
     cursor.execute("SELECT scalar FROM stock_info WHERE ticker = ?", (ticker,))

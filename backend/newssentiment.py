@@ -4,7 +4,6 @@ import os
 from dotenv import load_dotenv
 from backend.fetchnews import get_ticker_news
 from backend.dbfuncs import *
-import sqlite3
 
 load_dotenv()
 

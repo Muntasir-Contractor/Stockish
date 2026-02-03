@@ -1,35 +1,24 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
+import { useParams } from "react-router-dom"; // lets you read the dynamic :ticker from URL
+  // useState lets you create state variables
+  // useEffect lets you run code in response to events, such as when the first compnent renders, or state changes
+
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+function App(){
+  // Declare a staste viarable data with initial value null
+  // setData is the function used to updata 'data'
+  const {ticker} = useParams();
+  const [data, setData] = useState(null);
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  useEffect(() => {
+    // fetch makes an http request to the backend
+    fetch(`http://127.0.0.1:8000/stock/${ticker}`)
+    // convert the response into JSON
+    .then(res => res.json())
+    // update the state variable 'data' with the fetched JSON
+    .then(json => setData(json));
+  }, [ticker]);
 }
 
 export default App

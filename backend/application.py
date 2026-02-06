@@ -106,10 +106,12 @@ def valuation(ticker):
         print("This stock is significantly overvalued")
     else:
         print("This stock correctly valued")
+
     
     return relative_error
     
-valuation("AAPL")
+print(price_prediction("AMZN"))
+valuation("AMZN")
 #python -m backend.application
 
 

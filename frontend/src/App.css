@@ -1,8 +1,16 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+
+
+
+.Navbar{
+  display: flex;
+  justify-content: center;
+  margin-top: 0;
+  top: 0;
   text-align: center;
+  color: red;
+  
+  position: fixed;
+  
 }
 
 .logo {

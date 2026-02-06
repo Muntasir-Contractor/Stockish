@@ -1,14 +1,24 @@
 import { useEffect, useState } from 'react'
-import { useParams } from "react-router-dom"; // lets you read the dynamic :ticker from URL
-  // useState lets you create state variables
+// useState lets you create state variables
   // useEffect lets you run code in response to events, such as when the first compnent renders, or state changes
 
 import './App.css'
 
 function App(){
+
+  return (
+    <div>
+    <div className="Navbar">
+      <h1 >Hello world</h1>
+    </div>
+    <div>
+      <p> This is a paragraph</p>
+    </div>
+    </div>
+  )
   // Declare a staste viarable data with initial value null
   // setData is the function used to updata 'data'
-  const {ticker} = useParams();
+  //const {ticker} = useParams(); 
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -19,6 +29,10 @@ function App(){
     // update the state variable 'data' with the fetched JSON
     .then(json => setData(json));
   }, [ticker]);
+
+  return (
+    <h1> Hello World</h1>
+  )
 }
 
 export default App

@@ -1,0 +1,888 @@
+import React, { useState, useEffect } from 'react';
+import { Menu, X, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+
+export default function App() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Mock stock data - in production, fetch from an API
+  const stocks = [
+    { symbol: 'AAPL', name: 'Apple Inc.', price: 234.52, change: 2.34, changePercent: 1.01, volume: '52.3M' },
+    { symbol: 'MSFT', name: 'Microsoft Corp.', price: 445.78, change: -3.21, changePercent: -0.72, volume: '28.7M' },
+    { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 178.34, change: 4.12, changePercent: 2.36, volume: '31.2M' },
+    { symbol: 'AMZN', name: 'Amazon.com Inc.', price: 203.89, change: 1.45, changePercent: 0.72, volume: '45.8M' },
+    { symbol: 'TSLA', name: 'Tesla Inc.', price: 387.23, change: -8.67, changePercent: -2.19, volume: '89.4M' },
+    { symbol: 'NVDA', name: 'NVIDIA Corp.', price: 892.45, change: 15.32, changePercent: 1.75, volume: '67.1M' },
+  ];
+
+  return (
+    <div className="app">
+      {/* Animated background gradient */}
+      <div 
+        className="gradient-orb"
+        style={{
+          left: `${mousePosition.x}px`,
+          top: `${mousePosition.y}px`,
+        }}
+      />
+      
+      {/* Navigation */}
+      <nav className={`nav ${isLoaded ? 'nav-loaded' : ''}`}>
+        <div className="nav-content">
+          <div className="logo">
+            <Activity size={24} />
+            <span>Stockish</span>
+          </div>
+          
+          <button 
+            className="menu-toggle"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+          
+          <ul className={`nav-links ${isMenuOpen ? 'nav-links-open' : ''}`}>
+            <li><a href="#markets">Markets</a></li>
+            <li><a href="#watchlist">Watchlist</a></li>
+            <li><a href="#analysis">Analysis</a></li>
+            <li><a href="#news">News</a></li>
+          </ul>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <header className={`hero ${isLoaded ? 'hero-loaded' : ''}`}>
+        <div className="hero-content">
+          <div className="hero-label">Live Market Data</div>
+          <h1 className="hero-title">
+            Track the markets
+            <span className="hero-title-accent"> in real-time</span>
+          </h1>
+          <p className="hero-description">
+            Stay ahead with live stock prices, market trends, and comprehensive 
+            analysis tools. Monitor key movements and make informed decisions.
+          </p>
+          
+          {/* Market Overview Cards */}
+          <div className="market-overview">
+            <div className="overview-card">
+              <div className="overview-label">S&P 500</div>
+              <div className="overview-value">5,864.23</div>
+              <div className="overview-change positive">
+                <TrendingUp size={16} />
+                +0.85%
+              </div>
+            </div>
+            <div className="overview-card">
+              <div className="overview-label">NASDAQ</div>
+              <div className="overview-value">18,342.56</div>
+              <div className="overview-change positive">
+                <TrendingUp size={16} />
+                +1.23%
+              </div>
+            </div>
+            <div className="overview-card">
+              <div className="overview-label">DOW</div>
+              <div className="overview-value">43,729.34</div>
+              <div className="overview-change negative">
+                <TrendingDown size={16} />
+                -0.32%
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="hero-visual">
+          <div className="chart-placeholder">
+            <svg viewBox="0 0 400 250" className="mini-chart">
+              <path
+                d="M 0 200 Q 50 180 100 160 T 200 120 T 300 80 T 400 50"
+                fill="none"
+                stroke="url(#gradient)"
+                strokeWidth="3"
+                className="chart-line"
+              />
+              <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#6366f1" />
+                  <stop offset="100%" stopColor="#ec4899" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </div>
+      </header>
+
+      {/* Stock Movements Section */}
+      <section className="features" id="markets">
+        <div className="section-header">
+          <h2>Today's Market Movers</h2>
+          <p>Track key stocks and their performance in real-time</p>
+        </div>
+        
+        <div className="stocks-grid">
+          {stocks.map((stock, index) => (
+            <div 
+              key={stock.symbol} 
+              className="stock-card"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <div className="stock-header">
+                <div>
+                  <div className="stock-symbol">{stock.symbol}</div>
+                  <div className="stock-name">{stock.name}</div>
+                </div>
+                {stock.change >= 0 ? (
+                  <TrendingUp className="trend-icon positive" size={24} />
+                ) : (
+                  <TrendingDown className="trend-icon negative" size={24} />
+                )}
+              </div>
+              
+              <div className="stock-price">${stock.price.toFixed(2)}</div>
+              
+              <div className="stock-change-row">
+                <div className={`stock-change ${stock.change >= 0 ? 'positive' : 'negative'}`}>
+                  {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}
+                </div>
+                <div className={`stock-percent ${stock.change >= 0 ? 'positive' : 'negative'}`}>
+                  {stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
+                </div>
+              </div>
+              
+              <div className="stock-volume">
+                Volume: {stock.volume}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="cta">
+        <div className="cta-content">
+          <h2>Start tracking your portfolio</h2>
+          <p>Join thousands of investors making smarter decisions</p>
+          <button className="btn btn-primary">
+            <Activity size={20} />
+            Create Watchlist
+          </button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="footer">
+        <div className="footer-content">
+          <div className="footer-brand">
+            <Activity size={20} />
+            <span>Stockish</span>
+          </div>
+          <p>© 2026 Stockish. Real-time market data and analysis.</p>
+        </div>
+      </footer>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;700&display=swap');
+
+        :root {
+          --color-bg: #fafbff;
+          --color-surface: #ffffff;
+          --color-primary: #3b82f6;
+          --color-accent: #f59e0b;
+          --color-secondary: #10b981;
+          --color-purple: #8b5cf6;
+          --color-text: #1e293b;
+          --color-text-muted: #64748b;
+          --color-border: #e2e8f0;
+          --color-positive: #10b981;
+          --color-negative: #ef4444;
+          
+          --font-display: 'Syne', sans-serif;
+          --font-body: 'DM Sans', sans-serif;
+          
+          --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+          --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: var(--font-body);
+          background: var(--color-bg);
+          color: var(--color-text);
+          overflow-x: hidden;
+          -webkit-font-smoothing: antialiased;
+        }
+
+        .app {
+          position: relative;
+          min-height: 100vh;
+        }
+
+        /* Animated gradient orb */
+        .gradient-orb {
+          position: fixed;
+          width: 600px;
+          height: 600px;
+          background: radial-gradient(
+            circle,
+            rgba(59, 130, 246, 0.2) 0%,
+            rgba(245, 158, 11, 0.15) 50%,
+            transparent 70%
+          );
+          border-radius: 50%;
+          pointer-events: none;
+          transform: translate(-50%, -50%);
+          transition: all 0.2s ease-out;
+          z-index: 0;
+          filter: blur(60px);
+        }
+
+        /* Navigation */
+        .nav {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 100;
+          padding: 1.5rem 2rem;
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid var(--color-border);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+          opacity: 0;
+          transform: translateY(-20px);
+          transition: all 0.8s var(--ease-out);
+        }
+
+        .nav-loaded {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .nav-content {
+          max-width: 1400px;
+          margin: 0 auto;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .logo {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-family: var(--font-display);
+          font-size: 1.5rem;
+          font-weight: 700;
+          background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .logo svg {
+          color: var(--color-primary);
+        }
+
+        .menu-toggle {
+          display: none;
+          background: none;
+          border: none;
+          color: var(--color-text);
+          cursor: pointer;
+          padding: 0.5rem;
+          border-radius: 8px;
+          transition: background 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+          background: var(--color-surface);
+        }
+
+        .nav-links {
+          display: flex;
+          gap: 2.5rem;
+          list-style: none;
+        }
+
+        .nav-links a {
+          color: var(--color-text-muted);
+          text-decoration: none;
+          font-weight: 500;
+          position: relative;
+          transition: color 0.3s ease;
+        }
+
+        .nav-links a::after {
+          content: '';
+          position: absolute;
+          bottom: -4px;
+          left: 0;
+          width: 0;
+          height: 2px;
+          background: var(--color-primary);
+          transition: width 0.3s var(--ease-out);
+        }
+
+        .nav-links a:hover {
+          color: var(--color-text);
+        }
+
+        .nav-links a:hover::after {
+          width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+          position: relative;
+          min-height: 100vh;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 4rem;
+          align-items: center;
+          padding: 8rem 2rem 4rem;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+
+        .hero-content > * {
+          opacity: 0;
+          transform: translateY(30px);
+          animation: fadeInUp 0.8s var(--ease-out) forwards;
+        }
+
+        .hero-loaded .hero-content > *:nth-child(1) { animation-delay: 0.1s; }
+        .hero-loaded .hero-content > *:nth-child(2) { animation-delay: 0.2s; }
+        .hero-loaded .hero-content > *:nth-child(3) { animation-delay: 0.3s; }
+        .hero-loaded .hero-content > *:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .hero-label {
+          display: inline-block;
+          padding: 0.5rem 1rem;
+          background: rgba(59, 130, 246, 0.1);
+          border: 1px solid rgba(59, 130, 246, 0.3);
+          border-radius: 100px;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--color-primary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 2rem;
+        }
+
+        .hero-title {
+          font-family: var(--font-display);
+          font-size: clamp(3rem, 8vw, 5.5rem);
+          font-weight: 800;
+          line-height: 1.1;
+          margin-bottom: 1.5rem;
+          letter-spacing: -0.02em;
+        }
+
+        .hero-title-accent {
+          background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          display: block;
+        }
+
+        .hero-description {
+          font-size: 1.25rem;
+          line-height: 1.8;
+          color: var(--color-text-muted);
+          margin-bottom: 2.5rem;
+          max-width: 540px;
+        }
+
+        .hero-actions {
+          display: flex;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 1rem 2rem;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 1rem;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s var(--ease-out);
+          font-family: var(--font-body);
+        }
+
+        .btn-primary {
+          background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+          color: white;
+          box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 30px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-secondary {
+          background: var(--color-surface);
+          color: var(--color-text);
+          border: 1px solid var(--color-border);
+        }
+
+        .btn-secondary:hover {
+          background: var(--color-border);
+          transform: translateY(-2px);
+        }
+
+        /* Hero Visual */
+        .hero-visual {
+          position: relative;
+          height: 500px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .chart-placeholder {
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+          border: 2px solid var(--color-border);
+          border-radius: 20px;
+          padding: 2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 10px 40px rgba(59, 130, 246, 0.1);
+        }
+
+        .mini-chart {
+          width: 100%;
+          height: 100%;
+          opacity: 0;
+          animation: fadeIn 1s ease-out 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+          to { opacity: 1; }
+        }
+
+        .chart-line {
+          stroke-dasharray: 1000;
+          stroke-dashoffset: 1000;
+          animation: drawLine 2s ease-out 0.8s forwards;
+        }
+
+        @keyframes drawLine {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        /* Market Overview Cards */
+        .market-overview {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 1rem;
+          margin-top: 2rem;
+        }
+
+        .overview-card {
+          background: var(--color-surface);
+          border: 2px solid var(--color-border);
+          border-radius: 12px;
+          padding: 1.25rem;
+          transition: all 0.3s var(--ease-out);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .overview-card:hover {
+          transform: translateY(-4px);
+          border-color: var(--color-primary);
+          box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+        }
+
+        .overview-label {
+          font-size: 0.75rem;
+          color: var(--color-text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.5rem;
+          font-weight: 600;
+        }
+
+        .overview-value {
+          font-family: var(--font-display);
+          font-size: 1.5rem;
+          font-weight: 700;
+          margin-bottom: 0.5rem;
+        }
+
+        .overview-change {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          font-size: 0.875rem;
+          font-weight: 600;
+        }
+
+        .overview-change.positive {
+          color: #059669;
+          font-weight: 700;
+        }
+
+        .overview-change.negative {
+          color: #dc2626;
+          font-weight: 700;
+        }
+
+        /* Stock Cards */
+        .stocks-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 1.5rem;
+        }
+
+        .stock-card {
+          padding: 1.75rem;
+          background: var(--color-surface);
+          border: 2px solid var(--color-border);
+          border-radius: 16px;
+          transition: all 0.4s var(--ease-out);
+          opacity: 0;
+          animation: fadeInUp 0.8s var(--ease-out) forwards;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .stock-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: linear-gradient(90deg, var(--color-primary), var(--color-accent), var(--color-purple));
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+
+        .stock-card:hover {
+          transform: translateY(-6px);
+          border-color: var(--color-primary);
+          box-shadow: 0 20px 40px rgba(59, 130, 246, 0.25);
+        }
+
+        .stock-card:hover::before {
+          opacity: 1;
+        }
+
+        .stock-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 1.25rem;
+        }
+
+        .stock-symbol {
+          font-family: var(--font-display);
+          font-size: 1.5rem;
+          font-weight: 800;
+          background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin-bottom: 0.25rem;
+        }
+
+        .stock-name {
+          font-size: 0.875rem;
+          color: var(--color-text-muted);
+        }
+
+        .trend-icon {
+          opacity: 0.6;
+        }
+
+        .trend-icon.positive {
+          color: #059669;
+        }
+
+        .trend-icon.negative {
+          color: #dc2626;
+        }
+
+        .stock-price {
+          font-family: var(--font-display);
+          font-size: 2rem;
+          font-weight: 700;
+          margin-bottom: 0.75rem;
+        }
+
+        .stock-change-row {
+          display: flex;
+          gap: 0.75rem;
+          margin-bottom: 1rem;
+        }
+
+        .stock-change,
+        .stock-percent {
+          padding: 0.375rem 0.75rem;
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 0.875rem;
+        }
+
+        .stock-change.positive,
+        .stock-percent.positive {
+          background: rgba(16, 185, 129, 0.1);
+          color: #059669;
+          border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .stock-change.negative,
+        .stock-percent.negative {
+          background: rgba(239, 68, 68, 0.1);
+          color: #dc2626;
+          border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .stock-volume {
+          font-size: 0.75rem;
+          color: var(--color-text-muted);
+          padding-top: 0.75rem;
+          border-top: 1px solid var(--color-border);
+        }
+
+        /* Features Section */
+        .features {
+          padding: 8rem 2rem;
+          max-width: 1400px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 1;
+        }
+
+        .section-header {
+          text-align: center;
+          margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+          font-family: var(--font-display);
+          font-size: clamp(2.5rem, 5vw, 4rem);
+          font-weight: 800;
+          margin-bottom: 1rem;
+          background: linear-gradient(135deg, var(--color-primary), var(--color-purple));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .section-header p {
+          font-size: 1.25rem;
+          color: var(--color-text-muted);
+        }
+
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 2rem;
+        }
+
+        /* CTA Section */
+        .cta {
+          padding: 8rem 2rem;
+          max-width: 1400px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 1;
+        }
+
+        .cta-content {
+          text-align: center;
+          padding: 5rem 2rem;
+          background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.08));
+          border: 2px solid var(--color-border);
+          border-radius: 30px;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 10px 40px rgba(59, 130, 246, 0.1);
+        }
+
+        .cta-content::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+          animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .cta-content > * {
+          position: relative;
+          z-index: 1;
+        }
+
+        .cta-content h2 {
+          font-family: var(--font-display);
+          font-size: clamp(2.5rem, 5vw, 4rem);
+          font-weight: 800;
+          margin-bottom: 1rem;
+        }
+
+        .cta-content p {
+          font-size: 1.25rem;
+          color: var(--color-text-muted);
+          margin-bottom: 2.5rem;
+        }
+
+        /* Footer */
+        .footer {
+          border-top: 2px solid var(--color-border);
+          padding: 3rem 2rem;
+          position: relative;
+          z-index: 1;
+          background: rgba(255, 255, 255, 0.5);
+        }
+
+        .footer-content {
+          max-width: 1400px;
+          margin: 0 auto;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .footer-brand {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-family: var(--font-display);
+          font-weight: 700;
+          color: var(--color-text-muted);
+        }
+
+        .footer p {
+          color: var(--color-text-muted);
+          font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+          .hero {
+            grid-template-columns: 1fr;
+            padding-top: 6rem;
+          }
+
+          .hero-visual {
+            height: 400px;
+            order: -1;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .menu-toggle {
+            display: block;
+          }
+
+          .nav-links {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            flex-direction: column;
+            gap: 0;
+            padding: 1rem 2rem;
+            border-bottom: 2px solid var(--color-border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-10px);
+            transition: all 0.3s var(--ease-out);
+          }
+
+          .nav-links-open {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(0);
+          }
+
+          .nav-links li {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--color-border);
+          }
+
+          .nav-links li:last-child {
+            border-bottom: none;
+          }
+
+          .features-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .stocks-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .market-overview {
+            grid-template-columns: 1fr;
+          }
+
+          .footer-content {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+          }
+
+          .hero-title {
+            font-size: 2.5rem;
+          }
+
+          .btn {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}

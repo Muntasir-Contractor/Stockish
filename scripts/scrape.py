@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import yfinance as yf # pyright: ignore[reportMissingImports]
+import httpx
 
 def get_industry_sector(ticker : str) -> list:
     data = yf.Ticker(ticker).info
@@ -10,19 +11,19 @@ def get_industry_sector(ticker : str) -> list:
 def create_link(ticker):
     return f"https://ca.finance.yahoo.com/quote/{ticker}/"
 
-def get_stock_data(ticker):
+async def get_stock_data(ticker):
     
     
     #Fetch key stock metrics using yfinance safely with .get().
     #Returns a dictionary of metrics or None if ticker fails.
     
-    
-    data = yf.Ticker(ticker)
-    try:
-        info = data.info
-    except Exception as e:
-        print(f"Failed to fetch {ticker}: {e}")
-        return None
+    async with httpx.AsyncClient() as client:
+        data = await yf.Ticker(ticker)
+        try:
+            info = await data.info
+        except Exception as e:
+            print(f"Failed to fetch {ticker}: {e}")
+            return None
     
     tickerData = {
         "Ticker": ticker,

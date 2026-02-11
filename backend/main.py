@@ -5,7 +5,8 @@ from topmovers import get_top_movers
 app = FastAPI()
 origins = [
     "http://localhost:3000",
-    "http://localhost:5174"
+    "http://localhost:5174",
+    "http://localhost:5173"
 
 ]
 app.add_middleware(
@@ -31,8 +32,9 @@ def get_stock_data(ticker : str):
     pass
 
 @app.get("/topmovers")
-def top_movers():
-    return get_top_movers()
+async def top_movers():
+    stocks = await get_top_movers()
+    return stocks
 
 @app.get("/homepage")
 def get_homepage_data():

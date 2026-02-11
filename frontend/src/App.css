@@ -8,15 +8,19 @@
   padding: 0;
 }
 
-.nav_links li a{
+.nav_links li a {
   text-decoration: none;
-  color: #333333; /* Dark grey text */
-  font-weight: 500;
-  transition: color 0.3s;
+  color: #333333;
+  font-weight: 600; /* Bolder */
+  font-size: 15px; /* Slightly larger */
+  transition: all 0.3s;
+  padding: 8px 12px; /* Add padding */
+  border-radius: 6px;
 }
 
-.nav_links li a:hover{
+.nav_links li a:hover {
   color: #6fbf73;
+  background-color: rgba(111, 191, 115, 0.1); /* Subtle background on hover */
 }
 
 .search-btn {
@@ -36,7 +40,7 @@
   outline: none;
 }
 
-.seaarch-btn:hover {
+.search-btn:hover {
   background-color: #5fa865;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(111, 191, 115, 0.3);
@@ -45,24 +49,23 @@
 .search-btn:active {
   transform: translateY(0);
 }
-.Navbar{
+.Navbar {
   background-color: #f5f5f5;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 150px;
-  padding: 10px 5% 30px 2%;
+  padding: 20px 5% 20px 2%;
   margin-top: 0;
   top: 0;
   left: 0;
   color: #2d2d2d;
-  height: 18%;
   width: 100%;
   font-size: 14px;
   position: fixed;
-  box-sizing: border-box;
   z-index: 1000;
-  border-bottom: 1px solid #e0e0e0
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Add shadow */
+  border-bottom: none; /* Remove the line border */
 }
 
 .logo {
@@ -102,4 +105,78 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* ===== STOCK LIST ===== */
+.stock-list {
+  max-width: 100%;
+  margin: 150px auto 0;
+  padding: 40px 20px;
+}
+
+.stock-list h2 {
+  text-align: left;
+  margin-bottom: 30px;
+  color: #333;
+  font-size: 28px;
+}
+
+.stock-cards {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto; /* Enables horizontal scrolling if too many cards */
+  padding: 20px 10px;
+  list-style: none;
+  margin: 0;
+}
+
+.stock-card {
+  min-width: 280px; /* Prevents cards from shrinking too much */
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  border-top: 4px solid #6fbf73;
+}
+
+.stock-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.stock-symbol {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.stock-name {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.stock-price {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.stock-change {
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stock-change.positive {
+  color: #6fbf73;
+}
+
+.stock-change.negative {
+  color: #e74c3c;
 }

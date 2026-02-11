@@ -37,17 +37,20 @@ function App(){
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
               <path d="m21 21-4.35-4.35"></path>
-        </svg>
+          </svg>
         </button>
       </div>
       
-      <div style={{marginTop: '120px'}}> {/* Add margin to account for fixed navbar */}
-        <ul>{topmovers.map(u => (
-          <li key={u.symbol}>
-            {u.symbol} ({u.name}): ${u.price}USD
-            <ul>
-              <li>{u.change}, {u.changesPercentage}%</li>
-            </ul>
+      <div className="stock-list">
+        <h2>Top Movers</h2>
+        <ul className="stock-cards">{topmovers.map(u => (
+          <li key={u.symbol} className="stock-card">
+            <div className="stock-symbol">{u.symbol}</div>
+            <div className="stock-name">{u.name}</div>
+            <div className="stock-price">${u.price} USD</div>
+            <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
+              {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
+            </div>
           </li>
         ))}</ul>
       </div>

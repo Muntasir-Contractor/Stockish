@@ -11,19 +11,17 @@ def get_industry_sector(ticker : str) -> list:
 def create_link(ticker):
     return f"https://ca.finance.yahoo.com/quote/{ticker}/"
 
-async def get_stock_data(ticker):
-    
+def get_stock_data(ticker):
     
     #Fetch key stock metrics using yfinance safely with .get().
     #Returns a dictionary of metrics or None if ticker fails.
     
-    async with httpx.AsyncClient() as client:
-        data = await yf.Ticker(ticker)
-        try:
-            info = await data.info
-        except Exception as e:
-            print(f"Failed to fetch {ticker}: {e}")
-            return None
+    data = yf.Ticker(ticker)
+    try:
+        info = data.info
+    except Exception as e:
+        print(f"Failed to fetch {ticker}: {e}")
+        return None
     
     tickerData = {
         "Ticker": ticker,

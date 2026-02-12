@@ -44,73 +44,60 @@ def prepare_data(df):
     return df[FEATURES]
 
 
-async def get_stock_price(ticker):
+def get_stock_price(ticker):
     if not is_ticker(ticker):
         return
-    stock_data = await get_stock_data(ticker)
+    stock_data = get_stock_data(ticker)
     return stock_data["Current Price"]
 
 async def price_prediction(ticker : str, MODEL) -> float:
     if not is_ticker(ticker):
         return
     #model = load_model(path=r'model\\XGboost_model.joblib')
-    stock_data = await get_stock_data(ticker)
+    stock_data = get_stock_data(ticker)
+    """
     stock_price = stock_data["Current Price"]
     if pd.isna(stock_price):
         raise Exception("Stock price not found")
+    """
     stock_data = pd.DataFrame(stock_data,index=[0])
     stock_data = stock_data.dropna(axis=1)
     processed_stock_data = prepare_data(stock_data)
     stock_prediction = (MODEL.predict(processed_stock_data))[0] #XGBOOST
-    stock_prediction = numpy.round(stock_prediction,decimals=2)
-    return stock_prediction
+    stock_prediction = float(numpy.round(stock_prediction,decimals=2))
+    return round(stock_prediction,2)
     
-
-async def valuation(ticker) -> tuple[str,float]:
+def valuation(ticker: str, stock_prediction: float) -> tuple[str, float]:
+    """
+    Determine if a stock is overvalued or undervalued based on prediction vs current price.
+    
+    Returns:
+        tuple: (valuation_status, relative_error)
+    """
     if not is_ticker(ticker):
-        return
-    """
-    model2 = load_model()
-    stock_data = get_stock_data(ticker)
-    stock_price = stock_data["Current Price"] 
-    if pd.isna(stock_price):
-        print(f"No price data available for {ticker}")
-        return None
+        raise ValueError(f"Invalid ticker: {ticker}")
     
-    stock_data = pd.DataFrame(stock_data,index=[0])
-    stock_data = stock_data.dropna(axis=1)
-    processed_stock_data = prepare_data(stock_data)
-    stock_prediction = (model.predict(processed_stock_data))[0] #XGBOOST
-    stock_prediction = numpy.round(stock_prediction,decimals=2)
-
-    stock_prediction_linear_regressor = (model.predict(processed_stock_data))[0]
-    """
-    stock_prediction = await price_prediction(ticker)
-    # CACHE STOCK DATA
-    stock_price = await get_stock_price(ticker)
-    relative_error = (stock_prediction-stock_price)/stock_price
-    if 0.05<relative_error<=0.10:
-        return ("Slighty Undervalued", relative_error)
+    stock_price = get_stock_price(ticker)
+    if stock_price is None or pd.isna(stock_price):
+        raise ValueError(f"No price data available for {ticker}")
     
-    elif 0.1<relative_error<=0.2:
-        return ("Moderately Undervalued", relative_error)
+    relative_error = float(round((stock_prediction - stock_price) / stock_price, 2))
     
-    elif relative_error>0.20:
+    if relative_error > 0.20:
         return ("Significantly Undervalued", relative_error)
-
-    elif -0.10<relative_error<=-0.05:
-        return ("Slightly Overvalued", relative_error)
-
-    elif -0.2<relative_error<=-0.1:
-        return ("Moderately Overvalued", relative_error)
-
-    elif relative_error < -0.2:
+    elif relative_error > 0.10:
+        return ("Moderately Undervalued", relative_error)
+    elif relative_error > 0.05:
+        return ("Slightly Undervalued", relative_error)
+    elif relative_error < -0.20:
         return ("Significantly Overvalued", relative_error)
+    elif relative_error < -0.10:
+        return ("Moderately Overvalued", relative_error)
+    elif relative_error < -0.05:
+        return ("Slightly Overvalued", relative_error)
     else:
-        return ("Correctly Valued", relative_error)
-    
-print(price_prediction("AMZN"))
-valuation("AMZN")
+        # Between -0.05 and 0.05
+        return ("Fairly Valued", relative_error)
 #python -m backend.application
 
 

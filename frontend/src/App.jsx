@@ -40,7 +40,6 @@ function App(){
           </svg>
         </button>
       </div>
-      
       <div className="stock-list">
         <h2>Top Movers</h2>
         <ul className="stock-cards">{topmovers.map(u => (

@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from topmovers import get_top_movers
+import joblib
+from application import price_prediction, valuation
 
 app = FastAPI()
 origins = [
@@ -17,6 +19,9 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+#Loading model when app starts 
+MODEL = joblib.load('model/XGboost_model.joblib')
+
 #Get for reading
 #Post for create
 #Put for update
@@ -30,6 +35,12 @@ def root():
 @app.get("/stock/{ticker}")
 def get_stock_data(ticker : str):
     pass
+
+@app.get("/stockprediction/{ticker}")
+async def get_prediction(ticker : str):
+    stock_price_prediction = await price_prediction(ticker,MODEL)
+    conclusion , factor = await valuation(ticker)
+    return {"Stock Prediction": stock_price_prediction , "Stock Valuation": conclusion, "Relative Error": factor}
 
 @app.get("/topmovers")
 async def top_movers():

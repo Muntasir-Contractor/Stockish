@@ -43,29 +43,30 @@ def prepare_data(df):
 
     return df[FEATURES]
 
-def get_stock_price(ticker):
+
+async def get_stock_price(ticker):
     if not is_ticker(ticker):
         return
-    stock_data = get_stock_data(ticker)
+    stock_data = await get_stock_data(ticker)
     return stock_data["Current Price"]
 
-def price_prediction(ticker) -> float:
+async def price_prediction(ticker : str, MODEL) -> float:
     if not is_ticker(ticker):
         return
-    model = load_model(path=r'model\\XGboost_model.joblib')
-    stock_data = get_stock_data(ticker)
+    #model = load_model(path=r'model\\XGboost_model.joblib')
+    stock_data = await get_stock_data(ticker)
     stock_price = stock_data["Current Price"]
     if pd.isna(stock_price):
         raise Exception("Stock price not found")
     stock_data = pd.DataFrame(stock_data,index=[0])
     stock_data = stock_data.dropna(axis=1)
     processed_stock_data = prepare_data(stock_data)
-    stock_prediction = (model.predict(processed_stock_data))[0] #XGBOOST
+    stock_prediction = (MODEL.predict(processed_stock_data))[0] #XGBOOST
     stock_prediction = numpy.round(stock_prediction,decimals=2)
     return stock_prediction
     
 
-def valuation(ticker):
+async def valuation(ticker) -> tuple[str,float]:
     if not is_ticker(ticker):
         return
     """
@@ -84,31 +85,29 @@ def valuation(ticker):
 
     stock_prediction_linear_regressor = (model.predict(processed_stock_data))[0]
     """
-    stock_prediction = price_prediction(ticker)
-    stock_price = get_stock_price(ticker)
+    stock_prediction = await price_prediction(ticker)
+    # CACHE STOCK DATA
+    stock_price = await get_stock_price(ticker)
     relative_error = (stock_prediction-stock_price)/stock_price
     if 0.05<relative_error<=0.10:
-        print("This stock is slightly undervalued")
+        return ("Slighty Undervalued", relative_error)
     
     elif 0.1<relative_error<=0.2:
-        print("This stock is moderately undervalued")
+        return ("Moderately Undervalued", relative_error)
     
     elif relative_error>0.20:
-        print("This stock is significantly undervalued")
+        return ("Significantly Undervalued", relative_error)
 
     elif -0.10<relative_error<=-0.05:
-        print("This stock is slightly overvalued")
+        return ("Slightly Overvalued", relative_error)
 
     elif -0.2<relative_error<=-0.1:
-        print("This stock is moderately overvalued")
+        return ("Moderately Overvalued", relative_error)
 
     elif relative_error < -0.2:
-        print("This stock is significantly overvalued")
+        return ("Significantly Overvalued", relative_error)
     else:
-        print("This stock correctly valued")
-
-    
-    return relative_error
+        return ("Correctly Valued", relative_error)
     
 print(price_prediction("AMZN"))
 valuation("AMZN")

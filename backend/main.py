@@ -9,7 +9,7 @@ import os
 from dotenv import load_dotenv
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(root))
-from application import price_prediction, valuation, get_stock_price
+from application import price_prediction, valuation, get_stock_price, is_etf
 
 app = FastAPI()
 origins = [
@@ -84,7 +84,11 @@ async def get_stock_info(ticker : str):
     try:
         stock_price_prediction = await price_prediction(ticker, MODEL)
         conclusion, factor = valuation(ticker, stock_price_prediction)
-        current_price = float(get_stock_price(ticker))
+        if not conclusion:
+            conclusion = "Cannot Valuate ETF"
+            factor = None
+        fund_type , price = is_etf(ticker)
+        current_price = price
         return{
             "ticker": ticker.upper(),
             "current_price": current_price,

@@ -43,17 +43,31 @@ def prepare_data(df):
 
     return df[FEATURES]
 
+def is_etf(ticker : str) -> tuple[bool, float]:
+    direct_data = yf.Ticker(ticker)
+    info = direct_data.info
+    if info.get("quoteType") == "ETF":
+        return (True, info.get("open"))
+    else:
+        return (False, info.get("currentPrice"))
 
 def get_stock_price(ticker):
     if not is_ticker(ticker):
         return
-    stock_data = get_stock_data(ticker)
-    return stock_data["Current Price"]
+    try:
+        fund_type , price = is_etf(ticker)
+        return price
+    except Exception as e:
+        raise Exception(e)
 
-async def price_prediction(ticker : str, MODEL) -> float:
+async def price_prediction(ticker : str, MODEL) -> float | str:
     if not is_ticker(ticker):
         return
     #model = load_model(path=r'model\\XGboost_model.joblib')
+    fund_type , price = is_etf(ticker)
+    if fund_type:
+        return "Cannot Valuate ETF"
+
     stock_data = get_stock_data(ticker)
     """
     stock_price = stock_data["Current Price"]
@@ -74,8 +88,12 @@ def valuation(ticker: str, stock_prediction: float) -> tuple[str, float]:
     Returns:
         tuple: (valuation_status, relative_error)
     """
+
     if not is_ticker(ticker):
         raise ValueError(f"Invalid ticker: {ticker}")
+    
+    if type(stock_prediction) == str:
+        return (False, False)
     
     stock_price = get_stock_price(ticker)
     if stock_price is None or pd.isna(stock_price):

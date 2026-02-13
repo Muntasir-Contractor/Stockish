@@ -1,17 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import api from "./components/api.js";
-// useState lets you create state variables
-  // useEffect lets you run code in response to events, such as when the first compnent renders, or state changes
-
 import './App.css'
 
 function App(){
-
-  // Declare a staste viarable data with initial value null
-  // setData is the function used to updata 'data'
-  //const {ticker} = useParams(); 
   const [topmovers, setTopMovers] = useState([]);
-  console.log(api)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [selectedStock, setSelectedStock] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  
+  // Ref to track the search timeout
+  const searchTimeoutRef = useRef(null);
 
   useEffect(() => {
     api.get("/topmovers")
@@ -22,6 +23,97 @@ function App(){
         console.error(err);
       });
   }, []);
+
+  // Debounced search - triggers 300ms after user stops typing
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // If query is empty, hide results
+    if (!query.trim()) {
+      setShowSearchResults(false);
+      setSearchResults([]);
+      setSelectedIndex(-1); // Reset selection
+      return;
+    }
+    
+    // Show loading state
+    setIsSearching(true);
+    
+    // Set new timeout - search after 300ms of no typing
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await api.get(`/search/${query}`);
+        setSearchResults(response.data.results);
+        setShowSearchResults(true);
+        setIsSearching(false);
+        setSelectedIndex(-1); // Reset selection on new results
+      } catch (error) {
+        console.error("Search failed:", error);
+        setSearchResults([]);
+        setIsSearching(false);
+        setSelectedIndex(-1);
+      }
+    }, 300); // 300ms delay
+  };
+
+  const handleKeyDown = (e) => {
+    if (!showSearchResults || searchResults.length === 0) return;
+    
+    if (e.key === 'ArrowDown'){
+      e.preventDefault();
+      setSelectedIndex(prev => 
+        prev < searchResults.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp'){
+      e.preventDefault();
+      setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIndex >= 0) {
+        handleStockSelect(searchResults[selectedIndex].symbol);
+      }
+    } else if (e.key === 'Escape') {
+      setShowSearchResults(false);
+      setSelectedIndex(-1);
+    }
+  }
+
+  // Handle clicking on a search result
+  const handleStockSelect = async (ticker) => {
+    try {
+      setIsSearching(true);
+      const response = await api.get(`/stock/${ticker}`);
+      setSelectedStock(response.data);
+      setShowSearchResults(false);
+      setSearchQuery("");
+      setSelectedIndex(-1); // Reset selection
+      setIsSearching(false);
+    } catch (error) {
+      console.error("Failed to fetch stock:", error);
+      alert("Failed to load stock data");
+      setIsSearching(false);
+    }
+  };
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.search-form')) {
+        setShowSearchResults(false);
+        setSelectedIndex(-1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div>
       <div className="Navbar">
@@ -33,25 +125,99 @@ function App(){
             <li><a href="#">Third PlaceHolder</a></li>
           </ul>
         </nav>
-        <button className="search-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-          </svg>
-        </button>
+        
+        {/* Search Form */}
+        <div className="search-form">
+          <input
+            type="text"
+            placeholder="Search stocks..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onKeyDown={handleKeyDown}
+            className="search-input"
+            autoComplete="off"
+          />
+          <div className="search-icon">
+            {isSearching ? (
+              <div className="spinner"></div>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            )}
+          </div>
+
+          {/* Search Results Dropdown */}
+          {showSearchResults && (
+            <div className="search-results">
+              {searchResults.length > 0 ? (
+                <ul>
+                  {searchResults.map((result, index) => (
+                    <li 
+                      key={result.symbol}
+                      onClick={() => handleStockSelect(result.symbol)}
+                      className={selectedIndex === index ? 'selected' : ''}
+                    >
+                      <div className="result-main">
+                        <strong>{result.symbol}</strong>
+                        <span className="result-name">{result.name}</span>
+                      </div>
+                      <span className="exchange">{result.exchange}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="no-results">No results found for "{searchQuery}"</div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
+      
+      {/* Selected Stock Details */}
+      {selectedStock && (
+        <div className="selected-stock">
+          <button className="close-btn" onClick={() => setSelectedStock(null)}>×</button>
+          <h2>{selectedStock.ticker}</h2>
+          <div className="stock-details">
+            <div className="detail-card">
+              <span className="label">Current Price</span>
+              <span className="value">${selectedStock.current_price?.toFixed(2)}</span>
+            </div>
+            <div className="detail-card">
+              <span className="label">Predicted Price</span>
+              <span className="value">${selectedStock.predicted_price?.toFixed(2)}</span>
+            </div>
+            <div className="detail-card">
+              <span className="label">Valuation</span>
+              <span className="value">{selectedStock.valuation}</span>
+            </div>
+            <div className="detail-card">
+              <span className="label">Relative Error</span>
+              <span className={`value ${selectedStock.relative_error >= 0 ? 'positive' : 'negative'}`}>
+                {(selectedStock.relative_error * 100).toFixed(2)}%
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Top Movers */}
       <div className="stock-list">
         <h2>Top Movers</h2>
-        <ul className="stock-cards">{topmovers.map(u => (
-          <li key={u.symbol} className="stock-card">
-            <div className="stock-symbol">{u.symbol}</div>
-            <div className="stock-name">{u.name}</div>
-            <div className="stock-price">${u.price} USD</div>
-            <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
-              {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
-            </div>
-          </li>
-        ))}</ul>
+        <ul className="stock-cards">
+          {topmovers.map(u => (
+            <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
+              <div className="stock-symbol">{u.symbol}</div>
+              <div className="stock-name">{u.name}</div>
+              <div className="stock-price">${u.price} USD</div>
+              <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
+                {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

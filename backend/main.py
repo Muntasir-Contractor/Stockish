@@ -3,10 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from topmovers import get_top_movers
 import joblib
 import sys
+import httpx
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(root))
-from application import price_prediction, valuation
+from application import price_prediction, valuation, get_stock_price
 
 app = FastAPI()
 origins = [
@@ -25,6 +28,8 @@ app.add_middleware(
 
 #Loading model when app starts 
 MODEL = joblib.load(r"model\XGboost_model.joblib")
+load_dotenv()
+FINANCE_API_KEY = os.getenv("FINANCE_KEY")
 
 #Get for reading
 #Post for create
@@ -50,6 +55,45 @@ async def get_prediction(ticker : str):
 async def top_movers():
     stocks = await get_top_movers()
     return stocks
+
+@app.get("/search/{query}")
+async def search_tinker(query : str):
+    #Have a cache for stock symbol
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"https://financialmodelingprep.com/stable/search-symbol?query={query}&apikey={FINANCE_API_KEY}")
+            results = response.json()
+
+            return {
+                "query": query,
+                    "results": [
+                        {
+                            "symbol": r["symbol"],
+                            "name": r["name"],
+                            "exchange": r.get("exchangeShortName", ""),
+                            "type": r.get("type", "")
+                        }
+                        for r in results[:10]
+                    ]
+            }
+    except Exception as e:
+        print(str(e))
+
+@app.get("/stock/{ticker}")
+async def get_stock_info(ticker : str):
+    try:
+        stock_price_prediction = await price_prediction(ticker, MODEL)
+        conclusion, factor = valuation(ticker, stock_price_prediction)
+        current_price = float(get_stock_price(ticker))
+        return{
+            "ticker": ticker.upper(),
+            "current_price": current_price,
+            "predicted_price": stock_price_prediction,
+            "valuation": conclusion,
+            "relative_error": factor
+        }
+    except Exception as e:
+        raise Exception(e)
 
 @app.get("/homepage")
 def get_homepage_data():

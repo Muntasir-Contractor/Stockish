@@ -40,7 +40,7 @@ FINANCE_API_KEY = os.getenv("FINANCE_KEY")
 @app.get("/")
 def root():
     return {"Hello": "World"}
-
+"""
 @app.get("/stock/{ticker}")
 async def get_stock_info(ticker : str):
     stock_price_prediction = await price_prediction(ticker,MODEL)
@@ -53,7 +53,7 @@ async def get_stock_info(ticker : str):
         "valuation": conclusion,
         "relative_error": float(factor)
     }
-
+"""
 @app.get("/topmovers")
 async def top_movers():
     stocks = await get_top_movers()
@@ -94,18 +94,19 @@ async def search_tinker(query : str):
 async def get_stock_info(ticker : str):
     try:
         stock_price_prediction = await price_prediction(ticker, MODEL)
-        conclusion, factor = valuation(ticker, stock_price_prediction)
+        conclusion, smape, signed_pct = valuation(ticker, stock_price_prediction)
         if not conclusion:
             conclusion = "Cannot Valuate ETF"
-            factor = None
-        fund_type , price = is_etf(ticker)
-        current_price = price
+            smape = None
+            signed_pct = None
+        current_price = get_stock_price(ticker)
         return{
             "ticker": ticker.upper(),
             "current_price": current_price,
             "predicted_price": stock_price_prediction,
             "valuation": conclusion,
-            "relative_error": factor
+            "relative_error": signed_pct,
+            "smape": smape
         }
     except Exception as e:
         raise Exception(e)

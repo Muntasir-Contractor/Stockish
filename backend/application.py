@@ -81,7 +81,7 @@ async def price_prediction(ticker : str, MODEL) -> float | str:
     stock_prediction = float(numpy.round(stock_prediction,decimals=2))
     return round(stock_prediction,2)
     
-def valuation(ticker: str, stock_prediction: float) -> tuple[str, float]:
+def valuation(ticker: str, stock_prediction: float) -> tuple[str, float, float]:
     """
     Determine if a stock is overvalued or undervalued based on prediction vs current price.
     
@@ -93,29 +93,43 @@ def valuation(ticker: str, stock_prediction: float) -> tuple[str, float]:
         raise ValueError(f"Invalid ticker: {ticker}")
     
     if type(stock_prediction) == str:
-        return "Cannot Valuate ETF"
+        # e.g., cannot valuate ETF or other string response from predictor
+        return (None, None, None)
     
     stock_price = get_stock_price(ticker)
     if stock_price is None or pd.isna(stock_price):
         raise ValueError(f"No price data available for {ticker}")
     
-    relative_error = float(round((stock_prediction - stock_price) / stock_price, 2))
-    
-    if relative_error > 0.20:
-        return ("Significantly Undervalued", relative_error)
-    elif relative_error > 0.10:
-        return ("Moderately Undervalued", relative_error)
-    elif relative_error > 0.05:
-        return ("Slightly Undervalued", relative_error)
-    elif relative_error < -0.20:
-        return ("Significantly Overvalued", relative_error)
-    elif relative_error < -0.10:
-        return ("Moderately Overvalued", relative_error)
-    elif relative_error < -0.05:
-        return ("Slightly Overvalued", relative_error)
+    # Signed percent difference (directional)
+    signed_pct = (stock_prediction - stock_price) / stock_price
+
+    # sMAPE: symmetric Mean Absolute Percentage Error (magnitude of error)
+    denom = (abs(stock_prediction) + abs(stock_price)) / 2
+    if denom == 0:
+        smape = 0.0
+    else:
+        smape = abs(stock_prediction - stock_price) / denom
+
+    # Round for readability
+    signed_pct = float(round(signed_pct, 4))
+    smape = float(round(smape, 4))
+
+    # Keep labeling thresholds based on signed_pct (direction + severity)
+    if signed_pct > 0.20:
+        return ("Significantly Undervalued", smape, signed_pct)
+    elif signed_pct > 0.10:
+        return ("Moderately Undervalued", smape, signed_pct)
+    elif signed_pct > 0.05:
+        return ("Slightly Undervalued", smape, signed_pct)
+    elif signed_pct < -0.20:
+        return ("Significantly Overvalued", smape, signed_pct)
+    elif signed_pct < -0.10:
+        return ("Moderately Overvalued", smape, signed_pct)
+    elif signed_pct < -0.05:
+        return ("Slightly Overvalued", smape, signed_pct)
     else:
         # Between -0.05 and 0.05
-        return ("Fairly Valued", relative_error)
+        return ("Fairly Valued", smape, signed_pct)
 #python -m backend.application
 
 

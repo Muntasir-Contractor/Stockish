@@ -41,6 +41,23 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
+/* Ticker logo in header */
+.stock-header {
+  position: relative;
+}
+
+.stock-header-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  border: 2px solid rgba(0,0,0,0.06);
+}
+
 .stock-header h1 {
   font-size: 56px;
   color: #333;
@@ -82,6 +99,73 @@
   letter-spacing: 1px;
   margin-bottom: 15px;
   font-weight: 600;
+}
+
+/* Info help tooltip */
+.info-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 50%;
+  background: #f0f0f0;
+  color: #333;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 600;
+  font-family: Arial, Helvetica, sans-serif;
+  cursor: default;
+  position: relative;
+  overflow: visible; /* ensure tooltip can extend outside */
+}
+
+.info-help .tooltip {
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20,20,20,0.95);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap; /* keep tooltip on one line */
+  max-width: 600px;    /* allow horizontal expansion but cap it */
+  overflow: visible;   /* don't hide overflow */
+  text-overflow: clip;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s ease-in-out;
+  z-index: 99999; /* ensure it's above other elements */
+}
+
+.info-help:hover .tooltip,
+.info-help:focus .tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.info-help .tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: rgba(20,20,20,0.95) transparent transparent transparent;
+}
+
+/* Mobile: allow wrapping when screen is narrow */
+@media (max-width: 480px) {
+  .info-help .tooltip {
+    white-space: normal;
+    max-width: 260px;
+  }
 }
 
 .info-value {

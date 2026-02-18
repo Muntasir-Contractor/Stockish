@@ -193,7 +193,7 @@ function StockDetail() {
           </div>
 
           <div className="info-card">
-            <div className="info-label">AI Market Sentiment Analysis</div>
+            <div className="info-label">AI Market Sentiment Analysis Score</div>
             <div className="info-value">None</div>
           </div>
         </div>

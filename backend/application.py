@@ -93,7 +93,7 @@ def valuation(ticker: str, stock_prediction: float) -> tuple[str, float]:
         raise ValueError(f"Invalid ticker: {ticker}")
     
     if type(stock_prediction) == str:
-        return (False, False)
+        return "Cannot Valuate ETF"
     
     stock_price = get_stock_price(ticker)
     if stock_price is None or pd.isna(stock_price):

@@ -1,4 +1,23 @@
+/* Add this to src/index.css if not already there */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #fafafa;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+}
+
 :root {
+  width: 100%;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;

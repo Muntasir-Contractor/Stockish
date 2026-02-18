@@ -1,9 +1,13 @@
 import { useEffect, useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from "./components/api.js";
 import './App.css'
 
 function App(){
+  const navigate = useNavigate();
   const [topmovers, setTopMovers] = useState([]);
+  const [toplosers, setTopLosers] = useState([]);
+  const [topgainers, setTopGainers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -15,13 +19,24 @@ function App(){
   const searchTimeoutRef = useRef(null);
 
   useEffect(() => {
-    api.get("/topmovers")
-      .then(res => {
-        setTopMovers(res.data);
-      })
-      .catch(err => {
-        console.error(err);
-      });
+    // Fetch all data in parallel
+    const fetchAllData = async () => {
+      try {
+        const [moversRes, gainersRes, losersRes] = await Promise.all([
+          api.get("/topmovers"),
+          api.get("/topgainers"),
+          api.get("/toplosers")
+        ]);
+        
+        setTopMovers(moversRes.data);
+        setTopGainers(gainersRes.data);
+        setTopLosers(losersRes.data);
+      } catch (error) {
+        console.error("Failed to fetch stock data:", error);
+      }
+    };
+
+    fetchAllData();
   }, []);
 
   // Debounced search - triggers 300ms after user stops typing
@@ -85,20 +100,11 @@ function App(){
   }
 
   // Handle clicking on a search result
-  const handleStockSelect = async (ticker) => {
-    try {
-      setIsSearching(true);
-      const response = await api.get(`/stock/${ticker}`);
-      setSelectedStock(response.data);
-      setShowSearchResults(false);
-      setSearchQuery("");
-      setSelectedIndex(-1); // Reset selection
-      setIsSearching(false);
-    } catch (error) {
-      console.error("Failed to fetch stock:", error);
-      alert("Failed to load stock data");
-      setIsSearching(false);
-    }
+  const handleStockSelect = (ticker) => {
+    setShowSearchResults(false);
+    setSearchQuery("");
+    setSelectedIndex(-1);
+    navigate(`/stock/${ticker}`);  // Navigate to stock page
   };
 
   // Close search results when clicking outside
@@ -205,9 +211,46 @@ function App(){
 
       {/* Top Movers */}
       <div className="stock-list">
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
         <h2>Top Movers</h2>
         <ul className="stock-cards">
           {topmovers.map(u => (
+            <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
+              <div className="stock-symbol">{u.symbol}</div>
+              <div className="stock-name">{u.name}</div>
+              <div className="stock-price">${u.price} USD</div>
+              <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
+                {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {/* Top Gainers */}
+      <div className="stock-list">
+        <h2>Top Gainers</h2>
+        <ul className="stock-cards">
+          {topgainers.map(u => (
+            <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
+              <div className="stock-symbol">{u.symbol}</div>
+              <div className="stock-name">{u.name}</div>
+              <div className="stock-price">${u.price} USD</div>
+              <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
+                {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {/* Top Losers */}
+      <div className="stock-list">
+        <h2>Top Losers</h2>
+        <ul className="stock-cards">
+          {toplosers.map(u => (
             <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
               <div className="stock-symbol">{u.symbol}</div>
               <div className="stock-name">{u.name}</div>

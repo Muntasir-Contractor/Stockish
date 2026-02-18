@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from topmovers import get_top_movers
+from fetchfromAPI import get_top_movers, get_top_losers, get_top_gainers
 import joblib
 import sys
 import httpx
@@ -42,18 +42,29 @@ def root():
     return {"Hello": "World"}
 
 @app.get("/stock/{ticker}")
-def get_stock_data(ticker : str):
-    pass
-
-@app.get("/stockprediction/{ticker}")
-async def get_prediction(ticker : str):
+async def get_stock_info(ticker : str):
     stock_price_prediction = await price_prediction(ticker,MODEL)
     conclusion , factor = valuation(ticker, stock_price_prediction)
-    return {"Stock Prediction": stock_price_prediction , "Stock Valuation": conclusion, "Relative Error": factor}
+    current_price = get_stock_price(ticker)
+    return {
+        "ticker": ticker.upper(),
+        "current_price": current_price,
+        "predicted_price": float(stock_price_prediction),
+        "valuation": conclusion,
+        "relative_error": float(factor)
+    }
 
 @app.get("/topmovers")
 async def top_movers():
     stocks = await get_top_movers()
+    return stocks
+@app.get("/topgainers")
+async def top_gainers():
+    stocks = await get_top_gainers()
+    return stocks
+@app.get("/toplosers")
+async def top_losers():
+    stocks = await get_top_losers()
     return stocks
 
 @app.get("/search/{query}")

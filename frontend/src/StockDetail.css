@@ -1,0 +1,96 @@
+.stock-detail-page {
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.navbar-placeholder {
+  height: 140px; /* Space for fixed navbar */
+}
+
+.stock-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #6fbf73;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 10px 0;
+  margin-bottom: 30px;
+}
+
+.back-btn:hover {
+  color: #5fa865;
+}
+
+.stock-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.stock-header h1 {
+  font-size: 48px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.current-price-big {
+  font-size: 64px;
+  font-weight: 700;
+  color: #6fbf73;
+}
+
+.stock-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+}
+
+.info-card {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.info-label {
+  font-size: 13px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.info-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+}
+
+.info-value.positive {
+  color: #6fbf73;
+}
+
+.info-value.negative {
+  color: #e74c3c;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 100px 20px;
+}
+
+.error button {
+  margin-top: 20px;
+  padding: 12px 24px;
+  background: #6fbf73;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}

@@ -146,6 +146,37 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* Section-specific styles */
+.stock-list.movers h2 {
+  color: #1976d2; /* blue for Movers */
+}
+.stock-list.gainers h2 {
+  color: #2e7d32; /* green for Gainers */
+}
+.stock-list.losers h2 {
+  color: #c62828; /* red for Losers */
+}
+
+.stock-list.movers .stock-card {
+  border-top-color: #1976d2;
+}
+.stock-list.gainers .stock-card {
+  border-top-color: #6fbf73;
+}
+.stock-list.losers .stock-card {
+  border-top-color: #e74c3c;
+}
+
+.stock-list.movers .stock-card:hover {
+  box-shadow: 0 12px 28px rgba(25, 118, 210, 0.12);
+}
+.stock-list.gainers .stock-card:hover {
+  box-shadow: 0 12px 28px rgba(111, 191, 115, 0.12);
+}
+.stock-list.losers .stock-card:hover {
+  box-shadow: 0 12px 28px rgba(231, 76, 60, 0.12);
+}
+
 .stock-symbol {
   font-size: 24px;
   font-weight: bold;
@@ -408,4 +439,31 @@
 .stock-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Company badge (logo) in top-right of card */
+.stock-card {
+  position: relative; /* allow absolute positioned badge */
+}
+
+.company-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  border: 2px solid rgba(0,0,0,0.06);
+}
+
+.stock-list.movers .company-badge {
+  border-color: #1976d2;
+}
+.stock-list.gainers .company-badge {
+  border-color: #6fbf73;
+}
+.stock-list.losers .company-badge {
+  border-color: #e74c3c;
 }

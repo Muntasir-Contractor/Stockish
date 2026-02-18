@@ -1,6 +1,7 @@
 .stock-detail-page {
   min-height: 100vh;
   background: #fafafa;
+  width: 100%;
 }
 
 .navbar-placeholder {
@@ -8,7 +9,8 @@
 }
 
 .stock-detail-container {
-  max-width: 1200px;
+  max-width: 1400px; /* Increased from 1200px */
+  width: 95%; /* Use 95% of screen width */
   margin: 0 auto;
   padding: 40px 20px;
 }
@@ -22,54 +24,71 @@
   cursor: pointer;
   padding: 10px 0;
   margin-bottom: 30px;
+  transition: color 0.3s;
 }
 
 .back-btn:hover {
   color: #5fa865;
+  text-decoration: underline;
 }
 
 .stock-header {
   text-align: center;
   margin-bottom: 50px;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .stock-header h1 {
-  font-size: 48px;
+  font-size: 56px;
   color: #333;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  font-weight: 700;
 }
 
 .current-price-big {
-  font-size: 64px;
+  font-size: 72px;
   font-weight: 700;
   color: #6fbf73;
 }
 
 .stock-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* More flexible */
+  gap: 30px;
+  width: 100%;
 }
 
 .info-card {
   background: white;
   border-radius: 16px;
-  padding: 30px;
+  padding: 40px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+  text-align: center;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .info-label {
-  font-size: 13px;
+  font-size: 14px;
   color: #666;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 10px;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+  font-weight: 600;
 }
 
 .info-value {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
   color: #333;
+  word-break: break-word;
 }
 
 .info-value.positive {
@@ -83,14 +102,42 @@
 .loading, .error {
   text-align: center;
   padding: 100px 20px;
+  font-size: 24px;
+  color: #333;
 }
 
 .error button {
   margin-top: 20px;
-  padding: 12px 24px;
+  padding: 15px 30px;
   background: #6fbf73;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.error button:hover {
+  background: #5fa865;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .stock-header h1 {
+    font-size: 36px;
+  }
+  
+  .current-price-big {
+    font-size: 48px;
+  }
+  
+  .stock-info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-value {
+    font-size: 28px;
+  }
 }

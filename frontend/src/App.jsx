@@ -18,6 +18,18 @@ function App(){
   // Ref to track the search timeout
   const searchTimeoutRef = useRef(null);
 
+  // Logokit token and helpers for logo URL + fallback (use ticker endpoint)
+  const LOGOKIT_TOKEN = 'pk_fr2e451b952a202aafbaec';
+
+  const getLogokitUrl = (symbol) => {
+    if (!symbol) return '';
+    return `https://img.logokit.com/ticker/${encodeURIComponent(symbol)}?token=${LOGOKIT_TOKEN}`;
+  };
+
+  const getAvatarFallback = (name, bg = '6fbf73') => {
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=128&rounded=false&color=ffffff&background=${bg}`;
+  };
+
   useEffect(() => {
     // Fetch all data in parallel
     const fetchAllData = async () => {
@@ -210,7 +222,7 @@ function App(){
       )}
 
       {/* Top Movers */}
-      <div className="stock-list">
+      <div className="stock-list movers">
         <br />
         <br />
         <br />
@@ -220,6 +232,12 @@ function App(){
         <ul className="stock-cards">
           {topmovers.map(u => (
             <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
+              <img
+                src={getLogokitUrl(u.symbol)}
+                alt={u.name}
+                className="company-badge"
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, '1976d2'); }}
+              />
               <div className="stock-symbol">{u.symbol}</div>
               <div className="stock-name">{u.name}</div>
               <div className="stock-price">${u.price} USD</div>
@@ -231,11 +249,17 @@ function App(){
         </ul>
       </div>
       {/* Top Gainers */}
-      <div className="stock-list">
+      <div className="stock-list gainers">
         <h2>Top Gainers</h2>
         <ul className="stock-cards">
           {topgainers.map(u => (
             <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
+              <img
+                src={getLogokitUrl(u.symbol)}
+                alt={u.name}
+                className="company-badge"
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, '6fbf73'); }}
+              />
               <div className="stock-symbol">{u.symbol}</div>
               <div className="stock-name">{u.name}</div>
               <div className="stock-price">${u.price} USD</div>
@@ -247,11 +271,17 @@ function App(){
         </ul>
       </div>
       {/* Top Losers */}
-      <div className="stock-list">
+      <div className="stock-list losers">
         <h2>Top Losers</h2>
         <ul className="stock-cards">
           {toplosers.map(u => (
             <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
+              <img
+                src={getLogokitUrl(u.symbol)}
+                alt={u.name}
+                className="company-badge"
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, 'e74c3c'); }}
+              />
               <div className="stock-symbol">{u.symbol}</div>
               <div className="stock-name">{u.name}</div>
               <div className="stock-price">${u.price} USD</div>

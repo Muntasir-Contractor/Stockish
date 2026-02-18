@@ -5,7 +5,7 @@
 }
 
 .navbar-placeholder {
-  height: 140px; /* Space for fixed navbar */
+  height: 0px; /* Space for fixed navbar */
 }
 
 .stock-detail-container {
@@ -39,13 +39,10 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-/* Ticker logo in header */
-.stock-header {
   position: relative;
 }
 
+/* Ticker logo in header */
 .stock-header-badge {
   position: absolute;
   top: 16px;
@@ -73,7 +70,8 @@
 
 .stock-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* More flexible */
+  grid-template-columns: repeat(3, 1fr); /* 3 columns */
+  grid-template-rows: repeat(2, 1fr);    /* 2 rows */
   gap: 30px;
   width: 100%;
 }
@@ -85,6 +83,10 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s, box-shadow 0.3s;
   text-align: center;
+  min-height: 180px; /* Ensures consistent card height */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .info-card:hover {
@@ -160,14 +162,6 @@
   border-color: rgba(20,20,20,0.95) transparent transparent transparent;
 }
 
-/* Mobile: allow wrapping when screen is narrow */
-@media (max-width: 480px) {
-  .info-help .tooltip {
-    white-space: normal;
-    max-width: 260px;
-  }
-}
-
 .info-value {
   font-size: 36px;
   font-weight: 700;
@@ -208,6 +202,13 @@
 }
 
 /* Responsive design */
+@media (max-width: 1024px) {
+  .stock-info-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
+    grid-template-rows: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .stock-header h1 {
     font-size: 36px;
@@ -218,10 +219,22 @@
   }
   
   .stock-info-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* 1 column on mobile */
+    grid-template-rows: auto;
   }
   
   .info-value {
     font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .info-help .tooltip {
+    white-space: normal;
+    max-width: 260px;
+  }
+  
+  .info-card {
+    padding: 30px 20px; /* Reduce padding on small screens */
   }
 }

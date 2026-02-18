@@ -191,6 +191,11 @@ function StockDetail() {
               {priceDiff !== null ? `$${priceDiff.toFixed(2)}` : 'N/A'}
             </div>
           </div>
+
+          <div className="info-card">
+            <div className="info-label">AI Market Sentiment Analysis</div>
+            <div className="info-value">None</div>
+          </div>
         </div>
       </div>
     </div>

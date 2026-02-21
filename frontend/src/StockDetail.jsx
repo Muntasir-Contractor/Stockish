@@ -5,13 +5,14 @@ import './StockDetail.css';
 
 // Logokit helpers for ticker logo + fallback
 const LOGOKIT_TOKEN = 'pk_fr2e451b952a202aafbaec';
-const getLogokitUrl = (symbol) => {
+const getLogo = (symbol) => {
   if (!symbol) return '';
   return `https://img.logokit.com/ticker/${encodeURIComponent(symbol)}?token=${LOGOKIT_TOKEN}`;
 };
 const getAvatarFallback = (name, bg = '1976d2') => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=256&rounded=false&color=ffffff&background=${bg}`;
 };
+
 
 function StockDetail() {
   const { ticker } = useParams();
@@ -131,7 +132,7 @@ function StockDetail() {
         <div className="stock-header">
           {stockData?.ticker && (
             <img
-              src={getLogokitUrl(stockData.ticker)}
+              src={getLogo(stockData.ticker)}
               alt={`${stockData.ticker} logo`}
               className="stock-header-badge"
               onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(stockData.ticker); }}

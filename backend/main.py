@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fetchfromAPI import get_top_movers, get_top_losers, get_top_gainers
 import joblib
@@ -27,9 +27,12 @@ app.add_middleware(
 )
 
 #Loading model when app starts 
+
 MODEL = joblib.load(r"model\XGboost_model.joblib")
 load_dotenv()
 FINANCE_API_KEY = os.getenv("FINANCE_KEY")
+LOGOKIT_TOKEN = os.getenv("LOGOKIT_TOKEN")
+
 
 #Get for reading
 #Post for create
@@ -103,7 +106,7 @@ async def get_stock_info(ticker : str):
         return{
             "ticker": ticker.upper(),
             "current_price": current_price,
-            "predicted_price": stock_price_prediction,
+            "predicted_price": round(stock_price_prediction,2) if type(stock_price_prediction) == float else stock_price_prediction,
             "valuation": conclusion,
             "relative_error": signed_pct,
             "smape": smape

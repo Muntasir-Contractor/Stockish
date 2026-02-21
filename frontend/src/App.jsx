@@ -14,16 +14,31 @@ function App(){
   const [selectedStock, setSelectedStock] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  
   // Ref to track the search timeout
   const searchTimeoutRef = useRef(null);
 
-  // Logokit token and helpers for logo URL + fallback (use ticker endpoint)
-  const LOGOKIT_TOKEN = 'pk_fr2e451b952a202aafbaec';
+  // Logokit token state
+  const [logokitToken, setLogokitToken] = useState("");
 
-  const getLogokitUrl = (symbol) => {
+  // Fetch the token from backend on mount
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const res = await api.get("/logokit-token");
+        setLogokitToken(res.data.token);
+      } catch (err) {
+        setLogokitToken("");
+      }
+    };
+    fetchToken();
+  }, []);
+
+  // Use backend proxy for logo images
+  const getLogo = (symbol) => {
     if (!symbol) return '';
-    return `https://img.logokit.com/ticker/${encodeURIComponent(symbol)}?token=${LOGOKIT_TOKEN}`;
+    // The backend serves the logo without exposing the token
+    
+    return `https://images.financialmodelingprep.com/symbol/${symbol}.png`;
   };
 
   const getAvatarFallback = (name, bg = '6fbf73') => {
@@ -233,7 +248,7 @@ function App(){
           {topmovers.map(u => (
             <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
               <img
-                src={getLogokitUrl(u.symbol)}
+                src={getLogo(u.symbol)}
                 alt={u.name}
                 className="company-badge"
                 onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, '1976d2'); }}
@@ -255,7 +270,7 @@ function App(){
           {topgainers.map(u => (
             <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
               <img
-                src={getLogokitUrl(u.symbol)}
+                src={getLogo(u.symbol)}
                 alt={u.name}
                 className="company-badge"
                 onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, '6fbf73'); }}
@@ -277,7 +292,7 @@ function App(){
           {toplosers.map(u => (
             <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
               <img
-                src={getLogokitUrl(u.symbol)}
+                src={getLogo(u.symbol)}
                 alt={u.name}
                 className="company-badge"
                 onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, 'e74c3c'); }}

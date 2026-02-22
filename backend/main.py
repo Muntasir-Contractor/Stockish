@@ -31,7 +31,6 @@ app.add_middleware(
 MODEL = joblib.load(r"model\XGboost_model.joblib")
 load_dotenv()
 FINANCE_API_KEY = os.getenv("FINANCE_KEY")
-LOGOKIT_TOKEN = os.getenv("LOGOKIT_TOKEN")
 
 
 #Get for reading

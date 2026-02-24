@@ -18,17 +18,22 @@ def exists_in_db(ticker : str) -> bool:
 
 #Always run exists_in_db before implementing this
 #If exists_in_db returns false then run this
+"""
 def insert_stock(ticker : str, scalar : float, notes = ""):
     conn = sqlite3.connect(CONNECTION)
     cursor = conn.cursor()
     today = date.today()
     date_stamp = today.strftime("%Y-%m-%d")
     cursor.execute(
-        "INSERT INTO stock_info (ticker, scalar, notes, date_stamp) VALUES (?, ?, ?, ?)",
+        "INSERT INTO stock_sentiment (ticker, scalar, notes, date_stamp) VALUES (?, ?, ?, ?)",
         (ticker, scalar, notes or None, date_stamp)
     )
     conn.commit()
     conn.close()
+    """
+def insert_stock(ticker : str, scalar : float, insights):
+    pass
+
 
 #gets the date stamp from ticker
 #runs exists_in_db before running this

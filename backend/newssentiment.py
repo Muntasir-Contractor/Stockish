@@ -1,18 +1,19 @@
 #from scripts.scrape import get_stock_data
-from openai import OpenAI
+from openai import AsyncOpenAI
 import os
 from dotenv import load_dotenv
 from backend.fetchnews import get_ticker_news
 from backend.dbfuncs import *
 import json
+import asyncio
 
 load_dotenv()
 
 API_KEY = os.getenv("OPENAI_API_KEY")
 
 
-async def get_news_scalar(ticker):
-    top_headlines = await get_ticker_news(ticker)
+async def get_news_sentiment(ticker):
+    top_headlines = get_ticker_news(ticker)
     
     prompt = f"""
     You are a financial analyst specializing in market sentiment analysis. Below are recent news headlines related to {ticker}
@@ -65,7 +66,7 @@ async def get_news_scalar(ticker):
     }}
     """
 
-    client = OpenAI(api_key=API_KEY)
+    client = AsyncOpenAI(api_key=API_KEY)
 
     response = await client.responses.create(
         model="gpt-5-mini",
@@ -77,9 +78,22 @@ async def get_news_scalar(ticker):
     scalar = float(result["scalar"])
     sentiment = result["insights"]
 
-    usage = response.usage
+    token_usage = response.usage
 
-    return scalar, sentiment
+    return scalar, sentiment, token_usage
+
+def get_final_analysis(sentiment_score : float) -> str:
+    if type(scalar) != float:
+        return None
+    if 0.5<=scalar<0.97:
+        return "Bearish"
+    elif 0.97<=scalar<-1.03:
+        return "Neutral"
+    elif scalar>1.03:
+        return "Bullish"
+    
+    
+
 async def get_scalar(ticker : str):
     #NOT FINISHED
     #Create an update_row functions in dbfuncs to continue this function
@@ -97,6 +111,9 @@ async def get_scalar(ticker : str):
         await insert_stock(ticker, scalar)
         return scalar
 
+scalar, notes = asyncio.run(get_news_sentiment("NVDA"))
+print(scalar)
+print(notes)
 
 
     #If the difference in hours is less than 24 hours get the scalar from database

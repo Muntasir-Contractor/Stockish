@@ -3,13 +3,13 @@ import yfinance as yf
 
 # How can i fetch news from CNBC????
 
-async def get_ticker_news(ticker):
+def get_ticker_news(ticker):
     """
     Get news for specific stocks via Yahoo Finance
     """
 
     stock = yf.Ticker(ticker)
-    news = await stock.news
+    news = stock.news
 
     res_prompt = ""
     

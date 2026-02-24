@@ -31,8 +31,17 @@ def insert_stock(ticker : str, scalar : float, notes = ""):
     conn.commit()
     conn.close()
     """
-def insert_stock(ticker : str, scalar : float, insights):
-    pass
+def insert_stock(ticker : str, scalar : float, insights,token_usage=None):
+    conn = sqlite3.connect(CONNECTION)
+    cursor = conn.cursor()
+    today = date.today()
+    date_stamp = today.strftime("%Y-%m-%d")
+    cursor.execute(
+        "INSERT INTO stock_sentiment (ticker, scalar, raw_json, date_stamp, token_usage) VALUES (?, ?, ?, ?, ?)",
+        (ticker, scalar, insights, date_stamp, token_usage)
+    )
+    conn.commit()
+    conn.close()
 
 
 #gets the date stamp from ticker
@@ -40,7 +49,7 @@ def insert_stock(ticker : str, scalar : float, insights):
 def get_date(ticker : str):
     conn = sqlite3.connect(CONNECTION)
     cursor = conn.cursor()
-    cursor.execute(f"SELECT date_stamp FROM stock_info WHERE ticker = ?" , (ticker,))
+    cursor.execute(f"SELECT date_stamp FROM stock_sentiment WHERE ticker = ?" , (ticker,))
     #Unpacking the date
     date = (cursor.fetchone())[0]
     conn.close()
@@ -59,7 +68,7 @@ def date_difference(date_stamp : str):
 def get_scalar_from_db(ticker : str):
     conn = sqlite3.connect(CONNECTION)
     cursor = conn.cursor()
-    cursor.execute("SELECT scalar FROM stock_info WHERE ticker = ?", (ticker,))
+    cursor.execute("SELECT scalar FROM stock_sentiment WHERE ticker = ?", (ticker,))
     res = (cursor.fetchone())[0]
     conn.close()
     return res
@@ -67,7 +76,7 @@ def get_scalar_from_db(ticker : str):
 def update_row(ticker : str, scalar, note=""):
     conn = sqlite3.connect(CONNECTION)
     cursor = conn.cursor()
-    cursor.execute("UPDATE stock_info SET scalar = ? , notes = ? WHERE ticker = ?" , (scalar, None if not note else note, ticker))
+    cursor.execute("UPDATE stock_sentiment SET scalar = ? , raw_json = ? WHERE ticker = ?" , (scalar, None if not note else note, ticker))
     conn.commit()
     conn.exit()
     return

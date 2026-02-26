@@ -6,6 +6,67 @@ import yfinance as yf
 import pandas as pd
 import joblib
 from scripts.scrape import get_stock_data
+import os
+
+# FEATURES NEEDS CHANGING
+# Get rid of feautures that leak price, RMC , 52w high/low, 52 week change percent, 50 day average, 200 day 
+"""
+
+DROP = [
+    "Regular Market Change",      # momentum
+    "52 Week High",               # raw price anchor
+    "52 Week Low",                # raw price anchor
+    "52 Week Change Percent",     # momentum
+    "50 Day Average",             # raw price level
+    "200 Day Average",            # raw price level
+    "Volume",                     # not valuation
+    "Market Volume",              # not valuation
+    "Target Mean Price",          # analyst laundering
+    "Recommendation Mean",        # analyst laundering
+    "Enterprise Value",           # absolute
+    "Market Cap",                 # absolute
+    "Net Income to Common",       # absolute, margins cover this
+    "EBITA",                      # absolute, EV/EBITDA covers this
+    "Total Debt",                 # absolute, D/E covers this
+    "Total Cash",                 # absolute, cash per share covers this
+]
+
+KEEP = [
+    # Valuation multiples
+    "Forward PE",
+    "Trailing PE",
+    "Price to Book",
+    "Price To Sales 12 Months",
+    "Enterprise To EBITA",
+    "Enterprise To Revenue",
+
+    # Quality / profitability
+    "Gross Margins",
+    "Profit Margins",
+    "Operating Margins",
+    "EBITA Margins",
+    "Return on Assets",
+    "Return on Equity",
+
+    # Growth (your only trajectory proxies)
+    "Earnings Growth",
+    "Revenue Growth",
+
+    # Leverage / liquidity
+    "Debt to Equity",
+    "Current Ratio",
+    "Quick Ratio",
+
+    # Cash (normalized so okay)
+    "Total Cash Per Share",
+    "Free Cashflow",              # normalize it (see below)
+    "Operating Cashflow",         # normalize it
+
+    # Risk
+    "Beta",
+]
+
+"""
 
 FEATURES = [
     "Regular Market Change", "52 Week High", "52 Week Low", "52 Week Change Percent",
@@ -19,7 +80,7 @@ FEATURES = [
     "Total Cash Per Share", "Recommendation Mean", "Target Mean Price"
 ]
 
-def load_model(path=r'model\finalized_model.joblib'):
+def load_model(path=r"model\XGboost_model.joblib"):
     model = joblib.load(path)
     return model
 
@@ -28,6 +89,7 @@ def is_ticker(ticker):
     if len(stock.info) <= 1:
         return False
     return True
+
 
 #Takes in the dataframe of stockdata and returns it into two different dataframes, the stock metrics, and stock price
 def prepare_data(df):
@@ -130,6 +192,16 @@ def valuation(ticker: str, stock_prediction: float) -> tuple[str, float, float]:
     else:
         # Between -0.05 and 0.05
         return ("Fairly Valued", smape, signed_pct)
+    
+def feature_importance(model):
+    importance = model.get_booster().get_score(importance_type='gain')
+    importance_df = pd.DataFrame({'feature': list(importance.keys()), 
+                                'gain': list(importance.values())})
+    importance_df = importance_df.sort_values('gain', ascending=False)
+    print(importance_df.head(20))
+
+model = load_model(r"backend\model\XGboost_model.joblib")
+feature_importance(model)
 #python -m backend.application
 
 

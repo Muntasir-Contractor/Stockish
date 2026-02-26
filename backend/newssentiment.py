@@ -94,7 +94,7 @@ def get_final_analysis(sentiment_score : float) -> str:
     
     
 
-async def get_scalar(ticker : str):
+async def get_sentiment_analysis(ticker : str):
     #NOT FINISHED
     #Create an update_row functions in dbfuncs to continue this function
     if await exists_in_db(ticker):
@@ -103,11 +103,11 @@ async def get_scalar(ticker : str):
         if difference_hours < 24:
             return await get_scalar_from_db(ticker)
         else:
-            scalar = await get_news_scalar(ticker)
+            scalar = await get_news_sentiment(ticker)
             await update_row(ticker, scalar) # Notes needs to be addressed
             return scalar
     else:
-        scalar = await get_news_scalar(ticker)
+        scalar = await get_news_sentiment(ticker)
         await insert_stock(ticker, scalar)
         return scalar
 

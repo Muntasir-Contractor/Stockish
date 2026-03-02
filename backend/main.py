@@ -7,6 +7,7 @@ import httpx
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from newssentiment import get_sentiment_analysis
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(root))
 from application import price_prediction, valuation, get_stock_price, is_etf
@@ -112,6 +113,18 @@ async def get_stock_info(ticker : str):
         }
     except Exception as e:
         raise Exception(e)
+
+@app.get("/stocksentiment/{ticker}")
+async def get_stock_insight(ticker : str):
+    try:
+        if (is_etf(ticker))[0] == True:
+            return {"Sentiment": "Cannot evaluate etf"}
+        scalar, insights = get_sentiment_analysis(ticker)
+        return {"scalar": scalar , "insights": insights}
+    except Exception as e:
+        raise Exception(e)
+        
+    
 
 @app.get("/homepage")
 def get_homepage_data():

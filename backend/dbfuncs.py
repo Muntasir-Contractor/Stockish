@@ -29,7 +29,7 @@ def insert_stock(ticker : str, scalar : float, insights,token_usage=None):
         date_stamp = today.strftime("%Y-%m-%d")
         cursor.execute(
             "INSERT INTO stock_sentiment (ticker, scalar, raw_json, date_stamp, token_usage) VALUES (?, ?, ?, ?, ?)",
-            (ticker, scalar, insights, date_stamp, token_usage)
+            (ticker, scalar, json.dumps(insights), date_stamp, token_usage)
         )
         conn.commit()
 
@@ -79,6 +79,7 @@ def update_row(ticker : str, scalar, insights="", token_usage=0):
         return None
     with sqlite3.connect(CONNECTION) as conn:
         cursor = conn.cursor()
-        cursor.execute("UPDATE stock_sentiment SET scalar = ? , raw_json = ?, token_usage = ? WHERE ticker = ?" , (scalar, None if not insights else insights, token_usage, ticker))
+        today = date.today().strftime("%Y-%m-%d")
+        cursor.execute("UPDATE stock_sentiment SET scalar = ? , raw_json = ?, token_usage = ?, date_stamp = ? WHERE ticker = ?" , (scalar, None if not insights else json.dumps(insights), token_usage, today, ticker))
         conn.commit()
     return

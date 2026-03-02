@@ -12,6 +12,7 @@ load_dotenv()
 API_KEY = os.getenv("OPENAI_API_KEY")
 
 
+### HELPER FUNCTION, NEVER ACTUALLY USE THIS, USE get_news_analysis
 async def get_news_sentiment(ticker):
     top_headlines = get_ticker_news(ticker)
     
@@ -87,7 +88,7 @@ def get_final_analysis(sentiment_score : float) -> str:
         return None
     if 0.5<=scalar<0.97:
         return "Bearish"
-    elif 0.97<=scalar<-1.03:
+    elif 0.97<=scalar<=1.03:
         return "Neutral"
     elif scalar>1.03:
         return "Bullish"
@@ -97,19 +98,19 @@ def get_final_analysis(sentiment_score : float) -> str:
 async def get_sentiment_analysis(ticker : str):
     #NOT FINISHED
     #Create an update_row functions in dbfuncs to continue this function
-    if await exists_in_db(ticker):
-        difference = await date_difference(get_date(ticker))
+    if exists_in_db(ticker):
+        difference = date_difference(get_date(ticker))
         difference_hours = difference.total_seconds() // 3600
         if difference_hours < 24:
-            return await get_scalar_from_db(ticker)
+            return get_insights_from_db(ticker)
         else:
-            scalar = await get_news_sentiment(ticker)
-            await update_row(ticker, scalar) # Notes needs to be addressed
-            return scalar
+            scalar, insights, token_usage = await get_news_sentiment(ticker)
+            update_row(ticker, scalar, insights, token_usage) # Notes needs to be addressed
+            return scalar, insights
     else:
-        scalar = await get_news_sentiment(ticker)
-        await insert_stock(ticker, scalar)
-        return scalar
+        scalar, insights, token_usage = await get_news_sentiment(ticker)
+        insert_stock(ticker, scalar, insights, token_usage)
+        return scalar, insights
 
 scalar, notes = asyncio.run(get_news_sentiment("NVDA"))
 print(scalar)

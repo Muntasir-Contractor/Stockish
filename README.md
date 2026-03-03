@@ -2,7 +2,7 @@
 
 # 📈 Stockish
 
-### ML-Powered Stock Valuation & Sentiment Analysis
+### ML-Powered Stock Valuation & AI Sentiment Analysis
 
 **Is the market pricing it right? Stockish finds out.**
 

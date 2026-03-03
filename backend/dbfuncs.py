@@ -1,11 +1,56 @@
 import sqlite3
 from datetime import date , datetime
 import json
+import os
 
-CONNECTION = "newsentiment.db"
+_DIR = os.path.dirname(os.path.abspath(__file__))
+
+CONNECTION = os.path.join(_DIR,"newsentiment.db")
+
+DAILY_LIMIT = 3
 
 #### DOUBLE-OPENING CONNECTION WITH EXISTS_IN_DB AND OTHER FUNCTIONS
 #### OPTIMIZE LATER
+
+def _ensure_rate_limit_table():
+    with sqlite3.connect(CONNECTION) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS rate_limits (
+                ip TEXT,
+                date_stamp TEXT,
+                count INTEGER,
+                PRIMARY KEY (ip, date_stamp)
+            )
+        """)
+        conn.commit()
+
+_ensure_rate_limit_table()
+
+def get_daily_usage(ip: str) -> int:
+    today = date.today().strftime("%Y-%m-%d")
+    with sqlite3.connect(CONNECTION) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT count FROM rate_limits WHERE ip = ? AND date_stamp = ?",
+            (ip, today)
+        )
+        row = cursor.fetchone()
+        return row[0] if row else 0
+
+def increment_usage(ip: str) -> int:
+    today = date.today().strftime("%Y-%m-%d")
+    with sqlite3.connect(CONNECTION) as conn:
+        conn.execute("""
+            INSERT INTO rate_limits (ip, date_stamp, count) VALUES (?, ?, 1)
+            ON CONFLICT(ip, date_stamp) DO UPDATE SET count = count + 1
+        """, (ip, today))
+        conn.commit()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT count FROM rate_limits WHERE ip = ? AND date_stamp = ?",
+            (ip, today)
+        )
+        return cursor.fetchone()[0]
 
 
 def exists_in_db(ticker : str) -> bool:
@@ -27,6 +72,8 @@ def insert_stock(ticker : str, scalar : float, insights,token_usage=None):
         cursor = conn.cursor()
         today = date.today()
         date_stamp = today.strftime("%Y-%m-%d")
+        if hasattr(token_usage, "total_tokens"):
+            token_usage = token_usage.total_tokens
         cursor.execute(
             "INSERT INTO stock_sentiment (ticker, scalar, raw_json, date_stamp, token_usage) VALUES (?, ?, ?, ?, ?)",
             (ticker, scalar, json.dumps(insights), date_stamp, token_usage)
@@ -80,6 +127,8 @@ def update_row(ticker : str, scalar, insights="", token_usage=0):
     with sqlite3.connect(CONNECTION) as conn:
         cursor = conn.cursor()
         today = date.today().strftime("%Y-%m-%d")
+        if hasattr(token_usage, "total_tokens"):
+            token_usage = token_usage.total_tokens
         cursor.execute("UPDATE stock_sentiment SET scalar = ? , raw_json = ?, token_usage = ?, date_stamp = ? WHERE ticker = ?" , (scalar, None if not insights else json.dumps(insights), token_usage, today, ticker))
         conn.commit()
     return

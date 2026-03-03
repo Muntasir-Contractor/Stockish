@@ -20,6 +20,10 @@ function StockDetail() {
   const [stockData, setStockData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [insights, setInsights] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState(null);
+  const [remaining, setRemaining] = useState(null);
 
   useEffect(() => {
     const fetchStockData = async () => {
@@ -39,7 +43,30 @@ function StockDetail() {
     };
 
     fetchStockData();
+    setInsights(null);
+    setInsightsError(null);
+    setRemaining(null);
   }, [ticker]);
+
+  const handleGetInsights = async () => {
+    try {
+      setInsightsLoading(true);
+      setInsightsError(null);
+      const response = await api.get(`/stocksentiment/${ticker.toUpperCase()}`);
+      setInsights(response.data);
+      setRemaining(response.data.remaining);
+    } catch (err) {
+      if (err.response?.status === 429) {
+        setInsightsError("Daily limit reached. Try again tomorrow.");
+        setRemaining(0);
+      } else {
+        console.error("Failed to fetch insights:", err);
+        setInsightsError("Failed to load stock insights");
+      }
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -195,8 +222,91 @@ function StockDetail() {
 
           <div className="info-card">
             <div className="info-label">AI Market Sentiment Analysis Score</div>
-            <div className="info-value">None</div>
+            {insights ? (
+              <div
+                className={`info-value ${insights.scalar > 1.03 ? 'positive' : insights.scalar < 0.97 ? 'negative' : ''}`}
+              >
+                {insights.scalar.toFixed(2)}
+              </div>
+            ) : (
+              <button
+                className="get-insights-btn sentiment-card-btn"
+                onClick={handleGetInsights}
+                disabled={insightsLoading || remaining === 0}
+              >
+                {insightsLoading ? 'Analyzing…' : remaining === 0 ? 'Limit reached' : 'Get Score'}
+              </button>
+            )}
           </div>
+        </div>
+
+        <div className="insights-section">
+          <div className="insights-header-row">
+            <h2 className="insights-title">AI Market Sentiment Insights</h2>
+            <div className="insights-btn-wrap">
+              <button
+                className="get-insights-btn"
+                onClick={handleGetInsights}
+                disabled={insightsLoading || remaining === 0}
+              >
+                {insightsLoading
+                  ? 'Analyzing…'
+                  : insights
+                  ? 'Refresh Analysis'
+                  : 'Get Sentiment Analysis'}
+              </button>
+              {remaining !== null && (
+                <span className={`insights-remaining ${remaining === 0 ? 'exhausted' : ''}`}>
+                  {remaining === 0 ? 'No analyses left today' : `${remaining} of ${3} remaining today`}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {insightsLoading && (
+            <div className="insights-loading">Analyzing market sentiment for {ticker.toUpperCase()}…</div>
+          )}
+
+          {insightsError && !insightsLoading && (
+            <div className="insights-error">{insightsError}</div>
+          )}
+
+          {insights && !insightsLoading && (
+            <>
+              <div className="insights-scalar-bar">
+                <span className="insights-scalar-label">Sentiment Score</span>
+                <div className="insights-scalar-track">
+                  <div
+                    className="insights-scalar-fill"
+                    style={{ width: `${Math.min(Math.max((insights.scalar - 0.5) / 1.0, 0), 1) * 100}%` }}
+                  />
+                  <span
+                    className="insights-scalar-marker"
+                    style={{ left: `${Math.min(Math.max((insights.scalar - 0.5) / 1.0, 0), 1) * 100}%` }}
+                  />
+                </div>
+                <span
+                  className={`insights-scalar-value ${insights.scalar > 1.03 ? 'bullish' : insights.scalar < 0.97 ? 'bearish' : 'neutral'}`}
+                >
+                  {insights.scalar.toFixed(2)}
+                  &nbsp;·&nbsp;
+                  {insights.scalar > 1.03 ? 'Bullish' : insights.scalar < 0.97 ? 'Bearish' : 'Neutral'}
+                </span>
+              </div>
+
+              <div className="insights-cards">
+                {insights.insights.map((item, i) => (
+                  <div key={i} className={`insight-card sentiment-${item.sentiment.toLowerCase()}`}>
+                    <div className="insight-card-header">
+                      <span className="insight-title">{item.insight}</span>
+                      <span className={`insight-badge ${item.sentiment.toLowerCase()}`}>{item.sentiment}</span>
+                    </div>
+                    <p className="insight-reasoning">{item.reasoning}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

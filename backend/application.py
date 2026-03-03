@@ -200,9 +200,6 @@ def feature_importance(model):
     importance_df = importance_df.sort_values('gain', ascending=False)
     print(importance_df.head(20))
 
-model = load_model(r"backend\model\XGboost_model.joblib")
-feature_importance(model)
-#python -m backend.application
 
 
     

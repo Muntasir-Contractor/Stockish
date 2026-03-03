@@ -1,1 +1,1 @@
-SELECT * FROM stock_info
+SELECT SUM(token_usage) FROM stock_sentiment

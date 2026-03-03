@@ -2,8 +2,8 @@
 from openai import AsyncOpenAI
 import os
 from dotenv import load_dotenv
-from backend.fetchnews import get_ticker_news
-from backend.dbfuncs import *
+from fetchnews import get_ticker_news
+from dbfuncs import *
 import json
 import asyncio
 
@@ -41,7 +41,10 @@ async def get_news_sentiment(ticker):
     2. "insights": an array of 3 to 5 objects, each with:
         - "insight": short title summarizing the theme (string)
         - "sentiment": one of "Bullish", "Bearish", or "Neutral" (string)
-        - "reasoning": 2-3 sentences grounded in the headlines (string)
+        - "reasoning": 2-3 sentences grounded in the headlines (string), but do not make direct reference from "headline", state as if factual
+            Example:
+                DONT: "Headline States X", "Headline describes Y"
+                DO: "X", "Y"
 
     Rules:
     - Return valid JSON only. No preamble, no markdown, no extra text.
@@ -84,13 +87,13 @@ async def get_news_sentiment(ticker):
     return scalar, sentiment, token_usage
 
 def get_final_analysis(sentiment_score : float) -> str:
-    if type(scalar) != float:
+    if type(sentiment_score) != float:
         return None
-    if 0.5<=scalar<0.97:
+    if 0.5<=sentiment_score<0.97:
         return "Bearish"
-    elif 0.97<=scalar<=1.03:
+    elif 0.97<=sentiment_score<=1.03:
         return "Neutral"
-    elif scalar>1.03:
+    elif sentiment_score>1.03:
         return "Bullish"
     
     
@@ -112,9 +115,6 @@ async def get_sentiment_analysis(ticker : str):
         insert_stock(ticker, scalar, insights, token_usage)
         return scalar, insights
 
-scalar, notes = asyncio.run(get_news_sentiment("NVDA"))
-print(scalar)
-print(notes)
 
 
     #If the difference in hours is less than 24 hours get the scalar from database

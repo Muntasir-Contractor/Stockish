@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, HTTPException
+from fastapi import FastAPI, Response, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fetchfromAPI import get_top_movers, get_top_losers, get_top_gainers
 import joblib
@@ -8,6 +8,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from newssentiment import get_sentiment_analysis
+from dbfuncs import get_daily_usage, increment_usage, DAILY_LIMIT
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(root))
 from application import price_prediction, valuation, get_stock_price, is_etf
@@ -115,12 +116,23 @@ async def get_stock_info(ticker : str):
         raise Exception(e)
 
 @app.get("/stocksentiment/{ticker}")
-async def get_stock_insight(ticker : str):
+async def get_stock_insight(ticker: str, request: Request):
     try:
         if (is_etf(ticker))[0] == True:
             return {"Sentiment": "Cannot evaluate etf"}
-        scalar, insights = get_sentiment_analysis(ticker)
-        return {"scalar": scalar , "insights": insights}
+        client_ip = request.client.host
+        usage = get_daily_usage(client_ip)
+        if usage >= DAILY_LIMIT:
+            raise HTTPException(
+                status_code=429,
+                detail={"message": "Daily limit reached. Try again tomorrow.", "remaining": 0}
+            )
+        scalar, insights = await get_sentiment_analysis(ticker)
+        new_count = increment_usage(client_ip)
+        remaining = max(0, DAILY_LIMIT - new_count)
+        return {"scalar": scalar, "insights": insights, "remaining": remaining}
+    except HTTPException:
+        raise
     except Exception as e:
         raise Exception(e)
         

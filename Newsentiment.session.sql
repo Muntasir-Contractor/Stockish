@@ -1,1 +1,1 @@
-ALTER TABLE stock_sentiment ADD COLUMN date_stamp DATE DEFAULT CURRENT_TIMESTAMP;
+SELECT * FROM stock_sentiment

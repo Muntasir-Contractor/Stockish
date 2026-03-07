@@ -4,7 +4,7 @@ import numpy as np
 def cost_of_equity(beta):
     return 0.0396 + (beta*0.0438)
 
-def WACC(beta,mc,td,coe,cod,tr):
+def WACC(mc,td,coe,cod,tr):
     v = mc + td
     Wacc = ((mc/v)*coe) + ((td/v)*cod*(1-tr))
     return Wacc
@@ -19,7 +19,7 @@ def discounted_cashflow_analysis(ticker):
     marketCap = tickerData["marketCap"]
     totalDebt = tickerData["totalDebt"]
     taxRate = ticker_financial["Tax Provision"] / ticker_financial["Pretax Income"]
-    COD = ticker_financial["Interest Expense"] / tickerbs["Total Debt"]
+    COD = abs(ticker_financial["Interest Expense"])/ tickerbs["Total Debt"]
     if freeCashflow == None or beta == None or marketCap == None or beta == np.inf:
         return None
 
@@ -28,7 +28,7 @@ def discounted_cashflow_analysis(ticker):
 #    COD = interestExpense / totalDebt
 #    taxRate = taxexpense/pretaxincome
     #WACC
-    wacc = WACC(beta, marketCap, totalDebt, COE, COD, taxRate)
+    wacc = WACC(marketCap, totalDebt, COE, COD, taxRate)
 
 
 

@@ -19,6 +19,7 @@ def discounted_cashflow_analysis(ticker):
     marketCap = tickerData["marketCap"]
     totalDebt = tickerData["totalDebt"]
     taxRate = ticker_financial["Tax Provision"] / ticker_financial["Pretax Income"]
+    taxRate = max(0, min(taxRate, 0.5))
     COD = abs(ticker_financial["Interest Expense"])/ tickerbs["Total Debt"]
     if freeCashflow == None or beta == None or marketCap == None or beta == np.inf:
         return None

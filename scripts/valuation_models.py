@@ -12,8 +12,8 @@ def WACC(beta,mc,td,coe,cod,tr):
 def discounted_cashflow_analysis(ticker):
     ticker = yf.Ticker(ticker)
     tickerData = ticker.info
-    tickerbs = ticker.balancesheet["2026-01-31"]
-    ticker_financial = ticker.financials["2026-01-31"]
+    tickerbs = ticker.balancesheet.iloc[:, 0]
+    ticker_financial = ticker.financials[:, 0]
     freeCashflow = tickerData["freeCashflow"]
     beta = tickerData["beta"]
     marketCap = tickerData["marketCap"]

@@ -1,10 +1,11 @@
 import simfin as sf
 import pandas as pd
+import numpy as np
 import warnings
 import os
 from dotenv import load_dotenv
-env_path = r"backend\.env"
 
+env_path = os.path.join(os.path.dirname(__file__), '..', 'backend', '.env')
 
 # Load that specific .env file
 load_dotenv(dotenv_path=env_path)
@@ -15,11 +16,27 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 sf.set_api_key(SIMFIN)
 sf.set_data_dir('~/simfin_data/')
 
-print("1. Loading raw datasets...")
+print("1. Loading raw datasets and calculating preliminary features...")
 df_inc = sf.load_income(variant='quarterly').reset_index()
+
+# --- NEW FEATURE: Revenue Growth YoY ---
+# Sort by date so the 4-quarter lookback is accurate
+df_inc = df_inc.sort_values(['Ticker', 'Report Date'])
+df_inc['Revenue_Growth_YoY'] = df_inc.groupby('Ticker')['Revenue'].pct_change(periods=4)
+df_inc.replace([float('inf'), float('-inf')], pd.NA, inplace=True)
+# ---------------------------------------
+
 df_bal = sf.load_balance(variant='quarterly').reset_index()
 df_cf  = sf.load_cashflow(variant='quarterly').reset_index()
 df_prices = sf.load_shareprices(variant='daily').reset_index()
+
+# --- NEW FEATURE: 6-Month Momentum ---
+# Sort prices chronologically
+df_prices = df_prices.sort_values(['Ticker', 'Date'])
+# Calculate the trailing 6-month (126 trading days) return
+df_prices['Momentum_6M'] = df_prices.groupby('Ticker')['Close'].pct_change(periods=126)
+# -------------------------------------
+
 df_companies = sf.load_companies().reset_index()
 df_industries = sf.load_industries().reset_index()
 df_companies = df_companies.merge(df_industries[['IndustryId', 'Sector']], on='IndustryId', how='left')
@@ -37,8 +54,6 @@ print("3. Calculating Trailing Twelve Months (TTM) for Flow Metrics...")
 df_fundamentals = df_fundamentals.sort_values(['Ticker', 'Report Date'])
 
 # We need the sum of the last 4 quarters for these specific metrics
-# (SimFin's standard cash flow columns usually provide 'Net Cash from Operating Activities' 
-# and 'Change in Fixed Assets & Intangibles' which is CapEx. We calculate FCF first).
 df_fundamentals['Free Cash Flow'] = df_fundamentals['Net Cash from Operating Activities'] + df_fundamentals['Change in Fixed Assets & Intangibles'].fillna(0)
 
 flow_columns = ['Gross Profit', 'Operating Income (Loss)', 'Free Cash Flow']
@@ -69,6 +84,7 @@ master_df = pd.merge_asof(
 
 print(f"   master_df shape after price merge: {master_df.shape}")
 print(f"   master_df Date null count: {master_df['Date'].isna().sum()}")
+
 print("5. Engineering the Final Features (X)...")
 # Calculate Market Cap and Invested Capital (Snapshot metrics)
 master_df['Market_Cap'] = master_df['Close'] * master_df['Shares (Basic)']
@@ -82,11 +98,11 @@ master_df['FCF_Yield'] = master_df['Free Cash Flow_TTM'] / master_df['Market_Cap
 # Clean out division-by-zero or infinite values
 master_df.replace([float('inf'), float('-inf')], pd.NA, inplace=True)
 
-# Drop rows where no forward price was found (Date is NaT from the merge_asof above)
+# Drop rows where no forward price was found
 master_df = master_df.dropna(subset=['Date'])
 
 print("6. Calculating the Target Variable (y)...")
-# Map the future 5-year price backwards
+# Map the future 1-year price backwards
 future_prices = df_prices.copy()
 future_prices['Date'] = future_prices['Date'] - pd.DateOffset(years=1)
 future_prices = future_prices.rename(columns={'Close': 'Future_Close_1yr'})[['Ticker', 'Date', 'Future_Close_1yr']]
@@ -99,7 +115,7 @@ master_df = pd.merge_asof(
     direction='forward'
 )
 
-# Calculate the 5-year return and cross-sectionally rank it
+# Calculate the 1-year return and cross-sectionally rank it
 master_df['Forward_1yr_Return'] = (master_df['Future_Close_1yr'] / master_df['Close']) - 1
 master_df['y_target'] = master_df.groupby('Date')['Forward_1yr_Return'].transform(
     lambda x: pd.qcut(x, q=10, labels=False, duplicates='drop')
@@ -108,15 +124,20 @@ master_df['y_target'] = master_df.groupby('Date')['Forward_1yr_Return'].transfor
 print(f"   Forward_1yr_Return null count: {master_df['Forward_1yr_Return'].isna().sum()} / {len(master_df)}")
 print(f"   y_target null count: {master_df['y_target'].isna().sum()} / {len(master_df)}")
 print(f"   FCF_Yield null count: {master_df['FCF_Yield'].isna().sum()} / {len(master_df)}")
-print(f"   Gross_Profitability null count: {master_df['Gross_Profitability'].isna().sum()} / {len(master_df)}")
+
 print("7. Finalizing the Dataset & One-Hot Encoding Sectors...")
-# Keep only the essential columns
+# Keep only the essential columns (ADDED THE TWO NEW FEATURES HERE)
 final_columns = [
     'Ticker', 'Date', 'Sector', 
     'Gross_Profitability', 'ROIC', 'FCF_Yield', 
-    'y_target' # Notice we dropped the raw return, the model only needs the decile target
+    'Revenue_Growth_YoY', 'Momentum_6M', 
+    'y_target'
 ]
-model_ready_df = master_df[final_columns].dropna(subset=['Gross_Profitability', 'FCF_Yield', 'y_target'])
+
+# Drop rows missing ANY of the critical features
+model_ready_df = master_df[final_columns].dropna(
+    subset=['Gross_Profitability', 'FCF_Yield', 'Revenue_Growth_YoY', 'Momentum_6M', 'y_target']
+)
 
 # Convert the "Sector" text column into 1s and 0s for the Decision Tree
 model_ready_df = pd.get_dummies(model_ready_df, columns=['Sector'], drop_first=False)
@@ -128,6 +149,7 @@ for col in model_ready_df.columns:
 
 print("\n--- DONE! FINAL FEATURE MATRIX ---")
 print(model_ready_df.head())
-print(model_ready_df.shape[0])
+print(f"Total Rows Processed: {model_ready_df.shape[0]}")
+
 os.makedirs('dataset', exist_ok=True)
-model_ready_df.to_csv(r'dataset/model_data.csv', index=False)
+model_ready_df.to_csv(r'dataset/model_data_new.csv', index=False)

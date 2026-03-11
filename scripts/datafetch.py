@@ -17,6 +17,11 @@ df_inc = sf.load_income(variant='quarterly')
 print(df_inc.columns)
 df_bal = sf.load_balance(variant='quarterly')
 print(df_bal.columns)
+df_cf = sf.load_cashflow(variant='quarterly')
+df_prices = sf.load_shareprices(variant='daily')
+df_companies = sf.load_companies()
+print(df_companies.columns)
+print(df_cf.columns)
 #Once you add the load_cashflow(), load_shareprices(), and load_companies() lines to your script, you will have 100% of the raw data required.
 time.sleep(10)
 Features = [

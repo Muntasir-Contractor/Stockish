@@ -1,5 +1,24 @@
 import yfinance as yf
 import pandas as pd
+import os
+from dotenv import load_dotenv
+import simfin as sf
+import time
+
+env_path = r"backend\.env"
+
+
+# Load that specific .env file
+load_dotenv(dotenv_path=env_path)
+SIMFIN = os.getenv("SIMFIN")
+sf.set_api_key(SIMFIN)
+sf.set_data_dir('~/simfin_data/')
+df_inc = sf.load_income(variant='quarterly')
+print(df_inc.columns)
+df_bal = sf.load_balance(variant='quarterly')
+print(df_bal.columns)
+#Once you add the load_cashflow(), load_shareprices(), and load_companies() lines to your script, you will have 100% of the raw data required.
+time.sleep(10)
 Features = [
 
     "fcf_yield", # (Op Cashflow - Capex)/Enterprise Value

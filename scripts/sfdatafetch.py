@@ -130,7 +130,7 @@ print("7. Finalizing the Dataset & One-Hot Encoding Sectors...")
 final_columns = [
     'Ticker', 'Date', 'Sector', 
     'Gross_Profitability', 'ROIC', 'FCF_Yield', 
-    'Revenue_Growth_YoY', 'Momentum_6M', 
+    'Revenue_Growth_YoY', 'Momentum_6M', 'Forward_1yr_Return',
     'y_target'
 ]
 

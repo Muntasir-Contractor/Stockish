@@ -1,10 +1,10 @@
 import pandas as pd
 
 
-df = pd.read_csv('dataset/model_data.csv')
+df = pd.read_csv('dataset/model_data_new.csv')
 
 #The coloumns that need outlier clipping
-ratio_cols = ['Gross_Profitability', 'ROIC', 'FCF_Yield']
+ratio_cols = ['Gross_Profitability', 'ROIC', 'FCF_Yield','Revenue_Growth_YoY','Momentum_6M',] #Forward_1yr_Return
 
 for col in ratio_cols:
     # Find the 1st percentile (bottom 1%) and 99th percentile (top 1%)
@@ -16,5 +16,5 @@ for col in ratio_cols:
 
 print("Outliers Successfully Clipped!")
 
-df.to_csv('dataset/model_data_cleaned.csv', index=False)
-print("Cleaned dataset saved as 'model_data_cleaned.csv'")
+df.to_csv('dataset/model_data_new_cleaned.csv', index=False)
+print("Cleaned dataset saved as 'model_data_new_cleaned.csv'")

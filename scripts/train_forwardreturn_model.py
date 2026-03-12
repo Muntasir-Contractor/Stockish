@@ -4,7 +4,14 @@ import joblib
 from sklearn.metrics import accuracy_score, classification_report
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('dataset/model_data_cleaned.csv')
+# ADD THESE FEATURES TO IMPROVE: EV_to_EBITDA , Accrual_Ratio , Interest_Coverage_Ratio, Shares_Outstanding_YoY_Growth
+# Data required: Shares Outstanding, Interest Expense, Total Debt
+
+def save_model(model,path=r'model/XGBoost_fr_model.joblib'):
+    joblib.dump(model, path)
+    return
+
+df = pd.read_csv('dataset/model_data_new_cleaned.csv')
 
 df['Date'] = pd.to_datetime(df['Date'])
 df = df.sort_values('Date')
@@ -18,10 +25,10 @@ test_df = df.iloc[split_idx:]
 print(f"Training rows (80%): {len(train_df)}")
 print(f"Testing rows (20%): {len(test_df)}")
 print(f"Data split at date: {train_df['Date'].max().date()}")
-print(f"Latest date in train: {test_df['Date'].max().date()}")
+print(f"Latest date in test: {test_df['Date'].max().date()}")
 
 
-features_to_drop = ['Ticker', 'Date', 'y_target'] + [col for col in train_df.columns if 'Sector_' in col]
+features_to_drop = ['Ticker', 'Date', 'y_target','Forward_1yr_Return'] + [col for col in train_df.columns if 'Sector_' in col]
 
 X_train = train_df.drop(columns=features_to_drop)
 y_train = train_df['y_target']
@@ -37,7 +44,7 @@ def train_test_model():
         num_class=10,
         n_estimators=300,
         max_depth=4,
-        learning_rate=0.15,
+        learning_rate=0.01,
         random_state=42,
         n_jobs=-1)
     model.fit(X_train,y_train)
@@ -64,9 +71,10 @@ def train_test_model():
     plt.title('XGBoost Feature Importances (What drives the 1-Year Return?)')
     plt.xlabel('Relative Importance')
     plt.tight_layout()
-    plt.show()
+    save_model(model)
+    print("model saved")
+    #plt.show()
 
-train_test_model()
-
-
-
+#14.47
+if __name__ == "__main__":
+    train_test_model()

@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-df = pd.read_csv('dataset/model_data_new.csv')
+df = pd.read_csv('dataset/model_data_new_new.csv')
 
 #The coloumns that need outlier clipping
 ratio_cols = ['Gross_Profitability', 'ROIC', 'FCF_Yield','Revenue_Growth_YoY','Momentum_6M',] #Forward_1yr_Return
@@ -17,4 +17,4 @@ for col in ratio_cols:
 print("Outliers Successfully Clipped!")
 
 df.to_csv('dataset/model_data_new_cleaned.csv', index=False)
-print("Cleaned dataset saved as 'model_data_new_cleaned.csv'")
+print("Cleaned dataset saved as 'model_data_new_new_cleaned.csv'")

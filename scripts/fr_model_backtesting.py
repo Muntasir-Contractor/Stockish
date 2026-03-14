@@ -3,13 +3,11 @@ import joblib
 from train_forwardreturn_model import X_test,test_df, y_test
 from sklearn.metrics import confusion_matrix
 
-# GROUP DECILES BY LOCAL YEAR RATHER THAN GLOBAL DECILE SINCE DATASET CONTAINS YEARS FROM 2022-2024
+# GROUP DECILES BY LOCAL YEAR RATHER THAN GLOBAL DECILE SINCE DATASET CONTAINS YEARS FROM 2021-2024
 # 117 of 0's were predicting to be in 6.0-9.0 Range, minimize by adding additional features that spot growth traps
 
 
-model = joblib.load(r"model/XGBoost_fr_model.joblib")
-
-
+model = joblib.load(r"model/XGBoost_newfr_model.joblib")
 
 test_df = test_df.copy()
 test_df['Predicted_Decile'] = model.predict(X_test)

@@ -4,6 +4,7 @@ from fetchfromAPI import get_top_movers, get_top_losers, get_top_gainers
 import joblib
 import sys
 import httpx
+import pandas as pd
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -12,6 +13,7 @@ from dbfuncs import get_daily_usage, increment_usage, DAILY_LIMIT
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(root))
 from application import price_prediction, valuation, get_stock_price, is_etf
+from scripts.fetch_fr_stockdata import get_stock_data_fr
 
 app = FastAPI()
 origins = [
@@ -31,6 +33,7 @@ app.add_middleware(
 #Loading model when app starts 
 
 MODEL = joblib.load(r"model\XGboost_model.joblib")
+fr_MODEL = joblib.load(r"model\XGBoost_newfr_model.joblib")
 load_dotenv()
 FINANCE_API_KEY = os.getenv("FINANCE_KEY")
 
@@ -104,13 +107,16 @@ async def get_stock_info(ticker : str):
             smape = None
             signed_pct = None
         current_price = get_stock_price(ticker)
+        fr_features = pd.DataFrame([get_stock_data_fr(ticker)])
+        fr_prediction = int(fr_MODEL.predict(fr_features)[0])
         return{
             "ticker": ticker.upper(),
             "current_price": current_price,
             "predicted_price": round(stock_price_prediction,2) if type(stock_price_prediction) == float else stock_price_prediction,
             "valuation": conclusion,
             "relative_error": signed_pct,
-            "smape": smape
+            "smape": smape,
+            "fr_prediction": fr_prediction
         }
     except Exception as e:
         raise Exception(e)

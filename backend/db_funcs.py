@@ -4,6 +4,8 @@ import json
 import os
 from dotenv import load_dotenv
 
+#IMPLEMENT POOLING UPON DEPLOYMENT
+
 load_dotenv()
 
 PASSWORD = os.getenv("PASSWORD")
@@ -42,7 +44,7 @@ def _ensure_tables():
 _ensure_tables()
 
 
-# ── Rate Limiting ─────────────────────────────────────────────────────────────
+# Rate Limiting 
 
 def get_daily_usage(ip: str) -> int:
     today = date.today()
@@ -65,9 +67,6 @@ def increment_usage(ip: str) -> int:
         (ip, today)
     )
     return cursor.fetchone()[0]
-
-
-# ── Sentiment Cache ───────────────────────────────────────────────────────────
 
 def exists_in_db(ticker: str) -> bool:
     cursor.execute(

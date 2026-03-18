@@ -42,8 +42,8 @@ app.add_middleware(
 
 #Loading model when app starts 
 
-MODEL = joblib.load(r"model\XGboost_model.joblib")
-fr_MODEL = joblib.load(r"model\XGBoost_newfr_model.joblib")
+MODEL = joblib.load(Path(__file__).resolve().parent / "model" / "XGboost_model.joblib")
+fr_MODEL = joblib.load(Path(__file__).resolve().parent / "model" / "XGBoost_newfr_model.joblib")
 load_dotenv()
 FINANCE_API_KEY = os.getenv("FINANCE_KEY")
 

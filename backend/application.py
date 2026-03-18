@@ -7,66 +7,11 @@ import pandas as pd
 import joblib
 from scripts.scrape import get_stock_data
 import os
+from scripts.fetch_fr_stockdata import get_stock_data_fr
+
 
 # FEATURES NEEDS CHANGING
 # Get rid of feautures that leak price, RMC , 52w high/low, 52 week change percent, 50 day average, 200 day 
-"""
-
-DROP = [
-    "Regular Market Change",      # momentum
-    "52 Week High",               # raw price anchor
-    "52 Week Low",                # raw price anchor
-    "52 Week Change Percent",     # momentum
-    "50 Day Average",             # raw price level
-    "200 Day Average",            # raw price level
-    "Volume",                     # not valuation
-    "Market Volume",              # not valuation
-    "Target Mean Price",          # analyst laundering
-    "Recommendation Mean",        # analyst laundering
-    "Enterprise Value",           # absolute
-    "Market Cap",                 # absolute
-    "Net Income to Common",       # absolute, margins cover this
-    "EBITA",                      # absolute, EV/EBITDA covers this
-    "Total Debt",                 # absolute, D/E covers this
-    "Total Cash",                 # absolute, cash per share covers this
-]
-
-KEEP = [
-    # Valuation multiples
-    "Forward PE",
-    "Trailing PE",
-    "Price to Book",
-    "Price To Sales 12 Months",
-    "Enterprise To EBITA",
-    "Enterprise To Revenue",
-
-    # Quality / profitability
-    "Gross Margins",
-    "Profit Margins",
-    "Operating Margins",
-    "EBITA Margins",
-    "Return on Assets",
-    "Return on Equity",
-
-    # Growth (your only trajectory proxies)
-    "Earnings Growth",
-    "Revenue Growth",
-
-    # Leverage / liquidity
-    "Debt to Equity",
-    "Current Ratio",
-    "Quick Ratio",
-
-    # Cash (normalized so okay)
-    "Total Cash Per Share",
-    "Free Cashflow",              # normalize it (see below)
-    "Operating Cashflow",         # normalize it
-
-    # Risk
-    "Beta",
-]
-
-"""
 
 FEATURES = [
     "Regular Market Change", "52 Week High", "52 Week Low", "52 Week Change Percent",
@@ -199,6 +144,14 @@ def feature_importance(model):
                                 'gain': list(importance.values())})
     importance_df = importance_df.sort_values('gain', ascending=False)
     print(importance_df.head(20))
+
+def get_fr_prediction(ticker : str, model) -> int:
+    data = get_stock_data_fr(ticker)
+    data = pd.DataFrame([data])
+    fr = int(model.predict(data)[0])
+    return fr
+
+
 
 
 

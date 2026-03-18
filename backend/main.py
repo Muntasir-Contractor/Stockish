@@ -9,7 +9,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from newssentiment import get_sentiment_analysis
-from dbfuncs import get_daily_usage, increment_usage, DAILY_LIMIT
+from db_funcs import get_daily_usage, increment_usage, DAILY_LIMIT
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(root))
 from application import price_prediction, valuation, get_stock_price, is_etf, get_fr_prediction

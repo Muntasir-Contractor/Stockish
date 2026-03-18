@@ -3,7 +3,7 @@ from openai import AsyncOpenAI
 import os
 from dotenv import load_dotenv
 from fetchnews import get_ticker_news
-from dbfuncs import *
+from db_funcs import *
 import json
 import asyncio
 

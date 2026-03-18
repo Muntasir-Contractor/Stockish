@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix
 
 
 
-model = joblib.load(r"model/XGBoost_newfr_model.joblib")
+model = joblib.load(r"model/XGBoost_newestfr_model.joblib")
 
 test_df = test_df.copy()
 test_df['Predicted_Decile'] = model.predict(X_test)

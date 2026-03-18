@@ -63,7 +63,7 @@ df_fundamentals['Shares_Outstanding_YoY_Growth'] = df_fundamentals.groupby('Tick
 flow_columns = [
     'Gross Profit', 'Operating Income (Loss)', 'Free Cash Flow',
     'Net Income',                      # needed for Accrual Ratio
-    'Depreciation & Amortization',     # needed for EBITDA
+    'Depreciation & Amortization_x',   # needed for EBITDA (income statement source)
     'Interest Expense, Net',           # needed for Interest Coverage Ratio
 ]
 
@@ -107,8 +107,8 @@ master_df['FCF_Yield'] = master_df['Free Cash Flow_TTM'] / master_df['Market_Cap
 
 # --- NEW FEATURE: EV / EBITDA ---
 master_df['Enterprise_Value'] = master_df['Market_Cap'] + master_df['Total_Debt'] - master_df['Cash, Cash Equivalents & Short Term Investments'].fillna(0)
-if 'Depreciation & Amortization_TTM' in master_df.columns:
-    master_df['EBITDA_TTM'] = master_df['Operating Income (Loss)_TTM'] + master_df['Depreciation & Amortization_TTM'].fillna(0)
+if 'Depreciation & Amortization_x_TTM' in master_df.columns:
+    master_df['EBITDA_TTM'] = master_df['Operating Income (Loss)_TTM'] + master_df['Depreciation & Amortization_x_TTM'].fillna(0)
     master_df['EV_to_EBITDA'] = master_df['Enterprise_Value'] / master_df['EBITDA_TTM']
 # --------------------------------
 
@@ -192,4 +192,4 @@ print(f"Total Rows Processed: {model_ready_df.shape[0]}")
 print(model_ready_df.columns)
 
 os.makedirs('dataset', exist_ok=True)
-model_ready_df.to_csv(r'dataset/model_data_new_new.csv', index=False)
+model_ready_df.to_csv(r'dataset/model_data_newest.csv', index=False)

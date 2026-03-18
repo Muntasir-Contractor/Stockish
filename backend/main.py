@@ -43,7 +43,7 @@ app.add_middleware(
 #Loading model when app starts 
 
 MODEL = joblib.load(Path(__file__).resolve().parent / "model" / "XGboost_model.joblib")
-fr_MODEL = joblib.load(Path(__file__).resolve().parent / "model" / "XGBoost_newfr_model.joblib")
+fr_MODEL = joblib.load(Path(__file__).resolve().parent / "model" / "XGBoost_newestfr_model.joblib")
 load_dotenv()
 FINANCE_API_KEY = os.getenv("FINANCE_KEY")
 
@@ -117,7 +117,7 @@ async def get_stock_info(ticker : str):
             smape = None
             signed_pct = None
         current_price = get_stock_price(ticker)
-        fr_prediction = get_fr_prediction(ticker)
+        fr_prediction = get_fr_prediction(ticker,fr_MODEL)
         return{
             "ticker": ticker.upper(),
             "current_price": current_price,
@@ -153,8 +153,5 @@ async def get_stock_insight(ticker: str, request: Request):
         
     
 
-@app.get("/homepage")
-def get_homepage_data():
-    pass
 
 #uvicorn main:app --reload

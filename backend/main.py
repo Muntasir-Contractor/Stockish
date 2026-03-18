@@ -17,9 +17,10 @@ from scripts.fetch_fr_stockdata import get_stock_data_fr
 
 
 
-"""TO DO: Create a method in application.py to return the predicted forward return, 
+"""TO DO: Create a method in application.py to return the predicted forward return, --- DONE 
           Cache the the forward return output, as financial statements 10-k and balance sheets are prepared annually
           Create new table in database to cache data
+          Migrate to PostgreSQL 
 """
 
 

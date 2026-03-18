@@ -3,6 +3,8 @@ import yfinance as yf
 
 # How can i fetch news from CNBC????
 
+# FUTURE IMPLEMENTATION, fetch summary alongside title for better sentiment analysis, costs more tokens tho
+
 def get_ticker_news(ticker):
     """
     Get news for specific stocks via Yahoo Finance

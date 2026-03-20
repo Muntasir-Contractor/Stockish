@@ -1,9 +1,132 @@
+import asyncio
 import yfinance as yf
 import pandas as pd
-
+import os
+from dotenv import load_dotenv
+import httpx
 """  Fetching the necessary data required for the model to predict percentile return """
+env_path = r'backend/.env'
+load_dotenv(dotenv_path=env_path)
+Finance_key = os.getenv("FINANCE_KEY")
 
-def get_stock_data_fr(ticker: str) -> dict:
+# Helper function:
+# If features cannot be computed with the yfinance data, i.e, N/A or NaN values:
+# Use Financial Modeling Prep — fetches only the endpoints needed for the missing vars
+async def fallback(ticker: str, *vars):
+    fb_res = {}
+    inc_statement = None
+    fin_statement = None
+    cf_statement  = None
+    profile       = None
+
+    inc_endpoint     = f"https://financialmodelingprep.com/stable/income-statement?symbol={ticker}&apikey={Finance_key}"
+    fin_endpoint     = f"https://financialmodelingprep.com/stable/balance-sheet-statement?symbol={ticker}&apikey={Finance_key}"
+    cf_endpoint      = f"https://financialmodelingprep.com/stable/cash-flow-statement?symbol={ticker}&apikey={Finance_key}"
+    profile_endpoint = f"https://financialmodelingprep.com/stable/profile?symbol={ticker}&apikey={Finance_key}"
+
+    INC_VARS     = {"Gross_Profitability", "ROIC", "Revenue_Growth_YoY", "Interest_Coverage",
+                    "Shares_Outstanding_YoY_Growth", "EV_to_EBITDA", "Accrual_Ratio"}
+    BAL_VARS     = {"Gross_Profitability", "ROIC", "EV_to_EBITDA", "Accrual_Ratio"}
+    CF_VARS      = {"FCF_Yield", "Accrual_Ratio"}
+    PROFILE_VARS = {"FCF_Yield", "EV_to_EBITDA"}
+
+    var_set = set(vars)
+
+    async with httpx.AsyncClient() as client:
+        reqs = {}
+        if var_set & INC_VARS:     reqs['inc']     = client.get(inc_endpoint)
+        if var_set & BAL_VARS:     reqs['bal']     = client.get(fin_endpoint)
+        if var_set & CF_VARS:      reqs['cf']      = client.get(cf_endpoint)
+        if var_set & PROFILE_VARS: reqs['profile'] = client.get(profile_endpoint)
+
+        responses = dict(zip(reqs.keys(), await asyncio.gather(*reqs.values(), return_exceptions=True)))
+
+    def parse(responses, key):
+        r = responses.get(key)
+        if r is None or isinstance(r, Exception): return None
+        try:
+            data = r.json()
+        except Exception:
+            print(f"[fallback] Empty/invalid response for '{key}' (status {r.status_code})")
+            return None
+        return data if isinstance(data, list) and data else None
+
+    def parse_obj(responses, key):
+        data = parse(responses, key)
+        return data[0] if data else None
+
+    if 'inc'     in reqs: inc_statement = parse(responses, 'inc')
+    if 'bal'     in reqs: fin_statement = parse(responses, 'bal')
+    if 'cf'      in reqs: cf_statement  = parse_obj(responses, 'cf')
+    if 'profile' in reqs: profile       = parse_obj(responses, 'profile')
+
+    def safe(d, key):
+        if d is None: return None
+        val = d.get(key)
+        return float(val) if val not in (None, 0) else None
+
+    inc_cur  = inc_statement[0] if inc_statement and len(inc_statement) > 0 else {}
+    inc_prev = inc_statement[1] if inc_statement and len(inc_statement) > 1 else {}
+    bal      = fin_statement[0] if fin_statement and len(fin_statement) > 0 else {}
+
+    for var in vars:
+        if var == "Gross_Profitability":
+            # grossProfit / totalAssets (exact — balance sheet provides totalAssets)
+            gp = safe(inc_cur, "grossProfit")
+            ta = safe(bal,     "totalAssets")
+            fb_res[var] = gp / ta if gp and ta else None
+
+        elif var == "ROIC":
+            # operatingIncome / (shortTermDebt + longTermDebt + totalStockholdersEquity)
+            ebit        = safe(inc_cur, "operatingIncome")
+            st_debt     = safe(bal,     "shortTermDebt") or 0
+            lt_debt     = safe(bal,     "longTermDebt")  or 0
+            eq          = safe(bal,     "totalStockholdersEquity")
+            inv_capital = st_debt + lt_debt + (eq or 0)
+            fb_res[var] = ebit / inv_capital if ebit and inv_capital else None
+
+        elif var == "Revenue_Growth_YoY":
+            rev0 = safe(inc_cur,  "revenue")
+            rev1 = safe(inc_prev, "revenue")
+            fb_res[var] = (rev0 - rev1) / abs(rev1) if rev0 and rev1 else None
+
+        elif var == "Interest_Coverage":
+            ebit = safe(inc_cur, "operatingIncome")
+            ie   = safe(inc_cur, "interestExpense")
+            fb_res[var] = ebit / ie if ebit and ie else None
+
+        elif var == "Shares_Outstanding_YoY_Growth":
+            sh0 = safe(inc_cur,  "weightedAverageShsOut")
+            sh1 = safe(inc_prev, "weightedAverageShsOut")
+            fb_res[var] = (sh0 - sh1) / abs(sh1) if sh0 and sh1 else None
+
+        elif var == "FCF_Yield":
+            fcf     = safe(cf_statement, "freeCashFlow")
+            mkt_cap = safe(profile,      "mktCap")
+            fb_res[var] = fcf / mkt_cap if fcf and mkt_cap else None
+
+        elif var == "EV_to_EBITDA":
+            ebitda  = safe(inc_cur, "ebitda")
+            mkt_cap = safe(profile, "mktCap")
+            st_debt = safe(bal,     "shortTermDebt") or 0
+            lt_debt = safe(bal,     "longTermDebt")  or 0
+            cash    = safe(bal,     "cashAndCashEquivalents") or 0
+            ev      = mkt_cap + st_debt + lt_debt - cash if mkt_cap else None
+            fb_res[var] = ev / ebitda if ev and ebitda else None
+
+        elif var == "Accrual_Ratio":
+            ni  = safe(inc_cur,    "netIncome")
+            fcf = safe(cf_statement, "freeCashFlow")
+            ta  = safe(bal,        "totalAssets")
+            fb_res[var] = (ni - fcf) / ta if ni and fcf is not None and ta else None
+
+        else:
+            # Momentum_6M — price data only, cannot derive from fundamentals
+            fb_res[var] = None
+
+    return fb_res
+
+async def get_stock_data_fr(ticker: str) -> dict:
     # Features: Gross_Profitability, ROIC, FCF_Yield, Revenue_Growth_YoY,
     #           Momentum_6M, EV_to_EBITDA, Accrual_Ratio, Interest_Coverage,
     #           Shares_Outstanding_YoY_Growth
@@ -104,7 +227,7 @@ def get_stock_data_fr(ticker: str) -> dict:
     if sh0 and sh1:
         shares_outstanding_growth = (sh0 - sh1) / abs(sh1)
 
-    return {
+    features = {
         'Gross_Profitability':           gross_profitability,
         'ROIC':                          roic,
         'FCF_Yield':                     fcf_yield,
@@ -116,10 +239,20 @@ def get_stock_data_fr(ticker: str) -> dict:
         'Shares_Outstanding_YoY_Growth': shares_outstanding_growth,
     }
 
+    # Patch any None values using FMP income statement as fallback
+    missing = [k for k, val in features.items() if val is None]
+    if missing:
+        fb = await fallback(ticker, *missing)
+        for k in missing:
+            if fb.get(k) is not None:
+                features[k] = fb[k]
+
+    return {k: v if v is not None else float('nan') for k, v in features.items()}
+
 
 if __name__ == '__main__':
-    ticker = 'HIMS'
-    result = get_stock_data_fr(ticker)
+    ticker = 'SOFI'
+    result = asyncio.run(get_stock_data_fr(ticker))
     print(f"\n--- {ticker} Features ---")
     for k, v in result.items():
-        print(f"  {k}: {round(v, 4) if v is not None else 'N/A'}")
+        print(f"  {k}: {round(v, 4) if not pd.isna(v) else 'NaN'}")

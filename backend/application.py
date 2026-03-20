@@ -145,9 +145,9 @@ def feature_importance(model):
     importance_df = importance_df.sort_values('gain', ascending=False)
     print(importance_df.head(20))
 
-def get_fr_prediction(ticker : str, model) -> int:
-    data = get_stock_data_fr(ticker)
-    data = pd.DataFrame([data])
+async def get_fr_prediction(ticker : str, model) -> int:
+    data = await get_stock_data_fr(ticker)
+    data = pd.DataFrame([data]).astype(float)
     fr = int(model.predict(data)[0])
     return fr
 

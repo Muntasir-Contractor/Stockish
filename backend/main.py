@@ -117,7 +117,7 @@ async def get_stock_info(ticker : str):
             smape = None
             signed_pct = None
         current_price = get_stock_price(ticker)
-        fr_prediction = get_fr_prediction(ticker,fr_MODEL)
+        fr_prediction = await get_fr_prediction(ticker,fr_MODEL)
         return{
             "ticker": ticker.upper(),
             "current_price": current_price,

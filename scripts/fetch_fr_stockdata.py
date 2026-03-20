@@ -17,12 +17,12 @@ async def fallback(ticker: str, *vars):
     inc_statement = None
     fin_statement = None
     cf_statement  = None
-    profile       = None
+    ratios        = None
 
     inc_endpoint     = f"https://financialmodelingprep.com/stable/income-statement?symbol={ticker}&apikey={Finance_key}"
     fin_endpoint     = f"https://financialmodelingprep.com/stable/balance-sheet-statement?symbol={ticker}&apikey={Finance_key}"
     cf_endpoint      = f"https://financialmodelingprep.com/stable/cash-flow-statement?symbol={ticker}&apikey={Finance_key}"
-    profile_endpoint = f"https://financialmodelingprep.com/stable/profile?symbol={ticker}&apikey={Finance_key}"
+    ratio_endpoint = f"https://financialmodelingprep.com/stable/key-metrics?symbol={ticker}&apikey={Finance_key}"
 
     INC_VARS     = {"Gross_Profitability", "ROIC", "Revenue_Growth_YoY", "Interest_Coverage",
                     "Shares_Outstanding_YoY_Growth", "EV_to_EBITDA", "Accrual_Ratio"}
@@ -37,7 +37,7 @@ async def fallback(ticker: str, *vars):
         if var_set & INC_VARS:     reqs['inc']     = client.get(inc_endpoint)
         if var_set & BAL_VARS:     reqs['bal']     = client.get(fin_endpoint)
         if var_set & CF_VARS:      reqs['cf']      = client.get(cf_endpoint)
-        if var_set & PROFILE_VARS: reqs['profile'] = client.get(profile_endpoint)
+        if var_set & PROFILE_VARS: reqs['ratios']  = client.get(ratio_endpoint)
 
         responses = dict(zip(reqs.keys(), await asyncio.gather(*reqs.values(), return_exceptions=True)))
 
@@ -58,7 +58,7 @@ async def fallback(ticker: str, *vars):
     if 'inc'     in reqs: inc_statement = parse(responses, 'inc')
     if 'bal'     in reqs: fin_statement = parse(responses, 'bal')
     if 'cf'      in reqs: cf_statement  = parse_obj(responses, 'cf')
-    if 'profile' in reqs: profile       = parse_obj(responses, 'profile')
+    if 'ratios'  in reqs: ratios         = parse_obj(responses, 'ratios')
 
     def safe(d, key):
         if d is None: return None
@@ -102,17 +102,11 @@ async def fallback(ticker: str, *vars):
 
         elif var == "FCF_Yield":
             fcf     = safe(cf_statement, "freeCashFlow")
-            mkt_cap = safe(profile,      "mktCap")
+            mkt_cap = safe(ratios,       "marketCap")
             fb_res[var] = fcf / mkt_cap if fcf and mkt_cap else None
 
         elif var == "EV_to_EBITDA":
-            ebitda  = safe(inc_cur, "ebitda")
-            mkt_cap = safe(profile, "mktCap")
-            st_debt = safe(bal,     "shortTermDebt") or 0
-            lt_debt = safe(bal,     "longTermDebt")  or 0
-            cash    = safe(bal,     "cashAndCashEquivalents") or 0
-            ev      = mkt_cap + st_debt + lt_debt - cash if mkt_cap else None
-            fb_res[var] = ev / ebitda if ev and ebitda else None
+            fb_res[var] = safe(ratios, "evToEBITDA")
 
         elif var == "Accrual_Ratio":
             ni  = safe(inc_cur,    "netIncome")

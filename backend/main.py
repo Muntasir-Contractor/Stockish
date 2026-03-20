@@ -21,6 +21,9 @@ from scripts.fetch_fr_stockdata import get_stock_data_fr
           Cache the the forward return output, as financial statements 10-k and balance sheets are prepared annually
           Create new table in database to cache data
           Migrate to PostgreSQL 
+
+          Create a Logger, to log whenever stock data is fetched and one or more features come out with
+          N/A or NaN values, store fr_prediction, and coloumns unavailabled
 """
 
 

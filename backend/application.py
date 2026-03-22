@@ -8,6 +8,8 @@ import joblib
 from scripts.scrape import get_stock_data
 import os
 from scripts.fetch_fr_stockdata import get_stock_data_fr
+from db_funcs import exists_in_stockdb, insert_stockfr, fetch_fr_class, get_date_stamp, update_stock
+from datetime import datetime
 
 
 # FEATURES NEEDS CHANGING
@@ -145,11 +147,28 @@ def feature_importance(model):
     importance_df = importance_df.sort_values('gain', ascending=False)
     print(importance_df.head(20))
 
-async def get_fr_prediction(ticker : str, model) -> int:
-    data = await get_stock_data_fr(ticker)
-    data = pd.DataFrame([data]).astype(float)
-    fr = int(model.predict(data)[0])
-    return fr
+async def get_fr_prediction(ticker : str, model) -> float:
+    if exists_in_stockdb(ticker):
+        #Gets the latest published date of the companies income statement, if the current income statement date
+        # is greater than the datestamp, we must run a new analysis on the forward return classification
+        latest_income_statement_date = (str((yf.Ticker(ticker).financials.columns)[0]).split(" "))[0]
+        latest_income_statement_date = datetime.strptime(latest_income_statement_date, "%Y-%m-%d")
+        if latest_income_statement_date > get_date_stamp(ticker):
+            data = await get_stock_data_fr(ticker)
+            data = pd.DataFrame([data]).astype(float)
+            fr = float(model.predict(data)[0])
+            update_stock(ticker, fr, latest_income_statement_date)
+            return fr
+        else:
+            fr = fetch_fr_class(ticker)
+            return fr
+    else:
+
+        data = await get_stock_data_fr(ticker)
+        data = pd.DataFrame([data]).astype(float)
+        fr = float(model.predict(data)[0])
+        insert_stockfr(ticker, fr)
+        return fr
 
 
 

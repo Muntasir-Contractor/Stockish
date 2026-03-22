@@ -147,19 +147,17 @@ def exists_in_stockdb(ticker : str) -> bool:
 
 def fetch_fr_class(ticker : str) -> float:
     cursor.execute("SELECT fr_class FROM stock WHERE ticker = %s", (ticker,))
-    return cursor.fetchone()
+    return (cursor.fetchone())[0]
 
 def insert_stockfr(ticker : str, fr_class : float):
     date = datetime.today()
     cursor.execute("INSERT INTO stock (ticker, fr_class, date_stamp) VALUES(%s, %s, %s)", (ticker,fr_class,date))
-    conn.commit()
     return
 
 def get_date_stamp(ticker : str):
     cursor.execute("SELECT date_stamp FROM stock WHERE ticker = %s", (ticker,))
-    return datetime.strptime(cursor.fetchone()[0],"%Y-%m-%d")
-
+    d = (cursor.fetchone())[0]
+    return datetime(d.year,d.month,d.day)
 def update_stock(ticker : str, fr_class,date_stamp):
     cursor.execute("UPDATE stock SET fr_class = %s , date_stamp = %s WHERE ticker = %s", (fr_class, date_stamp, ticker))
-    conn.commit()
     return

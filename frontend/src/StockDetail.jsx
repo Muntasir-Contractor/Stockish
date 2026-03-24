@@ -100,6 +100,24 @@ function StockDetail() {
   const relativeError = typeof relativeErrorRaw === 'number' ? relativeErrorRaw : parseFloat(relativeErrorRaw);
   const smape = typeof smapeRaw === 'number' ? smapeRaw : parseFloat(smapeRaw);
 
+  const frPrediction = stockData?.fr_prediction;
+  const hasFr = frPrediction != null && !Number.isNaN(frPrediction);
+
+  const frLabel = (decile) => {
+    const low = decile * 10;
+    const high = low + 10;
+    const percentile = decile === 9 ? 'top 10%' : decile === 0 ? 'bottom 10%' : `${low}–${high}th percentile`;
+    const color =
+      decile >= 8 ? '#2e7d32' :
+      decile >= 6 ? '#4caf50' :
+      decile >= 4 ? '#666666' :
+      decile >= 2 ? '#e74c3c' : '#c62828';
+    return {
+      label: `Fundamentals match the ${percentile} of historical 1-yr forward returners`,
+      color,
+    };
+  };
+
   const hasCurrent = !Number.isNaN(currentPrice) && currentPrice != null;
   const hasPredicted = !Number.isNaN(predictedPrice) && predictedPrice != null;
   const hasRelative = !Number.isNaN(relativeError) && relativeError != null;
@@ -206,6 +224,17 @@ function StockDetail() {
             </div>
             <div className={`info-value`} style={{ color: smapeColor }}>
               {hasSmape ? `${(smape * 100).toFixed(2)}%` : 'N/A'}
+            </div>
+          </div>
+
+          <div className="info-card">
+            <div className="info-label">Forward Return Classification
+              <span className="info-help" tabIndex="0" aria-label="More info">ℹ
+                <span className="tooltip">XGBoost-predicted return decile (0–9) based on fundamental quality and momentum signals. Higher deciles indicate stronger expected forward returns.</span>
+              </span>
+            </div>
+            <div className="info-value" style={{ color: hasFr ? frLabel(frPrediction).color : '#666' }}>
+              {hasFr ? frLabel(frPrediction).label : 'N/A'}
             </div>
           </div>
 

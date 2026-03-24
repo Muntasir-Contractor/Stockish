@@ -17,10 +17,11 @@ from scripts.fetch_fr_stockdata import get_stock_data_fr
 
 
 
-"""TO DO: Create a method in application.py to return the predicted forward return, --- DONE 
-          Cache the the forward return output, as financial statements 10-k and balance sheets are prepared annually
-          Create new table in database to cache data
-          Migrate to PostgreSQL 
+"""TO DO: Create edge cases for news sentiment analysis for niche companies where news would not cover that stock in particular,
+         if no news can be found for that stock, return none, let the user know that there is no news to analyse the stock,
+         do not increase ip rate limiting counter
+          
+
 
           Create a Logger, to log whenever stock data is fetched and one or more features come out with
           N/A or NaN values, store fr_prediction, and coloumns unavailabled

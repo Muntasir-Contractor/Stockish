@@ -245,7 +245,7 @@ async def get_stock_data_fr(ticker: str) -> dict:
 
 
 if __name__ == '__main__':
-    ticker = 'SOFI'
+    ticker = 'BKNG'
     result = asyncio.run(get_stock_data_fr(ticker))
     print(f"\n--- {ticker} Features ---")
     for k, v in result.items():

@@ -175,3 +175,5 @@ async def get_fr_prediction(ticker : str, model) -> float:
 
 
     
+if __name__ == "__main__":
+    feature_importance(load_model())

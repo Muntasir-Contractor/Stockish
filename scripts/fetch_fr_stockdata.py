@@ -2,8 +2,17 @@ import asyncio
 import yfinance as yf
 import pandas as pd
 import os
+import logging
 from dotenv import load_dotenv
 import httpx
+
+logger = logging.getLogger("fr_stockdata")
+logger.setLevel(logging.WARNING)
+_log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'backend', 'logs', 'fr_features.log')
+os.makedirs(os.path.dirname(_log_path), exist_ok=True)
+_handler = logging.FileHandler(_log_path)
+_handler.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(message)s'))
+logger.addHandler(_handler)
 """  Fetching the necessary data required for the model to predict percentile return """
 env_path = r'backend/.env'
 load_dotenv(dotenv_path=env_path)
@@ -240,6 +249,13 @@ async def get_stock_data_fr(ticker: str) -> dict:
         for k in missing:
             if fb.get(k) is not None:
                 features[k] = fb[k]
+
+    still_missing = [k for k, val in features.items() if val is None]
+    if still_missing:
+        logger.warning(
+            "%s — %d/%d features unavailable after fallback: %s",
+            ticker, len(still_missing), len(features), ', '.join(still_missing)
+        )
 
     return {k: v if v is not None else float('nan') for k, v in features.items()}
 

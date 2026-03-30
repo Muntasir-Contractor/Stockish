@@ -239,7 +239,7 @@ function StockDetail() {
               </span>
             </div>
             <div className="info-value" style={{ color: hasFr ? frLabel(frPrediction).color : '#666' }}>
-              {hasFr ? frLabel(frPrediction).label : 'N/A'}
+              {hasFr ? frLabel(frPrediction).label : stockData.valuation === 'Cannot Valuate ETF' ? 'Cannot classify ETF' : 'N/A'}
             </div>
           </div>
 

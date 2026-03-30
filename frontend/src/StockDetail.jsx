@@ -53,6 +53,11 @@ function StockDetail() {
       setInsightsLoading(true);
       setInsightsError(null);
       const response = await api.get(`/stocksentiment/${ticker.toUpperCase()}`);
+      if (response.data.scalar === null && response.data.insights === null) {
+        setInsightsError("No recent news coverage found for this stock. Sentiment analysis is unavailable.");
+        setRemaining(response.data.remaining);
+        return;
+      }
       setInsights(response.data);
       setRemaining(response.data.remaining);
     } catch (err) {

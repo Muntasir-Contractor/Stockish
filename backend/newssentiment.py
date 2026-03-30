@@ -16,7 +16,7 @@ API_KEY = os.getenv("OPENAI_API_KEY")
 async def get_news_sentiment(ticker):
     top_headlines_summary_json = get_ticker_news(ticker)
     if len(top_headlines_summary_json) < 1:
-        return "No news"
+        return None,None,None
     headlines_summaries = news_toString(top_headlines_summary_json)
     
     prompt = f"""
@@ -86,7 +86,6 @@ async def get_news_sentiment(ticker):
     sentiment = result["insights"]
 
     token_usage = response.usage
-
     return scalar, sentiment, token_usage
 
 def get_final_analysis(sentiment_score : float) -> str:
@@ -111,10 +110,14 @@ async def get_sentiment_analysis(ticker : str):
             return get_insights_from_db(ticker)
         else:
             scalar, insights, token_usage = await get_news_sentiment(ticker)
+            if scalar==None and insights==None and token_usage==None:
+                return None,None
             update_row(ticker, scalar, insights, token_usage) # Notes needs to be addressed
             return scalar, insights
     else:
         scalar, insights, token_usage = await get_news_sentiment(ticker)
+        if scalar is None and insights is None:
+            return None, None
         insert_stock(ticker, scalar, insights, token_usage)
         return scalar, insights
 

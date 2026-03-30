@@ -148,6 +148,9 @@ async def get_stock_insight(ticker: str, request: Request):
                 detail={"message": "Daily limit reached. Try again tomorrow.", "remaining": 0}
             )
         scalar, insights = await get_sentiment_analysis(ticker)
+        if scalar is None and insights is None:
+            remaining = max(0, DAILY_LIMIT - usage)
+            return {"scalar": None, "insights": None, "remaining": remaining}
         new_count = increment_usage(client_ip)
         remaining = max(0, DAILY_LIMIT - new_count)
         return {"scalar": scalar, "insights": insights, "remaining": remaining}

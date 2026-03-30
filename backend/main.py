@@ -21,6 +21,7 @@ from scripts.fetch_fr_stockdata import get_stock_data_fr
          if no news can be found for that stock, return none, let the user know that there is no news to analyse the stock,
          do not increase ip rate limiting counter
           
+         - Implement intrinsic value 
 
 
           Create a Logger, to log whenever stock data is fetched and one or more features come out with

@@ -2,7 +2,7 @@
 from openai import AsyncOpenAI
 import os
 from dotenv import load_dotenv
-from fetchnews import get_ticker_news
+from fetchnews import get_ticker_news, news_toString
 from db_funcs import *
 import json
 import asyncio
@@ -14,18 +14,21 @@ API_KEY = os.getenv("OPENAI_API_KEY")
 
 ### HELPER FUNCTION, NEVER ACTUALLY USE THIS, USE get_news_analysis
 async def get_news_sentiment(ticker):
-    top_headlines = get_ticker_news(ticker)
+    top_headlines_summary_json = get_ticker_news(ticker)
+    if len(top_headlines_summary_json) < 1:
+        return "No news"
+    headlines_summaries = news_toString(top_headlines_summary_json)
     
     prompt = f"""
     You are a financial analyst specializing in market sentiment analysis. Below are recent news headlines related to {ticker}
 
 
     COMPANY: {ticker}
-    RECENT HEADLINES (last 7 days):
-    {top_headlines}
+    RECENT HEADLINES and summaries(last 7 days):
+    {headlines_summaries}
 
     TASK:
-    Analyze these headlines and return a single JSON object with exactly two keys:
+    Analyze these headlines and their summaries, return a single JSON object with exactly two keys:
 
     1. "scalar": a decimal multiplier between 0.5 and 1.5 representing the collective news impact on fair value:
         - 1.0 = neutral (no change)

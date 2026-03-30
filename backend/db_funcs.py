@@ -49,6 +49,17 @@ def _ensure_tables():
                 PRIMARY KEY (ip, date_stamp)
             )
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stock_dcf (
+                ticker          TEXT PRIMARY KEY,
+                intrinsic_value FLOAT,
+                upside_pct      FLOAT,
+                wacc            FLOAT,
+                growth_rate     FLOAT,
+                dcf_json        JSONB,
+                date_stamp      DATE
+            )
+        """)
         cursor.close()
     finally:
         put_conn(conn)
@@ -250,6 +261,77 @@ def update_stock(ticker : str, fr_class, date_stamp):
     try:
         cursor = conn.cursor()
         cursor.execute("UPDATE stock SET fr_class = %s , date_stamp = %s WHERE ticker = %s", (fr_class, date_stamp, ticker))
+        cursor.close()
+    finally:
+        put_conn(conn)
+
+
+# DCF Caching
+
+def exists_in_dcfdb(ticker: str) -> bool:
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM stock_dcf WHERE ticker = %s", (ticker,))
+        result = cursor.fetchone() is not None
+        cursor.close()
+        return result
+    finally:
+        put_conn(conn)
+
+def insert_dcf(ticker: str, dcf_results: dict):
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        today = date.today()
+        cursor.execute(
+            "INSERT INTO stock_dcf (ticker, intrinsic_value, upside_pct, wacc, growth_rate, dcf_json, date_stamp) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (ticker, dcf_results.get("intrinsic_value"), dcf_results.get("upside_downside_pct"),
+             dcf_results.get("wacc"), dcf_results.get("near_term_growth"),
+             json.dumps(dcf_results), today)
+        )
+        cursor.close()
+    finally:
+        put_conn(conn)
+
+def fetch_dcf(ticker: str) -> dict | None:
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT dcf_json FROM stock_dcf WHERE ticker = %s", (ticker,))
+        row = cursor.fetchone()
+        cursor.close()
+        if row is None:
+            return None
+        result = row[0]
+        if isinstance(result, str):
+            result = json.loads(result)
+        return result
+    finally:
+        put_conn(conn)
+
+def get_dcf_date_stamp(ticker: str):
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT date_stamp FROM stock_dcf WHERE ticker = %s", (ticker,))
+        d = cursor.fetchone()[0]
+        cursor.close()
+        return datetime(d.year, d.month, d.day)
+    finally:
+        put_conn(conn)
+
+def update_dcf(ticker: str, dcf_results: dict):
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        today = date.today()
+        cursor.execute(
+            "UPDATE stock_dcf SET intrinsic_value = %s, upside_pct = %s, wacc = %s, growth_rate = %s, dcf_json = %s, date_stamp = %s WHERE ticker = %s",
+            (dcf_results.get("intrinsic_value"), dcf_results.get("upside_downside_pct"),
+             dcf_results.get("wacc"), dcf_results.get("near_term_growth"),
+             json.dumps(dcf_results), today, ticker)
+        )
         cursor.close()
     finally:
         put_conn(conn)

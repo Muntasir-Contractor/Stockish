@@ -68,10 +68,108 @@
   color: #6fbf73;
 }
 
+/* ── Final Analysis Hero Card ── */
+.final-analysis-card {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.final-analysis-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.final-analysis-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+.confidence-badge {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.final-analysis-verdict {
+  font-size: 48px;
+  font-weight: 800;
+  margin-bottom: 24px;
+}
+
+.final-analysis-gauge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 500px;
+  margin: 0 auto 24px;
+}
+
+.gauge-label-left,
+.gauge-label-right {
+  font-size: 11px;
+  font-weight: 600;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.gauge-track {
+  flex: 1;
+  height: 8px;
+  background: linear-gradient(to right, #c62828 0%, #e74c3c 25%, #999 50%, #4caf50 75%, #2e7d32 100%);
+  border-radius: 4px;
+  position: relative;
+}
+
+.gauge-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background: white;
+  border: 3px solid #333;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.final-analysis-signals {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.signal-chip {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  background: #f0f0f0;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.signal-chip-missing {
+  color: #999;
+  background: #fafafa;
+  border: 1px dashed #ccc;
+}
+
 .stock-info-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 columns */
-  grid-template-rows: repeat(2, 1fr);    /* 2 rows */
+  grid-template-columns: repeat(3, 1fr);
   gap: 30px;
   width: 100%;
 }
@@ -410,18 +508,26 @@
   .stock-header h1 {
     font-size: 36px;
   }
-  
+
   .current-price-big {
     font-size: 48px;
   }
-  
+
   .stock-info-grid {
     grid-template-columns: 1fr; /* 1 column on mobile */
     grid-template-rows: auto;
   }
-  
+
   .info-value {
     font-size: 28px;
+  }
+
+  .final-analysis-verdict {
+    font-size: 36px;
+  }
+
+  .final-analysis-card {
+    padding: 30px 20px;
   }
 }
 

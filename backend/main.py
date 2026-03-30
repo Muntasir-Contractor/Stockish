@@ -1,10 +1,10 @@
+import asyncio
 from fastapi import FastAPI, Response, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fetchfromAPI import get_top_movers, get_top_losers, get_top_gainers
 import joblib
 import sys
 import httpx
-import pandas as pd
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -12,18 +12,11 @@ from newssentiment import get_sentiment_analysis
 from db_funcs import get_daily_usage, increment_usage, DAILY_LIMIT
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(root))
-from application import price_prediction, valuation, get_stock_price, is_etf, get_fr_prediction
-from scripts.fetch_fr_stockdata import get_stock_data_fr
+from application import get_stock_price, is_etf, get_fr_prediction, get_dcf_valuation, dcf_valuation_label, compute_final_analysis
 
 
 
-"""TO DO: Create edge cases for news sentiment analysis for niche companies where news would not cover that stock in particular,
-         if no news can be found for that stock, return none, let the user know that there is no news to analyse the stock,
-         do not increase ip rate limiting counter
-          
-         - Implement intrinsic value 
-
-
+"""TO DO:
           Create a Logger, to log whenever stock data is fetched and one or more features come out with
           N/A or NaN values, store fr_prediction, and coloumns unavailabled
 """
@@ -45,9 +38,8 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-#Loading model when app starts 
+#Loading model when app starts
 
-MODEL = joblib.load(Path(__file__).resolve().parent / "model" / "XGboost_model.joblib")
 fr_MODEL = joblib.load(Path(__file__).resolve().parent / "model" / "XGBoost_newestfr_model.joblib")
 load_dotenv()
 FINANCE_API_KEY = os.getenv("FINANCE_KEY")
@@ -62,20 +54,6 @@ FINANCE_API_KEY = os.getenv("FINANCE_KEY")
 @app.get("/")
 def root():
     return {"Hello": "World"}
-"""
-@app.get("/stock/{ticker}")
-async def get_stock_info(ticker : str):
-    stock_price_prediction = await price_prediction(ticker,MODEL)
-    conclusion , factor = valuation(ticker, stock_price_prediction)
-    current_price = get_stock_price(ticker)
-    return {
-        "ticker": ticker.upper(),
-        "current_price": current_price,
-        "predicted_price": float(stock_price_prediction),
-        "valuation": conclusion,
-        "relative_error": float(factor)
-    }
-"""
 @app.get("/topmovers")
 async def top_movers():
     stocks = await get_top_movers()
@@ -94,43 +72,69 @@ async def search_tinker(query : str):
     #Have a cache for stock symbol
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"https://financialmodelingprep.com/stable/search-symbol?query={query}&apikey={FINANCE_API_KEY}")
-            results = response.json()
+            symbol_res, name_res = await asyncio.gather(
+                client.get(f"https://financialmodelingprep.com/stable/search-symbol?query={query}&apikey={FINANCE_API_KEY}"),
+                client.get(f"https://financialmodelingprep.com/stable/search-name?query={query}&apikey={FINANCE_API_KEY}"),
+            )
+            symbol_results = symbol_res.json() if symbol_res.status_code == 200 else []
+            name_results = name_res.json() if name_res.status_code == 200 else []
+
+            seen = set()
+            merged = []
+            for r in symbol_results + name_results:
+                sym = r.get("symbol")
+                if sym and sym not in seen:
+                    seen.add(sym)
+                    merged.append({
+                        "symbol": sym,
+                        "name": r.get("name", ""),
+                        "exchange": r.get("exchangeShortName", ""),
+                        "type": r.get("type", "")
+                    })
 
             return {
                 "query": query,
-                    "results": [
-                        {
-                            "symbol": r["symbol"],
-                            "name": r["name"],
-                            "exchange": r.get("exchangeShortName", ""),
-                            "type": r.get("type", "")
-                        }
-                        for r in results[:10]
-                    ]
+                "results": merged[:10]
             }
     except Exception as e:
         print(str(e))
 
 @app.get("/stock/{ticker}")
-async def get_stock_info(ticker : str):
+async def get_stock_info(ticker: str):
     try:
-        stock_price_prediction = await price_prediction(ticker, MODEL)
-        conclusion, smape, signed_pct = valuation(ticker, stock_price_prediction)
-        if not conclusion:
-            conclusion = "Cannot Valuate ETF"
-            smape = None
-            signed_pct = None
         current_price = get_stock_price(ticker)
-        fr_prediction = await get_fr_prediction(ticker,fr_MODEL)
-        return{
+
+        dcf_result, fr_prediction = await asyncio.gather(
+            asyncio.to_thread(get_dcf_valuation, ticker),
+            get_fr_prediction(ticker, fr_MODEL),
+        )
+
+        intrinsic_value = None
+        upside_pct = None
+        valuation = "Cannot Valuate ETF" if is_etf(ticker)[0] else "Unavailable"
+        wacc = None
+        growth_rate = None
+
+        if dcf_result is not None:
+            intrinsic_value = dcf_result.get("intrinsic_value")
+            upside_pct = dcf_result.get("upside_downside_pct")
+            wacc = dcf_result.get("wacc")
+            growth_rate = dcf_result.get("near_term_growth")
+            if upside_pct is not None:
+                valuation = dcf_valuation_label(upside_pct)
+
+        final_analysis = compute_final_analysis(dcf_result, fr_prediction, None)
+
+        return {
             "ticker": ticker.upper(),
             "current_price": current_price,
-            "predicted_price": round(stock_price_prediction,2) if type(stock_price_prediction) == float else stock_price_prediction,
-            "valuation": conclusion,
-            "relative_error": signed_pct,
-            "smape": smape,
-            "fr_prediction": fr_prediction
+            "intrinsic_value": intrinsic_value,
+            "upside_pct": upside_pct,
+            "valuation": valuation,
+            "wacc": wacc,
+            "growth_rate": growth_rate,
+            "fr_prediction": fr_prediction,
+            "final_analysis": final_analysis,
         }
     except Exception as e:
         raise Exception(e)

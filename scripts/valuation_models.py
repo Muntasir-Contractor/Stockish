@@ -172,6 +172,7 @@ def discounted_cashflow_analysis(
     exit_multiple: float = 15.0,
     risk_free_rate: float = RISK_FREE_RATE,
     equity_risk_premium: float = EQUITY_RISK_PREMIUM,
+    verbose: bool = True,
 ) -> dict | None:
     """
     Full DCF analysis for a publicly traded company.
@@ -353,32 +354,33 @@ def discounted_cashflow_analysis(
     }
 
     # ── Pretty print ───────────────────────────────────────────────────────────
-    fallback_flag = " ⚠ fallback" if used_fallback else ""
-    print(f"\n{'='*55}")
-    print(f"  DCF Analysis — {results['ticker']}")
-    print(f"{'='*55}")
-    print(f"  Current Price       : ${results['current_price']}")
-    print(f"  Intrinsic Value     : ${results['intrinsic_value']}")
-    upside_str = f"{results['upside_downside_pct']:+.1f}%" if results['upside_downside_pct'] is not None else "N/A"
-    print(f"  Upside / Downside   : {upside_str}")
-    print(f"{'-'*55}")
-    print(f"  WACC                : {results['wacc']}%")
-    print(f"  Cost of Equity      : {results['coe']}%")
-    print(f"  Cost of Debt        : {results['cod']}%")
-    print(f"  Tax Rate            : {results['tax_rate']}%")
-    print(f"  Beta (raw/adj)      : {results['beta']} → {results['adjusted_beta']} (Blume)")
-    print(f"{'-'*55}")
-    print(f"  Near-term FCF Growth: {results['near_term_growth']}%{fallback_flag}")
-    print(f"  Terminal Growth     : {results['terminal_growth']}%")
-    print(f"  TV Method           : {results['terminal_value_method']}")
-    print(f"{'-'*55}")
-    print(f"  Base FCF            : ${free_cash_flow:,.0f}")
-    for i, (proj, disc) in enumerate(zip(results['projected_fcfs'], results['discounted_fcfs']), 1):
-        print(f"  Year {i} FCF (PV)    : ${proj:>14,.0f}  →  ${disc:>14,.0f}")
-    print(f"  PV of FCFs          : ${results['pv_sum_fcfs']:>14,.0f}")
-    print(f"  Terminal Value      : ${results['terminal_value']:>14,.0f}")
-    print(f"  Enterprise Value    : ${results['enterprise_value']:>14,.0f}")
-    print(f"{'='*55}\n")
+    if verbose:
+        fallback_flag = " ⚠ fallback" if used_fallback else ""
+        print(f"\n{'='*55}")
+        print(f"  DCF Analysis — {results['ticker']}")
+        print(f"{'='*55}")
+        print(f"  Current Price       : ${results['current_price']}")
+        print(f"  Intrinsic Value     : ${results['intrinsic_value']}")
+        upside_str = f"{results['upside_downside_pct']:+.1f}%" if results['upside_downside_pct'] is not None else "N/A"
+        print(f"  Upside / Downside   : {upside_str}")
+        print(f"{'-'*55}")
+        print(f"  WACC                : {results['wacc']}%")
+        print(f"  Cost of Equity      : {results['coe']}%")
+        print(f"  Cost of Debt        : {results['cod']}%")
+        print(f"  Tax Rate            : {results['tax_rate']}%")
+        print(f"  Beta (raw/adj)      : {results['beta']} → {results['adjusted_beta']} (Blume)")
+        print(f"{'-'*55}")
+        print(f"  Near-term FCF Growth: {results['near_term_growth']}%{fallback_flag}")
+        print(f"  Terminal Growth     : {results['terminal_growth']}%")
+        print(f"  TV Method           : {results['terminal_value_method']}")
+        print(f"{'-'*55}")
+        print(f"  Base FCF            : ${free_cash_flow:,.0f}")
+        for i, (proj, disc) in enumerate(zip(results['projected_fcfs'], results['discounted_fcfs']), 1):
+            print(f"  Year {i} FCF (PV)    : ${proj:>14,.0f}  →  ${disc:>14,.0f}")
+        print(f"  PV of FCFs          : ${results['pv_sum_fcfs']:>14,.0f}")
+        print(f"  Terminal Value      : ${results['terminal_value']:>14,.0f}")
+        print(f"  Enterprise Value    : ${results['enterprise_value']:>14,.0f}")
+        print(f"{'='*55}\n")
 
     return results
 

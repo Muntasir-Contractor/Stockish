@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from './components/api.js';
 import './StockDetail.css';
@@ -11,6 +11,56 @@ const getLogo = (symbol) => {
 };
 const getAvatarFallback = (name, bg = '1976d2') => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=256&rounded=false&color=ffffff&background=${bg}`;
+};
+
+// Client-side final analysis (mirrors backend logic)
+function computeFinalAnalysis(upsidePct, frPrediction, sentimentScalar) {
+  const signals = [];
+
+  if (upsidePct != null) {
+    const dcfScore = Math.max(-1, Math.min(1, upsidePct / 50));
+    signals.push({ name: 'dcf', score: dcfScore, weight: 0.50 });
+  }
+  if (frPrediction != null) {
+    const frScore = (frPrediction - 4.5) / 4.5;
+    signals.push({ name: 'fr', score: frScore, weight: 0.30 });
+  }
+  if (sentimentScalar != null) {
+    const sentScore = (sentimentScalar - 1.0) / 0.5;
+    signals.push({ name: 'sentiment', score: sentScore, weight: 0.20 });
+  }
+
+  if (signals.length === 0) return null;
+
+  const totalWeight = signals.reduce((s, x) => s + x.weight, 0);
+  const composite = signals.reduce((s, x) => s + (x.score * x.weight / totalWeight), 0);
+
+  let verdict;
+  if (composite > 0.50) verdict = 'Strong Buy';
+  else if (composite > 0.20) verdict = 'Buy';
+  else if (composite > -0.20) verdict = 'Hold';
+  else if (composite > -0.50) verdict = 'Sell';
+  else verdict = 'Strong Sell';
+
+  const confidence = signals.length >= 3 ? 'High' : signals.length === 2 ? 'Medium' : 'Low';
+
+  return { verdict, composite, confidence, signalsUsed: signals.length };
+}
+
+const verdictColor = (verdict) => {
+  const map = {
+    'Strong Buy': '#2e7d32',
+    'Buy': '#4caf50',
+    'Hold': '#666666',
+    'Sell': '#e74c3c',
+    'Strong Sell': '#c62828',
+  };
+  return map[verdict] || '#666';
+};
+
+const confidenceColor = (confidence) => {
+  const map = { 'High': '#2e7d32', 'Medium': '#f59e0b', 'Low': '#e74c3c' };
+  return map[confidence] || '#666';
 };
 
 
@@ -31,8 +81,6 @@ function StockDetail() {
         setLoading(true);
         setError(null);
         const response = await api.get(`/stock/${ticker.toUpperCase()}`);
-        console.log('Raw response:', response);
-        console.log('Response Data:', response.data);
         setStockData(response.data);
       } catch (err) {
         console.error("Failed to fetch stock:", err);
@@ -73,6 +121,13 @@ function StockDetail() {
     }
   };
 
+  // Recompute final analysis client-side when sentiment arrives
+  const finalAnalysis = useMemo(() => {
+    if (!stockData) return null;
+    const sentimentScalar = insights?.scalar ?? null;
+    return computeFinalAnalysis(stockData.upside_pct, stockData.fr_prediction, sentimentScalar);
+  }, [stockData, insights]);
+
   if (loading) {
     return (
       <div className="stock-detail-page">
@@ -94,24 +149,22 @@ function StockDetail() {
     );
   }
 
-  // Normalize numeric values and handle nulls/strings
-  const currentPriceRaw = stockData?.current_price;
-  const predictedPriceRaw = stockData?.predicted_price;
-  const relativeErrorRaw = stockData?.relative_error;
-  const smapeRaw = stockData?.smape;
-
-  const currentPrice = typeof currentPriceRaw === 'number' ? currentPriceRaw : parseFloat(currentPriceRaw);
-  const predictedPrice = typeof predictedPriceRaw === 'number' ? predictedPriceRaw : parseFloat(predictedPriceRaw);
-  const relativeError = typeof relativeErrorRaw === 'number' ? relativeErrorRaw : parseFloat(relativeErrorRaw);
-  const smape = typeof smapeRaw === 'number' ? smapeRaw : parseFloat(smapeRaw);
-
+  // Derived values
+  const currentPrice = stockData?.current_price;
+  const intrinsicValue = stockData?.intrinsic_value;
+  const upsidePct = stockData?.upside_pct;
   const frPrediction = stockData?.fr_prediction;
+
+  const hasCurrent = currentPrice != null && !Number.isNaN(currentPrice);
+  const hasIntrinsic = intrinsicValue != null && !Number.isNaN(intrinsicValue);
+  const hasUpside = upsidePct != null && !Number.isNaN(upsidePct);
   const hasFr = frPrediction != null && !Number.isNaN(frPrediction);
+  const isEtf = stockData?.valuation === 'Cannot Valuate ETF';
 
   const frLabel = (decile) => {
     const low = decile * 10;
     const high = low + 10;
-    const percentile = decile === 9 ? 'top 10%' : decile === 0 ? 'bottom 10%' : `${low}–${high}th percentile`;
+    const percentile = decile === 9 ? 'top 10%' : decile === 0 ? 'bottom 10%' : `${low}\u2013${high}th percentile`;
     const color =
       decile >= 8 ? '#2e7d32' :
       decile >= 6 ? '#4caf50' :
@@ -123,36 +176,6 @@ function StockDetail() {
     };
   };
 
-  const hasCurrent = !Number.isNaN(currentPrice) && currentPrice != null;
-  const hasPredicted = !Number.isNaN(predictedPrice) && predictedPrice != null;
-  const hasRelative = !Number.isNaN(relativeError) && relativeError != null;
-  const hasSmape = !Number.isNaN(smape) && smape != null;
-
-  const priceDiff = (hasCurrent && hasPredicted) ? Math.abs(predictedPrice - currentPrice) : null;
-
-  // Compute a color for valuation: use relativeError for smooth gradient when available,
-  // otherwise fall back to label-based mapping.
-  const lerp = (a, b, t) => a + (b - a) * t;
-  const hexToRgb = (hex) => {
-    const h = hex.replace('#', '');
-    return [parseInt(h.substring(0,2),16), parseInt(h.substring(2,4),16), parseInt(h.substring(4,6),16)];
-  };
-  const rgbToHex = (r,g,b) => '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
-
-  // Use sMAPE magnitude to map from dark green (very good) -> bright red (very bad)
-  const valuationColorFromSmape = (smapeVal) => {
-    const GOOD = '#0b3d16'; // dark green (very good)
-    const BAD = '#ff3b30';  // bright red (very bad)
-    const [g1,g2,g3] = hexToRgb(GOOD);
-    const [b1,b2,b3] = hexToRgb(BAD);
-    const MAX = 0.3; // clamp sMAPE for color scale
-    const t = Math.max(0, Math.min(1, (smapeVal || 0) / MAX));
-    const ri = Math.round(lerp(g1, b1, t));
-    const gi = Math.round(lerp(g2, b2, t));
-    const bi = Math.round(lerp(g3, b3, t));
-    return rgbToHex(ri, gi, bi);
-  };
-
   const valuationColorFromLabel = (label) => {
     if (!label) return '#666';
     const map = {
@@ -162,21 +185,20 @@ function StockDetail() {
       'Fairly Valued': '#666666',
       'Slightly Undervalued': '#8bc34a',
       'Moderately Undervalued': '#4caf50',
-      'Significantly Undervalued': '#2e7d32'
+      'Significantly Undervalued': '#2e7d32',
+      'Cannot Valuate ETF': '#666666',
+      'Unavailable': '#666666',
     };
     return map[label] || '#666';
   };
 
-  const valuationColor = hasSmape ? valuationColorFromSmape(smape) : valuationColorFromLabel(stockData.valuation);
-  const smapeColor = hasSmape ? valuationColorFromSmape(smape) : '#666';
-
   return (
     <div className="stock-detail-page">
       <div className="navbar-placeholder"></div>
-      
+
       <div className="stock-detail-container">
         <button className="back-btn" onClick={() => navigate('/')}>
-          ← Back to Home
+          &larr; Back to Home
         </button>
 
         <div className="stock-header">
@@ -195,62 +217,102 @@ function StockDetail() {
           </div>
         </div>
 
+        {/* Final Analysis Hero Card */}
+        {finalAnalysis && (
+          <div className="final-analysis-card">
+            <div className="final-analysis-header">
+              <h2 className="final-analysis-title">Final Analysis</h2>
+              <span className="confidence-badge" style={{ color: confidenceColor(finalAnalysis.confidence) }}>
+                {finalAnalysis.confidence} Confidence
+              </span>
+            </div>
+            <div className="final-analysis-verdict" style={{ color: verdictColor(finalAnalysis.verdict) }}>
+              {finalAnalysis.verdict}
+            </div>
+            <div className="final-analysis-gauge">
+              <span className="gauge-label-left">Strong Sell</span>
+              <div className="gauge-track">
+                <div
+                  className="gauge-marker"
+                  style={{ left: `${((finalAnalysis.composite + 1) / 2) * 100}%` }}
+                />
+              </div>
+              <span className="gauge-label-right">Strong Buy</span>
+            </div>
+            <div className="final-analysis-signals">
+              {hasUpside && (
+                <span className="signal-chip">
+                  DCF: {upsidePct > 0 ? '+' : ''}{upsidePct.toFixed(1)}% upside
+                </span>
+              )}
+              {hasFr && (
+                <span className="signal-chip">
+                  Fundamentals: Decile {frPrediction}
+                </span>
+              )}
+              {insights ? (
+                <span className="signal-chip">
+                  Sentiment: {insights.scalar.toFixed(2)}
+                </span>
+              ) : (
+                <span className="signal-chip signal-chip-missing">
+                  Sentiment: Not yet analyzed
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!finalAnalysis && !isEtf && (
+          <div className="final-analysis-card">
+            <div className="final-analysis-verdict" style={{ color: '#666' }}>
+              Insufficient data for analysis
+            </div>
+          </div>
+        )}
+
         <div className="stock-info-grid">
           <div className="info-card">
-            <div className="info-label">Predicted Price</div>
-            <div className="info-value">{hasPredicted ? `$${predictedPrice.toFixed(2)}` : 'N/A'}</div>
+            <div className="info-label">Intrinsic Value (DCF)
+              <span className="info-help" tabIndex="0" aria-label="More info">&#8505;
+                <span className="tooltip">Discounted Cash Flow valuation based on projected free cash flows and WACC.</span>
+              </span>
+            </div>
+            <div className="info-value">
+              {hasIntrinsic ? `$${intrinsicValue.toFixed(2)}` : isEtf ? 'Cannot value ETF' : 'Unavailable'}
+            </div>
           </div>
 
           <div className="info-card">
             <div className="info-label">Valuation
-              <span className="info-help" tabIndex="0" aria-label="More info">ℹ
-                <span className="tooltip">This is not financial advice or a buy/sell indicator.</span>
+              <span className="info-help" tabIndex="0" aria-label="More info">&#8505;
+                <span className="tooltip">Based on intrinsic value vs. current market price. This is not financial advice.</span>
               </span>
             </div>
-            <div className="info-value" style={{ color: valuationColor }}>{stockData.valuation || 'N/A'}</div>
-          </div>
-
-          <div className="info-card">
-            <div className="info-label">Relative Error
-              <span className="info-help" tabIndex="0" aria-label="More info">ℹ
-                <span className="tooltip">Signed percent difference: (predicted - current) / current — shows direction and magnitude.</span>
-              </span>
-            </div>
-            <div className={`info-value ${hasRelative ? (relativeError >= 0 ? 'positive' : 'negative') : ''}`}>
-              {hasRelative ? `${(relativeError * 100).toFixed(2)}%` : 'N/A'}
+            <div className="info-value" style={{ color: valuationColorFromLabel(stockData.valuation) }}>
+              {stockData.valuation || 'N/A'}
             </div>
           </div>
 
           <div className="info-card">
-            <div className="info-label">sMAPE
-              <span className="info-help" tabIndex="0" aria-label="More info">ℹ
-                <span className="tooltip">Symmetric Mean Absolute Percentage Error — magnitude of prediction error.</span>
+            <div className="info-label">Upside / Downside
+              <span className="info-help" tabIndex="0" aria-label="More info">&#8505;
+                <span className="tooltip">Percentage difference between intrinsic value and current price. Positive means undervalued.</span>
               </span>
             </div>
-            <div className={`info-value`} style={{ color: smapeColor }}>
-              {hasSmape ? `${(smape * 100).toFixed(2)}%` : 'N/A'}
+            <div className={`info-value ${hasUpside ? (upsidePct >= 0 ? 'positive' : 'negative') : ''}`}>
+              {hasUpside ? `${upsidePct > 0 ? '+' : ''}${upsidePct.toFixed(1)}%` : 'N/A'}
             </div>
           </div>
 
           <div className="info-card">
             <div className="info-label">Forward Return Classification
-              <span className="info-help" tabIndex="0" aria-label="More info">ℹ
-                <span className="tooltip">XGBoost-predicted return decile (0–9) based on fundamental quality and momentum signals. Higher deciles indicate stronger expected forward returns.</span>
+              <span className="info-help" tabIndex="0" aria-label="More info">&#8505;
+                <span className="tooltip">XGBoost-predicted return decile (0-9) based on fundamental quality and momentum signals. Higher deciles indicate stronger expected forward returns.</span>
               </span>
             </div>
             <div className="info-value" style={{ color: hasFr ? frLabel(frPrediction).color : '#666' }}>
-              {hasFr ? frLabel(frPrediction).label : stockData.valuation === 'Cannot Valuate ETF' ? 'Cannot classify ETF' : 'N/A'}
-            </div>
-          </div>
-
-          <div className="info-card">
-            <div className="info-label">Price Difference
-              <span className="info-help" tabIndex="0" aria-label="More info">ℹ
-                <span className="tooltip">Absolute dollar difference between predicted and current price.</span>
-              </span>
-            </div>
-            <div className={`info-value ${priceDiff !== null ? (predictedPrice >= currentPrice ? 'positive' : 'negative') : ''}`}>
-              {priceDiff !== null ? `$${priceDiff.toFixed(2)}` : 'N/A'}
+              {hasFr ? frLabel(frPrediction).label : isEtf ? 'Cannot classify ETF' : 'N/A'}
             </div>
           </div>
 
@@ -268,7 +330,7 @@ function StockDetail() {
                 onClick={handleGetInsights}
                 disabled={insightsLoading || remaining === 0}
               >
-                {insightsLoading ? 'Analyzing…' : remaining === 0 ? 'Limit reached' : 'Get Score'}
+                {insightsLoading ? 'Analyzing\u2026' : remaining === 0 ? 'Limit reached' : 'Get Score'}
               </button>
             )}
           </div>
@@ -284,7 +346,7 @@ function StockDetail() {
                 disabled={insightsLoading || remaining === 0}
               >
                 {insightsLoading
-                  ? 'Analyzing…'
+                  ? 'Analyzing\u2026'
                   : insights
                   ? 'Refresh Analysis'
                   : 'Get Sentiment Analysis'}
@@ -298,7 +360,7 @@ function StockDetail() {
           </div>
 
           {insightsLoading && (
-            <div className="insights-loading">Analyzing market sentiment for {ticker.toUpperCase()}…</div>
+            <div className="insights-loading">Analyzing market sentiment for {ticker.toUpperCase()}\u2026</div>
           )}
 
           {insightsError && !insightsLoading && (
@@ -323,7 +385,7 @@ function StockDetail() {
                   className={`insights-scalar-value ${insights.scalar > 1.03 ? 'bullish' : insights.scalar < 0.97 ? 'bearish' : 'neutral'}`}
                 >
                   {insights.scalar.toFixed(2)}
-                  &nbsp;·&nbsp;
+                  &nbsp;&middot;&nbsp;
                   {insights.scalar > 1.03 ? 'Bullish' : insights.scalar < 0.97 ? 'Bearish' : 'Neutral'}
                 </span>
               </div>

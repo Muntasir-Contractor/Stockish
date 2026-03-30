@@ -256,11 +256,17 @@ function App(){
               {searchResults.length > 0 ? (
                 <ul>
                   {searchResults.map((result, index) => (
-                    <li 
+                    <li
                       key={result.symbol}
                       onClick={() => handleStockSelect(result.symbol)}
                       className={selectedIndex === index ? 'selected' : ''}
                     >
+                      <img
+                        src={getLogo(result.symbol)}
+                        alt=""
+                        className="result-logo"
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(result.symbol, '6fbf73'); }}
+                      />
                       <div className="result-main">
                         <strong>{result.symbol}</strong>
                         <span className="result-name">{result.name}</span>
@@ -288,17 +294,17 @@ function App(){
               <span className="value">${selectedStock.current_price?.toFixed(2)}</span>
             </div>
             <div className="detail-card">
-              <span className="label">Predicted Price</span>
-              <span className="value">${selectedStock.predicted_price?.toFixed(2)}</span>
+              <span className="label">Intrinsic Value</span>
+              <span className="value">{selectedStock.intrinsic_value ? `$${selectedStock.intrinsic_value.toFixed(2)}` : 'N/A'}</span>
             </div>
             <div className="detail-card">
               <span className="label">Valuation</span>
               <span className="value">{selectedStock.valuation}</span>
             </div>
             <div className="detail-card">
-              <span className="label">Relative Error</span>
-              <span className={`value ${selectedStock.relative_error >= 0 ? 'positive' : 'negative'}`}>
-                {(selectedStock.relative_error * 100).toFixed(2)}%
+              <span className="label">Upside / Downside</span>
+              <span className={`value ${selectedStock.upside_pct != null ? (selectedStock.upside_pct >= 0 ? 'positive' : 'negative') : ''}`}>
+                {selectedStock.upside_pct != null ? `${selectedStock.upside_pct > 0 ? '+' : ''}${selectedStock.upside_pct.toFixed(1)}%` : 'N/A'}
               </span>
             </div>
           </div>

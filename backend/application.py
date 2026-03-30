@@ -148,6 +148,8 @@ def feature_importance(model):
     print(importance_df.head(20))
 
 async def get_fr_prediction(ticker : str, model) -> float:
+    if (is_etf(ticker))[0]:
+        return None
     if exists_in_stockdb(ticker):
         #Gets the latest published date of the companies income statement, if the current income statement date
         # is greater than the datestamp, we must run a new analysis on the forward return classification

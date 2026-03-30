@@ -122,13 +122,58 @@
   font-size: 28px;
 }
 
+.stock-cards-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .stock-cards {
   display: flex;
   gap: 20px;
-  overflow-x: auto; /* Enables horizontal scrolling if too many cards */
+  overflow-x: auto;
   padding: 20px 10px;
   list-style: none;
   margin: 0;
+  scrollbar-width: none; /* Firefox */
+}
+
+.stock-cards::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.scroll-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 24px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.scroll-arrow:hover {
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.scroll-arrow-left {
+  left: 0;
+}
+
+.scroll-arrow-right {
+  right: 0;
 }
 
 .stock-card {

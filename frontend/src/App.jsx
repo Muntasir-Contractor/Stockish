@@ -17,6 +17,75 @@ function App(){
   // Ref to track the search timeout
   const searchTimeoutRef = useRef(null);
 
+  // Refs for scrollable stock card lists
+  const moversRef = useRef(null);
+  const gainersRef = useRef(null);
+  const losersRef = useRef(null);
+
+  // Track which arrows to show per section
+  const [canScroll, setCanScroll] = useState({
+    movers: { left: false, right: false },
+    gainers: { left: false, right: false },
+    losers: { left: false, right: false },
+  });
+
+  const updateCanScroll = (name, el) => {
+    if (!el) return;
+    setCanScroll(prev => ({
+      ...prev,
+      [name]: {
+        left: el.scrollLeft > 0,
+        right: el.scrollLeft + el.clientWidth < el.scrollWidth - 1,
+      },
+    }));
+  };
+
+  // Attach scroll listeners and run initial check once data loads
+  useEffect(() => {
+    const refs = { movers: moversRef, gainers: gainersRef, losers: losersRef };
+    const handlers = {};
+    for (const [name, ref] of Object.entries(refs)) {
+      if (ref.current) {
+        updateCanScroll(name, ref.current);
+        handlers[name] = () => updateCanScroll(name, ref.current);
+        ref.current.addEventListener('scroll', handlers[name]);
+      }
+    }
+    return () => {
+      for (const [name, ref] of Object.entries(refs)) {
+        if (ref.current && handlers[name]) {
+          ref.current.removeEventListener('scroll', handlers[name]);
+        }
+      }
+    };
+  }, [topmovers, topgainers, toplosers]);
+
+  const scroll = (ref, name, direction) => {
+    if (!ref.current) return;
+    const el = ref.current;
+    const distance = 600;
+    const duration = 400;
+    const start = el.scrollLeft;
+    const target = direction === 'right' ? distance : -distance;
+    let startTime = null;
+
+    const step = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const ease = progress < 0.5
+        ? 2 * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+      el.scrollLeft = start + target * ease;
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        updateCanScroll(name, el);
+      }
+    };
+
+    requestAnimationFrame(step);
+  };
+
   // Logokit token state
   const [logokitToken, setLogokitToken] = useState("");
 
@@ -244,68 +313,80 @@ function App(){
         <br />
         <br />
         <h2>Top Movers</h2>
-        <ul className="stock-cards">
-          {topmovers.map(u => (
-            <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
-              <img
-                src={getLogo(u.symbol)}
-                alt={u.name}
-                className="company-badge"
-                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, '1976d2'); }}
-              />
-              <div className="stock-symbol">{u.symbol}</div>
-              <div className="stock-name">{u.name}</div>
-              <div className="stock-price">{isNaN(Number(u.price)) ? `$${u.price} USD` : `$${Number(u.price).toFixed(2)} USD`}</div>
-              <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
-                {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="stock-cards-wrapper">
+          {canScroll.movers.left && <button className="scroll-arrow scroll-arrow-left" onClick={() => scroll(moversRef, 'movers', 'left')}>&#8249;</button>}
+          <ul className="stock-cards" ref={moversRef}>
+            {topmovers.map(u => (
+              <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
+                <img
+                  src={getLogo(u.symbol)}
+                  alt={u.name}
+                  className="company-badge"
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, '1976d2'); }}
+                />
+                <div className="stock-symbol">{u.symbol}</div>
+                <div className="stock-name">{u.name}</div>
+                <div className="stock-price">{isNaN(Number(u.price)) ? `$${u.price} USD` : `$${Number(u.price).toFixed(2)} USD`}</div>
+                <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
+                  {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
+                </div>
+              </li>
+            ))}
+          </ul>
+          {canScroll.movers.right && <button className="scroll-arrow scroll-arrow-right" onClick={() => scroll(moversRef, 'movers', 'right')}>&#8250;</button>}
+        </div>
       </div>
       {/* Top Gainers */}
       <div className="stock-list gainers">
         <h2>Top Gainers</h2>
-        <ul className="stock-cards">
-          {topgainers.map(u => (
-            <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
-              <img
-                src={getLogo(u.symbol)}
-                alt={u.name}
-                className="company-badge"
-                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, '6fbf73'); }}
-              />
-              <div className="stock-symbol">{u.symbol}</div>
-              <div className="stock-name">{u.name}</div>
-              <div className="stock-price">{isNaN(Number(u.price)) ? `$${u.price} USD` : `$${Number(u.price).toFixed(2)} USD`}</div>
-              <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
-                {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="stock-cards-wrapper">
+          {canScroll.gainers.left && <button className="scroll-arrow scroll-arrow-left" onClick={() => scroll(gainersRef, 'gainers', 'left')}>&#8249;</button>}
+          <ul className="stock-cards" ref={gainersRef}>
+            {topgainers.map(u => (
+              <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
+                <img
+                  src={getLogo(u.symbol)}
+                  alt={u.name}
+                  className="company-badge"
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, '6fbf73'); }}
+                />
+                <div className="stock-symbol">{u.symbol}</div>
+                <div className="stock-name">{u.name}</div>
+                <div className="stock-price">{isNaN(Number(u.price)) ? `$${u.price} USD` : `$${Number(u.price).toFixed(2)} USD`}</div>
+                <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
+                  {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
+                </div>
+              </li>
+            ))}
+          </ul>
+          {canScroll.gainers.right && <button className="scroll-arrow scroll-arrow-right" onClick={() => scroll(gainersRef, 'gainers', 'right')}>&#8250;</button>}
+        </div>
       </div>
       {/* Top Losers */}
       <div className="stock-list losers">
         <h2>Top Losers</h2>
-        <ul className="stock-cards">
-          {toplosers.map(u => (
-            <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
-              <img
-                src={getLogo(u.symbol)}
-                alt={u.name}
-                className="company-badge"
-                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, 'e74c3c'); }}
-              />
-              <div className="stock-symbol">{u.symbol}</div>
-              <div className="stock-name">{u.name}</div>
-              <div className="stock-price">{isNaN(Number(u.price)) ? `$${u.price} USD` : `$${Number(u.price).toFixed(2)} USD`}</div>
-              <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
-                {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="stock-cards-wrapper">
+          {canScroll.losers.left && <button className="scroll-arrow scroll-arrow-left" onClick={() => scroll(losersRef, 'losers', 'left')}>&#8249;</button>}
+          <ul className="stock-cards" ref={losersRef}>
+            {toplosers.map(u => (
+              <li key={u.symbol} className="stock-card" onClick={() => handleStockSelect(u.symbol)}>
+                <img
+                  src={getLogo(u.symbol)}
+                  alt={u.name}
+                  className="company-badge"
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, 'e74c3c'); }}
+                />
+                <div className="stock-symbol">{u.symbol}</div>
+                <div className="stock-name">{u.name}</div>
+                <div className="stock-price">{isNaN(Number(u.price)) ? `$${u.price} USD` : `$${Number(u.price).toFixed(2)} USD`}</div>
+                <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
+                  {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
+                </div>
+              </li>
+            ))}
+          </ul>
+          {canScroll.losers.right && <button className="scroll-arrow scroll-arrow-right" onClick={() => scroll(losersRef, 'losers', 'right')}>&#8250;</button>}
+        </div>
       </div>
     </div>
   );

@@ -114,12 +114,16 @@ async def get_stock_info(ticker: str):
         valuation = "Cannot Valuate ETF" if is_etf(ticker)[0] else "Unavailable"
         wacc = None
         growth_rate = None
+        dcf_confidence = None
+        dcf_warnings = []
 
         if dcf_result is not None:
             intrinsic_value = dcf_result.get("intrinsic_value")
             upside_pct = dcf_result.get("upside_downside_pct")
             wacc = dcf_result.get("wacc")
             growth_rate = dcf_result.get("near_term_growth")
+            dcf_confidence = dcf_result.get("dcf_confidence")
+            dcf_warnings = dcf_result.get("dcf_warnings", [])
             if upside_pct is not None:
                 valuation = dcf_valuation_label(upside_pct)
 
@@ -135,6 +139,8 @@ async def get_stock_info(ticker: str):
             "growth_rate": growth_rate,
             "fr_prediction": fr_prediction,
             "final_analysis": final_analysis,
+            "dcf_confidence": dcf_confidence,
+            "dcf_warnings": dcf_warnings,
         }
     except Exception as e:
         raise Exception(e)

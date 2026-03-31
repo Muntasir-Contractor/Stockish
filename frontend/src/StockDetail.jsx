@@ -14,12 +14,13 @@ const getAvatarFallback = (name, bg = '1976d2') => {
 };
 
 // Client-side final analysis (mirrors backend logic)
-function computeFinalAnalysis(upsidePct, frPrediction, sentimentScalar) {
+function computeFinalAnalysis(upsidePct, frPrediction, sentimentScalar, dcfConfidence) {
   const signals = [];
 
   if (upsidePct != null) {
     const dcfScore = Math.max(-1, Math.min(1, upsidePct / 50));
-    signals.push({ name: 'dcf', score: dcfScore, weight: 0.50 });
+    const confMultiplier = { high: 1.0, medium: 0.5, low: 0.25 }[dcfConfidence] ?? 1.0;
+    signals.push({ name: 'dcf', score: dcfScore, weight: 0.50 * confMultiplier });
   }
   if (frPrediction != null) {
     const frScore = (frPrediction - 4.5) / 4.5;
@@ -125,7 +126,7 @@ function StockDetail() {
   const finalAnalysis = useMemo(() => {
     if (!stockData) return null;
     const sentimentScalar = insights?.scalar ?? null;
-    return computeFinalAnalysis(stockData.upside_pct, stockData.fr_prediction, sentimentScalar);
+    return computeFinalAnalysis(stockData.upside_pct, stockData.fr_prediction, sentimentScalar, stockData.dcf_confidence);
   }, [stockData, insights]);
 
   if (loading) {
@@ -155,11 +156,19 @@ function StockDetail() {
   const upsidePct = stockData?.upside_pct;
   const frPrediction = stockData?.fr_prediction;
 
+  const dcfConfidence = stockData?.dcf_confidence;
+  const dcfWarnings = stockData?.dcf_warnings || [];
+
   const hasCurrent = currentPrice != null && !Number.isNaN(currentPrice);
   const hasIntrinsic = intrinsicValue != null && !Number.isNaN(intrinsicValue);
   const hasUpside = upsidePct != null && !Number.isNaN(upsidePct);
   const hasFr = frPrediction != null && !Number.isNaN(frPrediction);
   const isEtf = stockData?.valuation === 'Cannot Valuate ETF';
+
+  const dcfConfidenceColor = (level) => {
+    const map = { high: '#2e7d32', medium: '#f59e0b', low: '#e74c3c' };
+    return map[level] || '#666';
+  };
 
   const frLabel = (decile) => {
     const low = decile * 10;
@@ -285,6 +294,18 @@ function StockDetail() {
             <div className="info-value">
               {hasIntrinsic ? `$${intrinsicValue.toFixed(2)}` : isEtf ? 'Cannot value ETF' : 'Unavailable'}
             </div>
+            {dcfConfidence && (
+              <div className="dcf-confidence-row">
+                <span className="dcf-confidence-badge" style={{ color: dcfConfidenceColor(dcfConfidence) }}>
+                  {dcfConfidence.charAt(0).toUpperCase() + dcfConfidence.slice(1)} Confidence
+                </span>
+                {dcfWarnings.length > 0 && (
+                  <span className="info-help" tabIndex="0" aria-label="DCF warnings">&#9888;
+                    <span className="tooltip tooltip-wide">{dcfWarnings.join(' | ')}</span>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="info-card">

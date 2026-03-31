@@ -7,9 +7,11 @@ import numpy as np
 RISK_FREE_RATE      = 0.0396
 EQUITY_RISK_PREMIUM = 0.0438
 MAX_WACC            = 0.15
+MIN_WACC            = 0.05
+MIN_WACC_GROWTH_SPREAD = 0.02  # floor for Gordon Growth denominator (WACC - g)
 MAX_TAX_RATE        = 0.40
 MIN_TAX_RATE        = 0.0
-MAX_GROWTH_RATE     = 0.60
+MAX_GROWTH_RATE     = 0.30
 MIN_GROWTH_RATE     = -0.10
 FCF_SANITY_LIMIT    = 5e12   # warn if any projected FCF exceeds $5T
 
@@ -43,10 +45,17 @@ def WACC(mc: float, td: float, coe: float, cod: float, tr: float) -> float:
 
 
 def TV_perpetuity(fcf: float, g: float, wacc: float) -> float:
-    """Gordon Growth Model terminal value."""
-    if wacc <= g:
-        raise ValueError(f"WACC ({wacc:.2%}) must be greater than growth rate ({g:.2%})")
-    return (fcf * (1 + g)) / (wacc - g)
+    """Gordon Growth Model terminal value with minimum spread guardrail."""
+    if fcf < 0:
+        print(f"  [WARNING] Terminal FCF is negative (${fcf:,.0f}). "
+              f"Terminal value capped at 0 (not projecting perpetual losses).")
+        return 0.0
+    spread = wacc - g
+    if spread < MIN_WACC_GROWTH_SPREAD:
+        print(f"  [WARNING] WACC-growth spread ({spread:.2%}) floored at "
+              f"{MIN_WACC_GROWTH_SPREAD:.2%}. Terminal value is capped.")
+        spread = MIN_WACC_GROWTH_SPREAD
+    return (fcf * (1 + g)) / spread
 
 
 def TV_exitMultiple(metric: float, multiple: float) -> float:
@@ -54,19 +63,40 @@ def TV_exitMultiple(metric: float, multiple: float) -> float:
     return metric * multiple
 
 
+def _ocf_cagr(tk: yf.Ticker) -> float | None:
+    """
+    Operating Cash Flow CAGR — used as a fallback when FCF is distorted
+    by lumpy capex (e.g. AMZN, GOOG during heavy infrastructure investment).
+    Returns None if insufficient data.
+    """
+    try:
+        cf = tk.cashflow
+        if "Operating Cash Flow" not in cf.index:
+            return None
+        ocf_values = cf.loc["Operating Cash Flow"].dropna().values
+        if len(ocf_values) >= 2:
+            latest, oldest = ocf_values[0], ocf_values[-1]
+            if latest > 0 and oldest > 0:
+                n = len(ocf_values) - 1
+                return float((latest / oldest) ** (1 / n) - 1)
+    except Exception:
+        pass
+    return None
+
+
 def estimate_growth_rate(tk: yf.Ticker) -> tuple[float, bool]:
     """
-    Estimate near-term FCF growth using historical FCF CAGR.
+    Estimate near-term FCF growth using historical CAGR.
     Returns (growth_rate, used_fallback).
     Capped between MIN_GROWTH_RATE and MAX_GROWTH_RATE.
 
-    Fallback hierarchy (best → worst):
-      1. Full-period CAGR — both endpoint years are positive.
-      2. Positive-years-only CAGR — skips negative trough years and computes
-         CAGR between the most-recent and oldest positive year. Handles
-         companies like AMZN that had a loss period mid-history.
-      3. All FCFs negative → 0% (flat cash burn assumption).
-      4. Only one positive year or exception → 5%.
+    Fallback hierarchy (best -> worst):
+      1. Full-period FCF CAGR — both endpoint years are positive.
+      2. Positive-years-only FCF CAGR — skips negative trough years.
+      3. Operating Cash Flow CAGR — when FCF CAGR is negative but OCF is
+         growing, capex is distorting FCF. Uses OCF growth as proxy.
+      4. All FCFs negative -> 0% (flat cash burn assumption).
+      5. Only one positive year or exception -> 5%.
     """
     try:
         cf = tk.cashflow
@@ -80,6 +110,14 @@ def estimate_growth_rate(tk: yf.Ticker) -> tuple[float, bool]:
             # Tier 1: full-period CAGR (both endpoints positive)
             if oldest > 0 and latest > 0:
                 cagr = (latest / oldest) ** (1 / n) - 1
+                # Tier 1b: if FCF CAGR is negative, check if OCF tells a better story
+                if cagr < 0:
+                    ocf_growth = _ocf_cagr(tk)
+                    if ocf_growth is not None and ocf_growth > 0:
+                        print(f"  [INFO] FCF CAGR ({cagr:.1%}) is negative but OCF CAGR "
+                              f"({ocf_growth:.1%}) is positive — capex likely distorting FCF. "
+                              f"Using OCF growth as proxy.")
+                        return float(np.clip(ocf_growth, MIN_GROWTH_RATE, MAX_GROWTH_RATE)), False
                 return float(np.clip(cagr, MIN_GROWTH_RATE, MAX_GROWTH_RATE)), False
 
             # Tier 2: CAGR across only the positive-FCF years (skip negative trough)
@@ -90,14 +128,26 @@ def estimate_growth_rate(tk: yf.Ticker) -> tuple[float, bool]:
                 n_pos = i_old - i_rec
                 if n_pos > 0:
                     cagr = (v_rec / v_old) ** (1 / n_pos) - 1
+                    if cagr < 0:
+                        ocf_growth = _ocf_cagr(tk)
+                        if ocf_growth is not None and ocf_growth > 0:
+                            print(f"  [INFO] FCF CAGR ({cagr:.1%}) is negative but OCF CAGR "
+                                  f"({ocf_growth:.1%}) is positive — using OCF growth as proxy.")
+                            return float(np.clip(ocf_growth, MIN_GROWTH_RATE, MAX_GROWTH_RATE)), False
                     return float(np.clip(cagr, MIN_GROWTH_RATE, MAX_GROWTH_RATE)), False
 
-            # Tier 3: all negative — flat cash burn
+            # Tier 3: OCF fallback when no usable FCF CAGR at all
+            ocf_growth = _ocf_cagr(tk)
+            if ocf_growth is not None and ocf_growth > 0:
+                print(f"  [INFO] No usable FCF CAGR — falling back to OCF CAGR ({ocf_growth:.1%}).")
+                return float(np.clip(ocf_growth, MIN_GROWTH_RATE, MAX_GROWTH_RATE)), False
+
+            # Tier 4: all negative — flat cash burn
             if all(v <= 0 for v in fcf_values):
                 print("  [WARNING] All historical FCFs are negative; using 0% fallback growth.")
                 return 0.0, True
 
-            # Tier 4: only one positive year, no trend computable
+            # Tier 5: only one positive year, no trend computable
     except Exception:
         pass
     return 0.05, True   # fallback — flag it
@@ -112,8 +162,8 @@ def project_fcfs_with_fade(
     """
     Project FCFs while linearly fading growth from g_near to g_terminal.
 
-    weight=0 in year 1  → uses g_near
-    weight=1 in year N  → uses g_terminal
+    weight=0 in year 1  -> uses g_near
+    weight=1 in year N  -> uses g_terminal
     For n_years=1 weight is forced to 0 so the single year uses g_near.
 
     Warns if any projected FCF exceeds FCF_SANITY_LIMIT.
@@ -121,8 +171,11 @@ def project_fcfs_with_fade(
     fcfs = []
     fcf = base_fcf
     for yr in range(1, n_years + 1):
-        # FIX: use 0.0 (g_near) when n_years=1 instead of 1.0 (g_terminal)
-        weight = (yr - 1) / (n_years - 1) if n_years > 1 else 0.0
+        if n_years > 1:
+            t = (yr - 1) / (n_years - 1)        # 0..1
+            weight = 1 - np.exp(-3 * t)          # exponential decay: ~0 at yr1, ~0.95 at yr5
+        else:
+            weight = 0.0
         g = g_near + weight * (g_terminal - g_near)
         fcf = fcf * (1 + g)
         if abs(fcf) > FCF_SANITY_LIMIT:
@@ -160,6 +213,55 @@ def intrinsic_value_per_share(
     if shares_outstanding <= 0:
         return np.nan
     return equity_value / shares_outstanding
+
+
+def _assess_dcf_confidence(
+    intrinsic_value: float,
+    current_price: float,
+    pv_tv: float,
+    enterprise_value: float,
+    net_debt: float,
+    base_fcf: float,
+    used_fallback: bool,
+) -> tuple[str, list[str]]:
+    """
+    Assess confidence in DCF result.
+    Returns (level, [warnings]) where level is "high", "medium", or "low".
+    """
+    warnings = []
+
+    if not _is_valid_float(intrinsic_value) or current_price <= 0:
+        return "low", ["Invalid intrinsic value or price"]
+
+    ratio = intrinsic_value / current_price
+    if ratio > 10.0 or ratio < 0.1:
+        warnings.append(f"Intrinsic value is {ratio:.1f}x current price (extreme)")
+    elif ratio > 5.0 or ratio < 0.2:
+        warnings.append(f"Intrinsic value is {ratio:.1f}x current price")
+
+    if enterprise_value != 0:
+        tv_pct = abs(pv_tv) / abs(enterprise_value)
+        if tv_pct > 0.90:
+            warnings.append(f"Terminal value is {tv_pct:.0%} of enterprise value")
+
+    if enterprise_value > 0 and net_debt > 0.5 * enterprise_value:
+        warnings.append(f"Net debt is {net_debt / enterprise_value:.0%} of EV")
+
+    if base_fcf < 0:
+        warnings.append("Base FCF is negative")
+
+    if used_fallback:
+        warnings.append("Used fallback growth rate")
+
+    extreme = any("extreme" in w for w in warnings)
+    if len(warnings) >= 3 or extreme:
+        level = "low"
+    elif len(warnings) >= 1:
+        level = "medium"
+    else:
+        level = "high"
+
+    return level, warnings
 
 
 # ── Main DCF function ─────────────────────────────────────────────────────────
@@ -279,21 +381,26 @@ def discounted_cashflow_analysis(
     coe  = cost_of_equity(adjusted_beta, risk_free_rate, equity_risk_premium)
     wacc = WACC(market_cap, total_debt, coe, cod, tax_rate)
 
-    # Cap WACC to avoid extreme discounting from high-beta stocks
+    # Clamp WACC to [MIN_WACC, MAX_WACC]
     if wacc > MAX_WACC:
         print(f"  [WARNING] WACC {wacc:.2%} capped at {MAX_WACC:.2%} for {ticker_symbol}. "
               f"Intrinsic value will be overstated — treat result with caution.")
         wacc = MAX_WACC
+    elif wacc < MIN_WACC:
+        print(f"  [WARNING] WACC {wacc:.2%} floored at {MIN_WACC:.2%} for {ticker_symbol}.")
+        wacc = MIN_WACC
 
     # ── Growth rate estimate ───────────────────────────────────────────────────
     g_near, used_fallback = estimate_growth_rate(tk)
     if used_fallback:
         print(f"  [WARNING] Could not compute FCF CAGR for {ticker_symbol}, using fallback")
 
-    # Warn if negative base FCF is paired with positive growth (projections diverge negatively)
+    # Negative base FCF + positive growth = diverging losses; zero out growth
     if free_cash_flow < 0 and g_near > 0:
         print(f"  [WARNING] Base FCF is negative (${free_cash_flow:,.0f}) with positive "
-              f"near-term growth ({g_near:.1%}). Projections will become increasingly negative.")
+              f"near-term growth ({g_near:.1%}). Setting growth to 0% to avoid "
+              f"diverging negative projections.")
+        g_near = 0.0
 
     # ── Project & discount FCFs ────────────────────────────────────────────────
     projected_fcfs  = project_fcfs_with_fade(free_cash_flow, g_near, terminal_growth_rate, n_years)
@@ -328,6 +435,16 @@ def discounted_cashflow_analysis(
     price_is_valid = _is_valid_float(price_target)
     upside = ((price_target / current_price) - 1) if price_is_valid else None
 
+    # ── Confidence assessment ─────────────────────────────────────────────────
+    pv_tv = float(tv) / (1 + wacc) ** n_years
+    enterprise_value = pv_sum_fcfs + pv_tv
+    net_debt = total_debt - cash
+
+    confidence_level, confidence_warnings = _assess_dcf_confidence(
+        price_target, current_price, pv_tv, enterprise_value,
+        net_debt, free_cash_flow, used_fallback,
+    )
+
     # ── Assemble results ───────────────────────────────────────────────────────
     results = {
         "ticker":                ticker_symbol.upper(),
@@ -350,12 +467,14 @@ def discounted_cashflow_analysis(
         "pv_sum_fcfs":           round(pv_sum_fcfs, 0),
         "terminal_value":        round(float(tv), 0),
         "tv_perpetuity_ref":     round(float(tv_perp), 0) if _is_valid_float(tv_perp) else None,
-        "enterprise_value":      round(pv_sum_fcfs + float(tv) / (1 + wacc) ** n_years, 0),
+        "enterprise_value":      round(enterprise_value, 0),
+        "dcf_confidence":        confidence_level,
+        "dcf_warnings":          confidence_warnings,
     }
 
     # ── Pretty print ───────────────────────────────────────────────────────────
     if verbose:
-        fallback_flag = " ⚠ fallback" if used_fallback else ""
+        fallback_flag = " !! fallback" if used_fallback else ""
         print(f"\n{'='*55}")
         print(f"  DCF Analysis — {results['ticker']}")
         print(f"{'='*55}")
@@ -368,7 +487,7 @@ def discounted_cashflow_analysis(
         print(f"  Cost of Equity      : {results['coe']}%")
         print(f"  Cost of Debt        : {results['cod']}%")
         print(f"  Tax Rate            : {results['tax_rate']}%")
-        print(f"  Beta (raw/adj)      : {results['beta']} → {results['adjusted_beta']} (Blume)")
+        print(f"  Beta (raw/adj)      : {results['beta']} -> {results['adjusted_beta']} (Blume)")
         print(f"{'-'*55}")
         print(f"  Near-term FCF Growth: {results['near_term_growth']}%{fallback_flag}")
         print(f"  Terminal Growth     : {results['terminal_growth']}%")
@@ -376,10 +495,15 @@ def discounted_cashflow_analysis(
         print(f"{'-'*55}")
         print(f"  Base FCF            : ${free_cash_flow:,.0f}")
         for i, (proj, disc) in enumerate(zip(results['projected_fcfs'], results['discounted_fcfs']), 1):
-            print(f"  Year {i} FCF (PV)    : ${proj:>14,.0f}  →  ${disc:>14,.0f}")
+            print(f"  Year {i} FCF (PV)    : ${proj:>14,.0f}  ->  ${disc:>14,.0f}")
         print(f"  PV of FCFs          : ${results['pv_sum_fcfs']:>14,.0f}")
         print(f"  Terminal Value      : ${results['terminal_value']:>14,.0f}")
         print(f"  Enterprise Value    : ${results['enterprise_value']:>14,.0f}")
+        print(f"{'-'*55}")
+        print(f"  Confidence          : {confidence_level.upper()}")
+        if confidence_warnings:
+            for w in confidence_warnings:
+                print(f"    !! {w}")
         print(f"{'='*55}\n")
 
     return results

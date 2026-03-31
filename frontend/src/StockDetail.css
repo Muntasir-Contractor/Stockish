@@ -290,6 +290,30 @@
   word-break: break-word;
 }
 
+/* DCF Confidence */
+.dcf-confidence-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.dcf-confidence-badge {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.tooltip-wide {
+  white-space: normal;
+  min-width: 220px;
+  max-width: 320px;
+  text-align: left;
+  line-height: 1.5;
+}
+
 .info-value.positive {
   color: #6fbf73;
 }

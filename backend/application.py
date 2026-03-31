@@ -83,10 +83,13 @@ def compute_final_analysis(dcf_result: dict | None, fr_prediction: float | None,
     signals = []
 
     # DCF signal: upside_pct mapped to [-1, 1], clamped at +/-50%
+    # Weight is scaled by DCF confidence: high=1.0, medium=0.5, low=0.25
     if dcf_result is not None and dcf_result.get("upside_downside_pct") is not None:
         upside = dcf_result["upside_downside_pct"]
         dcf_score = max(-1.0, min(1.0, upside / 50.0))
-        signals.append({"name": "dcf", "score": dcf_score, "weight": 0.50})
+        conf = dcf_result.get("dcf_confidence", "high")
+        conf_multiplier = {"high": 1.0, "medium": 0.5, "low": 0.25}.get(conf, 1.0)
+        signals.append({"name": "dcf", "score": dcf_score, "weight": 0.50 * conf_multiplier})
 
     # FR signal: decile 0-9 mapped to [-1, 1]
     if fr_prediction is not None:

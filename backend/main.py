@@ -21,7 +21,19 @@ from application import get_stock_price, is_etf, get_fr_prediction, get_valuatio
 TODO: Replace hardcoded sector medians (scripts/valuation_models)
        with medians of top 5-15 companies in that sector, caching,
        and refetching every quarter.
-       
+
+       Show users limitations and assumptions made on the
+       valuations models, let users make their own assumptions
+       to output a new value
+
+       Have a 'How to interpret the output' (replacing placeholder 1) section that explains throughouly
+       the fr classification, the features it is trained on, and what the output means
+
+       Show users how confidence level is obtained; urging that confidence level
+       does not emphasize an action rather that precise variables
+       were used instead of fallback/default values
+
+
 
 """
 

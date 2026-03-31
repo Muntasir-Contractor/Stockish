@@ -485,6 +485,14 @@
   color: #e74c3c;
 }
 
+.popup-disclaimer {
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+  margin: 12px 0 0;
+  line-height: 1.4;
+}
+
 /* Make stock cards clickable */
 .stock-card {
   cursor: pointer;

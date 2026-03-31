@@ -15,6 +15,23 @@ MAX_GROWTH_RATE     = 0.30
 MIN_GROWTH_RATE     = -0.10
 FCF_SANITY_LIMIT    = 5e12   # warn if any projected FCF exceeds $5T
 
+# ── Sector Median Multiples ──────────────────────────────────────────────────
+
+SECTOR_MEDIANS = {
+    "Technology":             {"pe": 28.0, "ps": 6.0, "pb": 7.0, "ev_ebitda": 20.0},
+    "Communication Services": {"pe": 18.0, "ps": 3.0, "pb": 3.0, "ev_ebitda": 12.0},
+    "Consumer Cyclical":      {"pe": 20.0, "ps": 1.5, "pb": 4.0, "ev_ebitda": 14.0},
+    "Consumer Defensive":     {"pe": 22.0, "ps": 2.0, "pb": 4.5, "ev_ebitda": 15.0},
+    "Energy":                 {"pe": 12.0, "ps": 1.2, "pb": 1.8, "ev_ebitda": 6.0},
+    "Financial Services":     {"pe": 13.0, "ps": 3.0, "pb": 1.3, "ev_ebitda": 10.0},
+    "Healthcare":             {"pe": 22.0, "ps": 4.0, "pb": 4.0, "ev_ebitda": 16.0},
+    "Industrials":            {"pe": 20.0, "ps": 2.0, "pb": 4.0, "ev_ebitda": 13.0},
+    "Basic Materials":        {"pe": 14.0, "ps": 1.5, "pb": 2.0, "ev_ebitda": 8.0},
+    "Real Estate":            {"pe": 35.0, "ps": 6.0, "pb": 1.8, "ev_ebitda": 18.0},
+    "Utilities":              {"pe": 18.0, "ps": 2.5, "pb": 1.8, "ev_ebitda": 12.0},
+}
+DEFAULT_MEDIANS = {"pe": 18.0, "ps": 2.5, "pb": 3.0, "ev_ebitda": 12.0}
+
 
 def _is_valid_float(x) -> bool:
     """Return True if x is a finite, non-NaN number."""
@@ -264,6 +281,352 @@ def _assess_dcf_confidence(
     return level, warnings
 
 
+# ── Shared helpers for multi-model valuation ─────────────────────────────────
+
+def _get_ticker_data(ticker: str):
+    """Single yfinance call shared across models. Returns (tk, info)."""
+    tk = yf.Ticker(ticker)
+    info = tk.info
+    return tk, info
+
+
+def _get_sector_medians(info: dict) -> dict:
+    """Lookup sector medians with fallback to DEFAULT_MEDIANS."""
+    sector = info.get("sector", "")
+    return SECTOR_MEDIANS.get(sector, DEFAULT_MEDIANS)
+
+
+# ── P/E Comparable Valuation ─────────────────────────────────────────────────
+
+def pe_valuation(ticker: str, tk=None, info=None) -> dict | None:
+    """Fair value = sector_median_pe * trailing_eps."""
+    if tk is None or info is None:
+        tk, info = _get_ticker_data(ticker)
+
+    trailing_eps = info.get("trailingEps")
+    current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+
+    if not _is_valid_float(trailing_eps) or trailing_eps <= 0 or not _is_valid_float(current_price):
+        return None
+
+    medians = _get_sector_medians(info)
+    fair_value = medians["pe"] * trailing_eps
+
+    upside = ((fair_value / current_price) - 1) * 100
+
+    # Confidence assessment
+    warnings = []
+    forward_pe = info.get("forwardPE")
+    trailing_pe = info.get("trailingPE")
+
+    if _is_valid_float(forward_pe) and _is_valid_float(trailing_pe) and trailing_pe > 0:
+        pe_divergence = abs(forward_pe - trailing_pe) / trailing_pe
+        if pe_divergence > 0.3:
+            warnings.append(f"Forward P/E diverges {pe_divergence:.0%} from trailing")
+
+    ratio = fair_value / current_price
+    if ratio > 5.0 or ratio < 0.2:
+        warnings.append(f"Fair value is {ratio:.1f}x current price")
+
+    if len(warnings) >= 2:
+        confidence = "low"
+    elif len(warnings) == 1:
+        confidence = "medium"
+    else:
+        confidence = "high"
+
+    return {
+        "model_type": "pe_comparable",
+        "ticker": ticker.upper(),
+        "current_price": round(current_price, 2),
+        "intrinsic_value": round(fair_value, 2),
+        "upside_downside_pct": round(upside, 1),
+        "confidence": confidence,
+        "warnings": warnings,
+        "sector_median_pe": medians["pe"],
+        "trailing_eps": round(trailing_eps, 2),
+    }
+
+
+# ── Revenue Multiple Valuation ───────────────────────────────────────────────
+
+def revenue_multiple_valuation(ticker: str, tk=None, info=None) -> dict | None:
+    """Fair value = sector_median_ps * revenue_per_share."""
+    if tk is None or info is None:
+        tk, info = _get_ticker_data(ticker)
+
+    revenue_per_share = info.get("revenuePerShare")
+    current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+
+    if not _is_valid_float(revenue_per_share) or revenue_per_share <= 0 or not _is_valid_float(current_price):
+        return None
+
+    medians = _get_sector_medians(info)
+    fair_value = medians["ps"] * revenue_per_share
+
+    upside = ((fair_value / current_price) - 1) * 100
+
+    # Confidence assessment
+    warnings = []
+    revenue_growth = info.get("revenueGrowth")
+    if _is_valid_float(revenue_growth) and revenue_growth < 0:
+        warnings.append("Revenue is declining")
+
+    ratio = fair_value / current_price
+    if ratio > 5.0 or ratio < 0.2:
+        warnings.append(f"Fair value is {ratio:.1f}x current price")
+
+    if len(warnings) >= 2:
+        confidence = "low"
+    elif len(warnings) == 1:
+        confidence = "medium"
+    else:
+        confidence = "high"
+
+    return {
+        "model_type": "revenue_multiple",
+        "ticker": ticker.upper(),
+        "current_price": round(current_price, 2),
+        "intrinsic_value": round(fair_value, 2),
+        "upside_downside_pct": round(upside, 1),
+        "confidence": confidence,
+        "warnings": warnings,
+        "sector_median_ps": medians["ps"],
+        "revenue_per_share": round(revenue_per_share, 2),
+    }
+
+
+# ── Dividend Discount Model (DDM) ───────────────────────────────────────────
+
+def ddm_valuation(ticker: str, tk=None, info=None) -> dict | None:
+    """Gordon Growth Model: fair_value = D1 / (r - g)."""
+    if tk is None or info is None:
+        tk, info = _get_ticker_data(ticker)
+
+    dividend_rate = info.get("dividendRate")
+    current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+
+    if not _is_valid_float(dividend_rate) or dividend_rate <= 0 or not _is_valid_float(current_price):
+        return None
+
+    # Compute dividend growth from annual dividend sums CAGR
+    try:
+        divs = tk.dividends
+        if divs is None or len(divs) == 0:
+            return None
+        annual_divs = divs.resample("YE").sum()
+        annual_divs = annual_divs[annual_divs > 0]
+        if len(annual_divs) >= 2:
+            latest = float(annual_divs.iloc[-1])
+            oldest = float(annual_divs.iloc[0])
+            n = len(annual_divs) - 1
+            if oldest > 0 and latest > 0:
+                div_growth = (latest / oldest) ** (1 / n) - 1
+            else:
+                div_growth = 0.02
+        else:
+            div_growth = 0.02
+    except Exception:
+        div_growth = 0.02
+
+    # Cap dividend growth at 8%
+    div_growth = min(div_growth, 0.08)
+    if div_growth < 0:
+        div_growth = 0.0
+
+    # Discount rate from CAPM
+    beta = info.get("beta", 1.0) or 1.0
+    adjusted_beta = (2 / 3) * beta + (1 / 3)
+    r = cost_of_equity(adjusted_beta)
+
+    spread = r - div_growth
+    if spread <= 0.01:
+        spread = 0.01
+
+    d1 = dividend_rate * (1 + div_growth)
+    fair_value = d1 / spread
+
+    upside = ((fair_value / current_price) - 1) * 100
+
+    # Confidence
+    warnings = []
+    if spread < 0.02:
+        warnings.append("Very narrow discount spread — sensitive to rate assumptions")
+    ratio = fair_value / current_price
+    if ratio > 5.0 or ratio < 0.2:
+        warnings.append(f"Fair value is {ratio:.1f}x current price")
+
+    if len(warnings) >= 2:
+        confidence = "low"
+    elif len(warnings) == 1:
+        confidence = "medium"
+    else:
+        confidence = "high"
+
+    return {
+        "model_type": "ddm",
+        "ticker": ticker.upper(),
+        "current_price": round(current_price, 2),
+        "intrinsic_value": round(fair_value, 2),
+        "upside_downside_pct": round(upside, 1),
+        "confidence": confidence,
+        "warnings": warnings,
+        "dividend_rate": round(dividend_rate, 4),
+        "dividend_growth": round(div_growth * 100, 2),
+        "cost_of_equity": round(r * 100, 2),
+    }
+
+
+# ── Book Value (P/B) Valuation ───────────────────────────────────────────────
+
+def pb_valuation(ticker: str, tk=None, info=None) -> dict | None:
+    """Fair value = sector_median_pb * book_value_per_share."""
+    if tk is None or info is None:
+        tk, info = _get_ticker_data(ticker)
+
+    book_value = info.get("bookValue")
+    current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+
+    if not _is_valid_float(book_value) or book_value <= 0 or not _is_valid_float(current_price):
+        return None
+
+    medians = _get_sector_medians(info)
+    fair_value = medians["pb"] * book_value
+
+    upside = ((fair_value / current_price) - 1) * 100
+
+    # Confidence
+    warnings = []
+    ratio = fair_value / current_price
+    if ratio > 5.0 or ratio < 0.2:
+        warnings.append(f"Fair value is {ratio:.1f}x current price")
+
+    if len(warnings) >= 1:
+        confidence = "medium"
+    else:
+        confidence = "high"
+
+    return {
+        "model_type": "book_value",
+        "ticker": ticker.upper(),
+        "current_price": round(current_price, 2),
+        "intrinsic_value": round(fair_value, 2),
+        "upside_downside_pct": round(upside, 1),
+        "confidence": confidence,
+        "warnings": warnings,
+        "sector_median_pb": medians["pb"],
+        "book_value_per_share": round(book_value, 2),
+    }
+
+
+# ── Model Selector ───────────────────────────────────────────────────────────
+
+def select_best_model(ticker: str, tk=None, info=None) -> str:
+    """Decision tree to pick the best primary valuation model for a ticker."""
+    if tk is None or info is None:
+        tk, info = _get_ticker_data(ticker)
+
+    sector = info.get("sector", "")
+    dividend_yield = info.get("dividendYield") or 0
+    trailing_pe = info.get("trailingPE")
+    revenue_growth = info.get("revenueGrowth") or 0
+    fcf = info.get("freeCashflow")
+    book_value = info.get("bookValue")
+
+    # Check dividend history length
+    has_dividend_history = False
+    try:
+        divs = tk.dividends
+        if divs is not None and len(divs) > 0:
+            years = (divs.index[-1] - divs.index[0]).days / 365.25
+            has_dividend_history = years >= 5
+    except Exception:
+        pass
+
+    # 1. Financial Services / Real Estate + positive book value -> Book Value
+    if sector in ("Financial Services", "Real Estate") and _is_valid_float(book_value) and book_value > 0:
+        return "book_value"
+
+    # 2. Dividend yield >2% + 5+ years history -> DDM
+    #    yfinance returns dividendYield as a percentage (e.g. 2.7 = 2.7%)
+    if dividend_yield > 2.0 and has_dividend_history:
+        return "ddm"
+
+    # 3. Revenue growth >15% + (no P/E or P/E >40 or FCF <0) -> Revenue Multiple
+    high_growth = revenue_growth > 0.15
+    no_pe = not _is_valid_float(trailing_pe) or trailing_pe <= 0
+    high_pe = _is_valid_float(trailing_pe) and trailing_pe > 40
+    negative_fcf = _is_valid_float(fcf) and fcf < 0
+    if high_growth and (no_pe or high_pe or negative_fcf):
+        return "revenue_multiple"
+
+    # 4. Positive trailing P/E -> P/E Comparable
+    if _is_valid_float(trailing_pe) and trailing_pe > 0:
+        return "pe_comparable"
+
+    # 5. Default -> DCF
+    return "dcf"
+
+
+# ── Run All Applicable Models ────────────────────────────────────────────────
+
+def run_all_applicable_models(ticker: str) -> dict:
+    """Run all applicable valuation models and return results."""
+    tk, info = _get_ticker_data(ticker)
+    primary_model = select_best_model(ticker, tk, info)
+
+    all_models = []
+
+    # Try each model
+    pe_result = pe_valuation(ticker, tk, info)
+    if pe_result:
+        all_models.append(pe_result)
+
+    rev_result = revenue_multiple_valuation(ticker, tk, info)
+    if rev_result:
+        all_models.append(rev_result)
+
+    ddm_result = ddm_valuation(ticker, tk, info)
+    if ddm_result:
+        all_models.append(ddm_result)
+
+    pb_result = pb_valuation(ticker, tk, info)
+    if pb_result:
+        all_models.append(pb_result)
+
+    dcf_result = discounted_cashflow_analysis(ticker, verbose=False, tk=tk, info=info)
+    if dcf_result:
+        # Normalize DCF keys to standard shape
+        dcf_normalized = {
+            "model_type": "dcf",
+            "ticker": dcf_result["ticker"],
+            "current_price": dcf_result["current_price"],
+            "intrinsic_value": dcf_result["intrinsic_value"],
+            "upside_downside_pct": dcf_result["upside_downside_pct"],
+            "confidence": dcf_result.get("dcf_confidence", "medium"),
+            "warnings": dcf_result.get("dcf_warnings", []),
+        }
+        all_models.append(dcf_normalized)
+
+    # Find primary result
+    primary_result = None
+    for m in all_models:
+        if m["model_type"] == primary_model:
+            primary_result = m
+            break
+
+    # If the selected primary model didn't produce a result, fall back to first available
+    if primary_result is None and all_models:
+        primary_result = all_models[0]
+        primary_model = primary_result["model_type"]
+
+    return {
+        "primary_model": primary_model,
+        "primary_result": primary_result,
+        "all_models": all_models,
+    }
+
+
 # ── Main DCF function ─────────────────────────────────────────────────────────
 
 def discounted_cashflow_analysis(
@@ -275,6 +638,8 @@ def discounted_cashflow_analysis(
     risk_free_rate: float = RISK_FREE_RATE,
     equity_risk_premium: float = EQUITY_RISK_PREMIUM,
     verbose: bool = True,
+    tk=None,
+    info=None,
 ) -> dict | None:
     """
     Full DCF analysis for a publicly traded company.
@@ -298,8 +663,9 @@ def discounted_cashflow_analysis(
         print(f"[{ticker_symbol}] n_years must be >= 1 (got {n_years}).")
         return None
 
-    tk = yf.Ticker(ticker_symbol)
-    info = tk.info
+    if tk is None or info is None:
+        tk = yf.Ticker(ticker_symbol)
+        info = tk.info
 
     # ── Pull raw data ──────────────────────────────────────────────────────────
     try:

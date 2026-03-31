@@ -60,6 +60,18 @@ def _ensure_tables():
                 date_stamp      DATE
             )
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stock_valuations (
+                ticker          TEXT NOT NULL,
+                model_type      TEXT NOT NULL,
+                intrinsic_value FLOAT,
+                upside_pct      FLOAT,
+                confidence      TEXT,
+                result_json     JSONB,
+                date_stamp      DATE,
+                PRIMARY KEY (ticker, model_type)
+            )
+        """)
         cursor.close()
     finally:
         put_conn(conn)
@@ -333,5 +345,111 @@ def update_dcf(ticker: str, dcf_results: dict):
              json.dumps(dcf_results), today, ticker)
         )
         cursor.close()
+    finally:
+        put_conn(conn)
+
+
+# ── Multi-Model Valuation Caching ────────────────────────────────────────────
+
+def exists_in_valuations(ticker: str, model_type: str) -> bool:
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT 1 FROM stock_valuations WHERE ticker = %s AND model_type = %s",
+            (ticker, model_type)
+        )
+        result = cursor.fetchone() is not None
+        cursor.close()
+        return result
+    finally:
+        put_conn(conn)
+
+
+def insert_valuation(ticker: str, model_type: str, result: dict):
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        today = date.today()
+        cursor.execute(
+            "INSERT INTO stock_valuations (ticker, model_type, intrinsic_value, upside_pct, confidence, result_json, date_stamp) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (ticker, model_type, result.get("intrinsic_value"), result.get("upside_downside_pct"),
+             result.get("confidence"), json.dumps(result), today)
+        )
+        cursor.close()
+    finally:
+        put_conn(conn)
+
+
+def fetch_valuation(ticker: str, model_type: str) -> dict | None:
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT result_json FROM stock_valuations WHERE ticker = %s AND model_type = %s",
+            (ticker, model_type)
+        )
+        row = cursor.fetchone()
+        cursor.close()
+        if row is None:
+            return None
+        result = row[0]
+        if isinstance(result, str):
+            result = json.loads(result)
+        return result
+    finally:
+        put_conn(conn)
+
+
+def fetch_all_valuations(ticker: str) -> list[dict]:
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT result_json FROM stock_valuations WHERE ticker = %s",
+            (ticker,)
+        )
+        rows = cursor.fetchall()
+        cursor.close()
+        results = []
+        for row in rows:
+            r = row[0]
+            if isinstance(r, str):
+                r = json.loads(r)
+            results.append(r)
+        return results
+    finally:
+        put_conn(conn)
+
+
+def update_valuation(ticker: str, model_type: str, result: dict):
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        today = date.today()
+        cursor.execute(
+            "UPDATE stock_valuations SET intrinsic_value = %s, upside_pct = %s, confidence = %s, result_json = %s, date_stamp = %s WHERE ticker = %s AND model_type = %s",
+            (result.get("intrinsic_value"), result.get("upside_downside_pct"),
+             result.get("confidence"), json.dumps(result), today, ticker, model_type)
+        )
+        cursor.close()
+    finally:
+        put_conn(conn)
+
+
+def get_valuation_date_stamp(ticker: str, model_type: str):
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT date_stamp FROM stock_valuations WHERE ticker = %s AND model_type = %s",
+            (ticker, model_type)
+        )
+        row = cursor.fetchone()
+        cursor.close()
+        if row is None:
+            return None
+        d = row[0]
+        return datetime(d.year, d.month, d.day)
     finally:
         put_conn(conn)

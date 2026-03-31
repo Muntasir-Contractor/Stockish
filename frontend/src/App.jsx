@@ -298,7 +298,7 @@ function App(){
               <span className="value">{selectedStock.intrinsic_value ? `$${selectedStock.intrinsic_value.toFixed(2)}` : 'N/A'}</span>
             </div>
             <div className="detail-card">
-              <span className="label">Valuation</span>
+              <span className="label">Model Signal</span>
               <span className="value">{selectedStock.valuation}</span>
             </div>
             <div className="detail-card">
@@ -308,6 +308,7 @@ function App(){
               </span>
             </div>
           </div>
+          <p className="popup-disclaimer">Model-generated signal for informational purposes only. Not financial advice.</p>
         </div>
       )}
 

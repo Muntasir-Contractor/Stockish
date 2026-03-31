@@ -12,19 +12,18 @@ from newssentiment import get_sentiment_analysis
 from db_funcs import get_daily_usage, increment_usage, DAILY_LIMIT
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(root))
-from application import get_stock_price, is_etf, get_fr_prediction, get_dcf_valuation, dcf_valuation_label, compute_final_analysis
+from application import get_stock_price, is_etf, get_fr_prediction, get_valuation, dcf_valuation_label, compute_final_analysis
 
 
-
-"""TO DO:
-
-
-        Wording and output should enforce the idea that this is not
-        financial advice. Rather mathematical factors put together to 
-        show a signal. I am not a financial advisor
 """
 
 
+TODO: Replace hardcoded sector medians (scripts/valuation_models)
+       with medians of top 5-15 companies in that sector, caching,
+       and refetching every quarter.
+       
+
+"""
 
 app = FastAPI()
 origins = [
@@ -107,8 +106,8 @@ async def get_stock_info(ticker: str):
     try:
         current_price = get_stock_price(ticker)
 
-        dcf_result, fr_prediction = await asyncio.gather(
-            asyncio.to_thread(get_dcf_valuation, ticker),
+        valuation_data, fr_prediction = await asyncio.gather(
+            asyncio.to_thread(get_valuation, ticker),
             get_fr_prediction(ticker, fr_MODEL),
         )
 
@@ -119,18 +118,33 @@ async def get_stock_info(ticker: str):
         growth_rate = None
         dcf_confidence = None
         dcf_warnings = []
+        primary_model = None
+        models = []
 
-        if dcf_result is not None:
-            intrinsic_value = dcf_result.get("intrinsic_value")
-            upside_pct = dcf_result.get("upside_downside_pct")
-            wacc = dcf_result.get("wacc")
-            growth_rate = dcf_result.get("near_term_growth")
-            dcf_confidence = dcf_result.get("dcf_confidence")
-            dcf_warnings = dcf_result.get("dcf_warnings", [])
-            if upside_pct is not None:
-                valuation = dcf_valuation_label(upside_pct)
+        primary_result = None
+        if valuation_data is not None:
+            primary_result = valuation_data.get("primary_result")
+            primary_model = valuation_data.get("primary_model")
 
-        final_analysis = compute_final_analysis(dcf_result, fr_prediction, None)
+            if primary_result is not None:
+                intrinsic_value = primary_result.get("intrinsic_value")
+                upside_pct = primary_result.get("upside_downside_pct")
+                dcf_confidence = primary_result.get("confidence")
+                dcf_warnings = primary_result.get("warnings", [])
+                if upside_pct is not None:
+                    valuation = dcf_valuation_label(upside_pct)
+
+            # Build models array for frontend
+            for m in valuation_data.get("all_models", []):
+                models.append({
+                    "model_type": m.get("model_type"),
+                    "intrinsic_value": m.get("intrinsic_value"),
+                    "upside_downside_pct": m.get("upside_downside_pct"),
+                    "confidence": m.get("confidence"),
+                    "warnings": m.get("warnings", []),
+                })
+
+        final_analysis = compute_final_analysis(primary_result, fr_prediction, None)
 
         return {
             "ticker": ticker.upper(),
@@ -144,6 +158,8 @@ async def get_stock_info(ticker: str):
             "final_analysis": final_analysis,
             "dcf_confidence": dcf_confidence,
             "dcf_warnings": dcf_warnings,
+            "primary_model": primary_model,
+            "models": models,
         }
     except Exception as e:
         raise Exception(e)

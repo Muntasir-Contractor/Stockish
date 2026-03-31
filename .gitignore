@@ -7,6 +7,9 @@ __pycache__/
 yfinance_cache/
 node_modules/
 
+# Claude
+CLAUDE.md
+
 # --------------------------
 # Virtual environments
 # --------------------------

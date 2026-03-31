@@ -17,8 +17,11 @@ from application import get_stock_price, is_etf, get_fr_prediction, get_dcf_valu
 
 
 """TO DO:
-          Create a Logger, to log whenever stock data is fetched and one or more features come out with
-          N/A or NaN values, store fr_prediction, and coloumns unavailabled
+
+
+        Wording and output should enforce the idea that this is not
+        financial advice. Rather mathematical factors put together to 
+        show a signal. I am not a financial advisor
 """
 
 

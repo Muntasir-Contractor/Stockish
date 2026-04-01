@@ -45,11 +45,11 @@ function computeFinalAnalysis(upsidePct, frPrediction, sentimentScalar, dcfConfi
   const composite = signals.reduce((s, x) => s + (x.score * x.weight / totalWeight), 0);
 
   let verdict;
-  if (composite > 0.50) verdict = 'Composite Model Score: Strong';
+  if (composite > 0.50) verdict = 'Very Strong Composite';
   else if (composite > 0.20) verdict = 'Historically Strong Pattern';
   else if (composite > -0.20) verdict = 'Neutral Pattern';
   else if (composite > -0.50) verdict = 'Historically Weak Pattern';
-  else verdict = 'Composite Model Score: Weak';
+  else verdict = 'Very Weak Composite';
 
   const confidence = signals.length >= 3 ? 'High' : signals.length === 2 ? 'Medium' : 'Low';
 
@@ -316,7 +316,7 @@ function StockDetail() {
 
         <div className="stock-info-grid">
           <div className="info-card">
-            <div className="info-label">Model-Estimated Fair Value ({modelLabel[stockData.primary_model] || 'DCF'})
+            <div className="info-label">Model-Estimated Intrinsic Value ({modelLabel[stockData.primary_model] || 'DCF'})
               <span className="info-help" tabIndex="0" aria-label="More info">&#8505;
                 <span className="tooltip">This value is produced by applying a valuation model to the selected ticker's financials. It reflects a model estimate under specific assumptions, not an objective measure of true value. It is not a price target.</span>
               </span>

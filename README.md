@@ -48,7 +48,7 @@ A stock classified in decile 9, for example, means its current fundamentals hist
 
 ### AI Market Sentiment Analysis
 
-Recent headlines are fetched from Yahoo Finance and analyzed by OpenAI, which returns:
+Recent headlines are fetched from third party sources and analyzed by OpenAI, which returns:
 
 - A **sentiment scalar** (0.5–1.5) representing how current news should adjust fair value expectations (1.0 = neutral)
 - **Structured insights** — 3 to 5 thematic summaries, each tagged Bullish, Bearish, or Neutral with reasoning grounded in the actual headlines

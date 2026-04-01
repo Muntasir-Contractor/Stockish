@@ -32,7 +32,7 @@ function Feedback() {
   const Navbar = () => (
     <div className="Navbar">
       <Link to="/">
-        <img className="logo" src="/transparent-logo.png" alt="StockInsight" />
+        <img className="logo" src="/new-transparent-logo.png" alt="StockInsight" />
       </Link>
       <nav>
         <ul className="nav_links">

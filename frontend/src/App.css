@@ -80,11 +80,13 @@
 .logo {
   margin-top: 0;
   margin-left: 0;
-  height: 7.5em;
+  height: 8.5em;
   padding: 0em;
   will-change: filter;
   transition: filter 200s;
   position: left;
+  transform: scale(1.3);
+  transform-origin: left center;
 }
 .logo:hover {
   filter: drop-shadow(0 0 2em rgba(111,191,115,0.4));
@@ -310,9 +312,15 @@
   box-shadow: 0 0 0 3px var(--green-glow);
 }
 
+.search-input-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
 .search-icon {
   position: absolute;
-  right: 35px;
+  right: 10px;
   pointer-events: none;
   display: flex;
   align-items: center;

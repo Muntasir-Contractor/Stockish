@@ -219,7 +219,7 @@ function App(){
   return (
     <div>
       <div className="Navbar">
-        <img className="logo" src="transparent-logo.png" alt="Logo" />
+        <img className="logo" src="new-transparent-logo.png" alt="Logo" />
         <nav>
           <ul className="nav_links">
             <li><Link to="/guide">How to Use</Link></li>
@@ -230,6 +230,7 @@ function App(){
         
         {/* Search Form */}
         <div className="search-form">
+          <div className="search-input-wrapper">
           <input
             type="text"
             placeholder="> search ticker or company..."
@@ -248,6 +249,7 @@ function App(){
                 <path d="m21 21-4.35-4.35"></path>
               </svg>
             )}
+          </div>
           </div>
 
           {/* Search Results Dropdown */}

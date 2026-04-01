@@ -115,10 +115,12 @@ def get_valuation(ticker: str) -> dict | None:
             if primary_result is None and all_models:
                 primary_result = all_models[0]
                 primary_model = primary_result["model_type"]
+            selection_reasoning = primary_info.get("_selection_reasoning") if primary_info else None
             return {
                 "primary_model": primary_model,
                 "primary_result": primary_result,
                 "all_models": all_models,
+                "selection_reasoning": selection_reasoning,
             }
 
     # Run fresh analysis
@@ -135,7 +137,7 @@ def get_valuation(ticker: str) -> dict | None:
             insert_valuation(ticker, model_type, m)
 
     # Store a sentinel "primary" row to track the cache date and which model is primary
-    primary_sentinel = {"model_type": "primary", "_primary_model": result["primary_model"]}
+    primary_sentinel = {"model_type": "primary", "_primary_model": result["primary_model"], "_selection_reasoning": result.get("selection_reasoning")}
     if exists_in_valuations(ticker, "primary"):
         update_valuation(ticker, "primary", primary_sentinel)
     else:

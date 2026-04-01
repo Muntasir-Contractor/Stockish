@@ -74,6 +74,10 @@ function StockDetail() {
   const [insightsError, setInsightsError] = useState(null);
   const [remaining, setRemaining] = useState(null);
   const [showAllModels, setShowAllModels] = useState(false);
+  const [expandedModel, setExpandedModel] = useState(null);
+  const [customAssumptions, setCustomAssumptions] = useState({});
+  const [recalculating, setRecalculating] = useState(null);
+  const [customResults, setCustomResults] = useState({});
 
   useEffect(() => {
     const fetchStockData = async () => {
@@ -119,6 +123,60 @@ function StockDetail() {
     } finally {
       setInsightsLoading(false);
     }
+  };
+
+  const handleAssumptionChange = (modelType, key, value) => {
+    setCustomAssumptions(prev => ({
+      ...prev,
+      [modelType]: {
+        ...prev[modelType],
+        [key]: value,
+      }
+    }));
+  };
+
+  const getModifiedAssumptions = (modelType, assumptions) => {
+    if (!assumptions || !customAssumptions[modelType]) return {};
+    const modified = {};
+    for (const [key, val] of Object.entries(customAssumptions[modelType])) {
+      if (assumptions[key] && parseFloat(val) !== assumptions[key].value) {
+        modified[key] = parseFloat(val);
+      }
+    }
+    return modified;
+  };
+
+  const handleRecalculate = async (modelType, assumptions) => {
+    const modified = getModifiedAssumptions(modelType, assumptions);
+    if (Object.keys(modified).length === 0) return;
+    setRecalculating(modelType);
+    try {
+      const response = await api.post(`/stock/${ticker.toUpperCase()}/recalculate`, {
+        model_type: modelType,
+        assumptions: modified,
+      });
+      setCustomResults(prev => ({
+        ...prev,
+        [modelType]: response.data,
+      }));
+    } catch (err) {
+      console.error("Recalculation failed:", err);
+    } finally {
+      setRecalculating(null);
+    }
+  };
+
+  const handleResetAssumptions = (modelType) => {
+    setCustomAssumptions(prev => {
+      const next = { ...prev };
+      delete next[modelType];
+      return next;
+    });
+    setCustomResults(prev => {
+      const next = { ...prev };
+      delete next[modelType];
+      return next;
+    });
   };
 
   // Recompute final analysis client-side when sentiment arrives
@@ -335,6 +393,23 @@ function StockDetail() {
           </div>
         </div>
 
+        {/* Model Selection Reasoning */}
+        {stockData.selection_reasoning && (
+          <div className="model-reasoning-card">
+            <div className="reasoning-header">
+              <span className="reasoning-label">// WHY {(modelLabel[stockData.primary_model] || stockData.primary_model || '').toUpperCase()}</span>
+            </div>
+            <p className="reasoning-text">{stockData.selection_reasoning.reason}</p>
+            <div className="reasoning-criteria">
+              {Object.entries(stockData.selection_reasoning.criteria || {}).map(([key, val]) => (
+                <span key={key} className="criteria-chip mono">
+                  {key.replace(/_/g, ' ')}: {typeof val === 'number' ? val.toLocaleString() : String(val)}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {stockData.models && stockData.models.length > 1 && (
           <div className="all-models-section">
             <button
@@ -345,33 +420,122 @@ function StockDetail() {
             </button>
             {showAllModels && (
               <div className="models-grid">
-                {stockData.models.map((m) => (
-                  <div
-                    key={m.model_type}
-                    className={`model-card${m.model_type === stockData.primary_model ? ' model-primary' : ''}`}
-                  >
-                    {m.model_type === stockData.primary_model && (
-                      <span className="primary-badge">Primary</span>
-                    )}
-                    <div className="model-card-name">{modelLabel[m.model_type] || m.model_type}</div>
-                    <div className="model-card-value">
-                      {m.intrinsic_value != null ? `$${m.intrinsic_value.toFixed(2)}` : 'N/A'}
-                    </div>
-                    <div className="model-card-upside">
-                      {m.upside_downside_pct != null ? `${m.upside_downside_pct > 0 ? '+' : ''}${m.upside_downside_pct.toFixed(1)}%` : 'N/A'}
-                    </div>
-                    <div className="model-card-confidence">
-                      {m.confidence ? sensitivityLabel(m.confidence) : ''}
-                    </div>
-                    {m.warnings && m.warnings.length > 0 && (
-                      <div className="model-card-warnings">
-                        {m.warnings.map((w, i) => (
-                          <span key={i} className="model-warning">{w}</span>
-                        ))}
+                {stockData.models.map((m) => {
+                  const isExpanded = expandedModel === m.model_type;
+                  const custom = customResults[m.model_type];
+                  const displayValue = custom ? custom.intrinsic_value : m.intrinsic_value;
+                  const displayUpside = custom ? custom.upside_downside_pct : m.upside_downside_pct;
+                  const hasModified = Object.keys(getModifiedAssumptions(m.model_type, m.assumptions)).length > 0;
+
+                  return (
+                    <div
+                      key={m.model_type}
+                      className={`model-card${m.model_type === stockData.primary_model ? ' model-primary' : ''}${isExpanded ? ' model-expanded' : ''}`}
+                    >
+                      {m.model_type === stockData.primary_model && (
+                        <span className="primary-badge">Primary</span>
+                      )}
+                      {custom && <span className="custom-badge">Custom</span>}
+                      <div className="model-card-name">{modelLabel[m.model_type] || m.model_type}</div>
+                      <div className="model-card-value">
+                        {displayValue != null ? `$${displayValue.toFixed(2)}` : 'N/A'}
                       </div>
-                    )}
-                  </div>
-                ))}
+                      <div className="model-card-upside">
+                        {displayUpside != null ? `${displayUpside > 0 ? '+' : ''}${displayUpside.toFixed(1)}%` : 'N/A'}
+                      </div>
+                      <div className="model-card-confidence">
+                        {m.confidence ? sensitivityLabel(m.confidence) : ''}
+                      </div>
+                      {m.warnings && m.warnings.length > 0 && (
+                        <div className="model-card-warnings">
+                          {m.warnings.map((w, i) => (
+                            <span key={i} className="model-warning">{w}</span>
+                          ))}
+                        </div>
+                      )}
+
+                      <button
+                        className="model-details-toggle"
+                        onClick={() => setExpandedModel(isExpanded ? null : m.model_type)}
+                      >
+                        {isExpanded ? 'Hide Details' : 'Assumptions & Limitations'}
+                      </button>
+
+                      {isExpanded && (
+                        <div className="model-details-section">
+                          {/* Editable Assumptions */}
+                          {m.assumptions && Object.keys(m.assumptions).length > 0 && (
+                            <div className="assumptions-block">
+                              <h4 className="details-section-title">// ADJUSTABLE ASSUMPTIONS</h4>
+                              {Object.entries(m.assumptions).map(([key, def]) => (
+                                <div key={key} className="assumption-row">
+                                  <label className="assumption-label">{def.label}</label>
+                                  <div className="assumption-input-wrap">
+                                    <input
+                                      type="number"
+                                      className="assumption-input mono"
+                                      value={customAssumptions[m.model_type]?.[key] ?? def.value}
+                                      onChange={(e) => handleAssumptionChange(m.model_type, key, e.target.value)}
+                                      min={def.min}
+                                      max={def.max}
+                                      step={def.step}
+                                    />
+                                    <span className="assumption-unit">{def.unit}</span>
+                                  </div>
+                                  <span className="assumption-range">({def.min} – {def.max})</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Read-only Assumptions */}
+                          {m.assumptions_readonly && Object.keys(m.assumptions_readonly).length > 0 && (
+                            <div className="assumptions-block">
+                              <h4 className="details-section-title">// MODEL INPUTS</h4>
+                              {Object.entries(m.assumptions_readonly).map(([key, def]) => (
+                                <div key={key} className="assumption-row readonly">
+                                  <label className="assumption-label">{def.label}</label>
+                                  <span className="assumption-value mono">{def.value}{def.unit && def.unit !== '$' ? def.unit : ''}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Limitations */}
+                          {m.limitations && m.limitations.length > 0 && (
+                            <div className="limitations-block">
+                              <h4 className="details-section-title">// LIMITATIONS</h4>
+                              <ul className="limitations-list">
+                                {m.limitations.map((lim, i) => (
+                                  <li key={i} className="limitation-item">{lim}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Recalculate / Reset */}
+                          <div className="recalculate-actions">
+                            <button
+                              className="recalculate-btn"
+                              onClick={() => handleRecalculate(m.model_type, m.assumptions)}
+                              disabled={!hasModified || recalculating === m.model_type}
+                            >
+                              {recalculating === m.model_type ? 'Recalculating\u2026' : 'Recalculate'}
+                            </button>
+                            {(custom || hasModified) && (
+                              <button
+                                className="reset-btn"
+                                onClick={() => handleResetAssumptions(m.model_type)}
+                              >
+                                Reset to Default
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -13,29 +13,29 @@ from db_funcs import get_daily_usage, increment_usage, DAILY_LIMIT
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(root))
 from application import get_stock_price, is_etf, get_fr_prediction, get_valuation, dcf_valuation_label, compute_final_analysis
+from scripts.valuation_models import (
+    pe_valuation, revenue_multiple_valuation, ddm_valuation,
+    pb_valuation, discounted_cashflow_analysis,
+)
 
 
 """
 
 
-TODO: Replace hardcoded sector medians (scripts/valuation_models)
+TODO: - Replace hardcoded sector medians (scripts/valuation_models)
        with medians of top 5-15 companies in that sector, caching,
        and refetching every quarter.
 
-       Show users limitations and assumptions made on the
-       valuations models, let users make their own assumptions
-       to output a new value
-
-       Have a 'How to interpret the output' (replacing placeholder 1) section that explains throughouly
+       - Have a 'How to interpret the output' (replacing placeholder 1) section that explains throughouly
        the fr classification, the features it is trained on, and what the output means
 
-       Show users how confidence level is obtained; urging that confidence level
+       - Show users how confidence level is obtained; urging that confidence level
        does not emphasize an action rather that precise variables
        were used instead of fallback/default values
 
-       Explain to the user why a certain valuation model was chosen over the other
+       - Fix info hover over stock info cards; it is going hovering outside of the screen
 
-       
+
 
 
 
@@ -136,11 +136,13 @@ async def get_stock_info(ticker: str):
         dcf_warnings = []
         primary_model = None
         models = []
+        selection_reasoning = None
 
         primary_result = None
         if valuation_data is not None:
             primary_result = valuation_data.get("primary_result")
             primary_model = valuation_data.get("primary_model")
+            selection_reasoning = valuation_data.get("selection_reasoning")
 
             if primary_result is not None:
                 intrinsic_value = primary_result.get("intrinsic_value")
@@ -150,7 +152,7 @@ async def get_stock_info(ticker: str):
                 if upside_pct is not None:
                     valuation = dcf_valuation_label(upside_pct)
 
-            # Build models array for frontend
+            # Build models array for frontend (pass full data including assumptions)
             for m in valuation_data.get("all_models", []):
                 models.append({
                     "model_type": m.get("model_type"),
@@ -158,6 +160,9 @@ async def get_stock_info(ticker: str):
                     "upside_downside_pct": m.get("upside_downside_pct"),
                     "confidence": m.get("confidence"),
                     "warnings": m.get("warnings", []),
+                    "assumptions": m.get("assumptions"),
+                    "assumptions_readonly": m.get("assumptions_readonly"),
+                    "limitations": m.get("limitations"),
                 })
 
         final_analysis = compute_final_analysis(primary_result, fr_prediction, None)
@@ -176,6 +181,7 @@ async def get_stock_info(ticker: str):
             "dcf_warnings": dcf_warnings,
             "primary_model": primary_model,
             "models": models,
+            "selection_reasoning": selection_reasoning,
         }
     except Exception as e:
         raise Exception(e)
@@ -205,6 +211,93 @@ async def get_stock_insight(ticker: str, request: Request):
         raise Exception(e)
         
     
+
+
+ASSUMPTION_RANGES = {
+    "dcf": {
+        "growth_rate": (-10, 50),
+        "wacc": (1, 30),
+        "terminal_growth": (0, 5),
+        "projection_years": (1, 10),
+    },
+    "pe_comparable": {
+        "sector_pe": (1, 100),
+    },
+    "revenue_multiple": {
+        "sector_ps": (0.1, 50),
+    },
+    "ddm": {
+        "dividend_growth": (0, 15),
+        "cost_of_equity": (1, 25),
+    },
+    "book_value": {
+        "sector_pb": (0.1, 20),
+    },
+}
+
+@app.post("/stock/{ticker}/recalculate")
+async def recalculate_model(ticker: str, body: dict):
+    """Recalculate a specific valuation model with user-provided assumptions."""
+    model_type = body.get("model_type")
+    assumptions = body.get("assumptions", {})
+
+    if model_type not in ASSUMPTION_RANGES:
+        raise HTTPException(status_code=422, detail=f"Unknown model_type: {model_type}")
+
+    # Validate ranges
+    ranges = ASSUMPTION_RANGES[model_type]
+    for key, value in assumptions.items():
+        if key not in ranges:
+            raise HTTPException(status_code=422, detail=f"Unknown assumption '{key}' for {model_type}")
+        lo, hi = ranges[key]
+        try:
+            val = float(value)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=422, detail=f"Invalid value for '{key}': {value}")
+        if val < lo or val > hi:
+            raise HTTPException(status_code=422, detail=f"'{key}' must be between {lo} and {hi}, got {val}")
+
+    try:
+        result = await asyncio.to_thread(_run_recalculation, ticker, model_type, assumptions)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    if result is None:
+        raise HTTPException(status_code=422, detail="Model could not produce a result with these assumptions")
+
+    # DCF uses different key names — normalize
+    confidence = result.get("confidence") or result.get("dcf_confidence")
+    warnings = result.get("warnings") or result.get("dcf_warnings", [])
+
+    return {
+        "model_type": result.get("model_type", model_type),
+        "intrinsic_value": result.get("intrinsic_value"),
+        "upside_downside_pct": result.get("upside_downside_pct"),
+        "confidence": confidence,
+        "warnings": warnings,
+    }
+
+
+def _run_recalculation(ticker: str, model_type: str, assumptions: dict) -> dict | None:
+    """Run a single model with custom assumptions (called in thread)."""
+    if model_type == "dcf":
+        return discounted_cashflow_analysis(
+            ticker,
+            n_years=int(assumptions.get("projection_years", 5)),
+            terminal_growth_rate=float(assumptions.get("terminal_growth", 2.5)) / 100,
+            verbose=False,
+            override_growth_rate=float(assumptions["growth_rate"]) if "growth_rate" in assumptions else None,
+            override_wacc=float(assumptions["wacc"]) if "wacc" in assumptions else None,
+        )
+    elif model_type == "pe_comparable":
+        return pe_valuation(ticker, custom_overrides=assumptions)
+    elif model_type == "revenue_multiple":
+        return revenue_multiple_valuation(ticker, custom_overrides=assumptions)
+    elif model_type == "ddm":
+        return ddm_valuation(ticker, custom_overrides=assumptions)
+    elif model_type == "book_value":
+        return pb_valuation(ticker, custom_overrides=assumptions)
+    return None
 
 
 #uvicorn main:app --reload

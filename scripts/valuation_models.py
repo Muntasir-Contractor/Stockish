@@ -298,7 +298,7 @@ def _get_sector_medians(info: dict) -> dict:
 
 # ── P/E Comparable Valuation ─────────────────────────────────────────────────
 
-def pe_valuation(ticker: str, tk=None, info=None) -> dict | None:
+def pe_valuation(ticker: str, tk=None, info=None, custom_overrides: dict | None = None) -> dict | None:
     """Fair value = sector_median_pe * trailing_eps."""
     if tk is None or info is None:
         tk, info = _get_ticker_data(ticker)
@@ -310,7 +310,10 @@ def pe_valuation(ticker: str, tk=None, info=None) -> dict | None:
         return None
 
     medians = _get_sector_medians(info)
-    fair_value = medians["pe"] * trailing_eps
+    pe_multiple = medians["pe"]
+    if custom_overrides and "sector_pe" in custom_overrides:
+        pe_multiple = float(custom_overrides["sector_pe"])
+    fair_value = pe_multiple * trailing_eps
 
     upside = ((fair_value / current_price) - 1) * 100
 
@@ -343,14 +346,26 @@ def pe_valuation(ticker: str, tk=None, info=None) -> dict | None:
         "upside_downside_pct": round(upside, 1),
         "confidence": confidence,
         "warnings": warnings,
-        "sector_median_pe": medians["pe"],
+        "sector_median_pe": pe_multiple,
         "trailing_eps": round(trailing_eps, 2),
+        "assumptions": {
+            "sector_pe": {"value": pe_multiple, "label": "Sector Median P/E Ratio", "unit": "x", "min": 1, "max": 100, "step": 0.5},
+        },
+        "assumptions_readonly": {
+            "trailing_eps": {"value": round(trailing_eps, 2), "label": "Trailing Earnings Per Share", "unit": "$"},
+        },
+        "limitations": [
+            "Assumes this company deserves the sector median P/E multiple",
+            "Does not account for company-specific growth or risk differences vs. peers",
+            "Trailing earnings may not reflect future profitability",
+            "Sector medians are static benchmarks, not dynamically computed from current peers",
+        ],
     }
 
 
 # ── Revenue Multiple Valuation ───────────────────────────────────────────────
 
-def revenue_multiple_valuation(ticker: str, tk=None, info=None) -> dict | None:
+def revenue_multiple_valuation(ticker: str, tk=None, info=None, custom_overrides: dict | None = None) -> dict | None:
     """Fair value = sector_median_ps * revenue_per_share."""
     if tk is None or info is None:
         tk, info = _get_ticker_data(ticker)
@@ -362,7 +377,10 @@ def revenue_multiple_valuation(ticker: str, tk=None, info=None) -> dict | None:
         return None
 
     medians = _get_sector_medians(info)
-    fair_value = medians["ps"] * revenue_per_share
+    ps_multiple = medians["ps"]
+    if custom_overrides and "sector_ps" in custom_overrides:
+        ps_multiple = float(custom_overrides["sector_ps"])
+    fair_value = ps_multiple * revenue_per_share
 
     upside = ((fair_value / current_price) - 1) * 100
 
@@ -391,14 +409,26 @@ def revenue_multiple_valuation(ticker: str, tk=None, info=None) -> dict | None:
         "upside_downside_pct": round(upside, 1),
         "confidence": confidence,
         "warnings": warnings,
-        "sector_median_ps": medians["ps"],
+        "sector_median_ps": ps_multiple,
         "revenue_per_share": round(revenue_per_share, 2),
+        "assumptions": {
+            "sector_ps": {"value": ps_multiple, "label": "Sector Median P/S Ratio", "unit": "x", "min": 0.1, "max": 50, "step": 0.1},
+        },
+        "assumptions_readonly": {
+            "revenue_per_share": {"value": round(revenue_per_share, 2), "label": "Revenue Per Share", "unit": "$"},
+        },
+        "limitations": [
+            "Revenue multiples ignore profitability entirely",
+            "Assumes this company will achieve sector-average margins over time",
+            "Most useful for high-growth companies where earnings are not yet meaningful",
+            "Sector medians are static benchmarks, not dynamically computed from current peers",
+        ],
     }
 
 
 # ── Dividend Discount Model (DDM) ───────────────────────────────────────────
 
-def ddm_valuation(ticker: str, tk=None, info=None) -> dict | None:
+def ddm_valuation(ticker: str, tk=None, info=None, custom_overrides: dict | None = None) -> dict | None:
     """Gordon Growth Model: fair_value = D1 / (r - g)."""
     if tk is None or info is None:
         tk, info = _get_ticker_data(ticker)
@@ -439,6 +469,13 @@ def ddm_valuation(ticker: str, tk=None, info=None) -> dict | None:
     adjusted_beta = (2 / 3) * beta + (1 / 3)
     r = cost_of_equity(adjusted_beta)
 
+    # Apply user overrides
+    if custom_overrides:
+        if "dividend_growth" in custom_overrides:
+            div_growth = float(custom_overrides["dividend_growth"]) / 100
+        if "cost_of_equity" in custom_overrides:
+            r = float(custom_overrides["cost_of_equity"]) / 100
+
     spread = r - div_growth
     if spread <= 0.01:
         spread = 0.01
@@ -474,12 +511,25 @@ def ddm_valuation(ticker: str, tk=None, info=None) -> dict | None:
         "dividend_rate": round(dividend_rate, 4),
         "dividend_growth": round(div_growth * 100, 2),
         "cost_of_equity": round(r * 100, 2),
+        "assumptions": {
+            "dividend_growth": {"value": round(div_growth * 100, 2), "label": "Dividend Growth Rate", "unit": "%", "min": 0, "max": 15, "step": 0.25},
+            "cost_of_equity": {"value": round(r * 100, 2), "label": "Cost of Equity (Discount Rate)", "unit": "%", "min": 1, "max": 25, "step": 0.25},
+        },
+        "assumptions_readonly": {
+            "dividend_rate": {"value": round(dividend_rate, 4), "label": "Current Annual Dividend", "unit": "$"},
+        },
+        "limitations": [
+            "Only applicable to dividend-paying stocks",
+            "Assumes dividends grow at a constant rate forever (Gordon Growth Model)",
+            "Very sensitive to the spread between discount rate and growth rate",
+            "Does not capture value from retained earnings or share buybacks",
+        ],
     }
 
 
 # ── Book Value (P/B) Valuation ───────────────────────────────────────────────
 
-def pb_valuation(ticker: str, tk=None, info=None) -> dict | None:
+def pb_valuation(ticker: str, tk=None, info=None, custom_overrides: dict | None = None) -> dict | None:
     """Fair value = sector_median_pb * book_value_per_share."""
     if tk is None or info is None:
         tk, info = _get_ticker_data(ticker)
@@ -491,7 +541,10 @@ def pb_valuation(ticker: str, tk=None, info=None) -> dict | None:
         return None
 
     medians = _get_sector_medians(info)
-    fair_value = medians["pb"] * book_value
+    pb_multiple = medians["pb"]
+    if custom_overrides and "sector_pb" in custom_overrides:
+        pb_multiple = float(custom_overrides["sector_pb"])
+    fair_value = pb_multiple * book_value
 
     upside = ((fair_value / current_price) - 1) * 100
 
@@ -514,15 +567,30 @@ def pb_valuation(ticker: str, tk=None, info=None) -> dict | None:
         "upside_downside_pct": round(upside, 1),
         "confidence": confidence,
         "warnings": warnings,
-        "sector_median_pb": medians["pb"],
+        "sector_median_pb": pb_multiple,
         "book_value_per_share": round(book_value, 2),
+        "assumptions": {
+            "sector_pb": {"value": pb_multiple, "label": "Sector Median P/B Ratio", "unit": "x", "min": 0.1, "max": 20, "step": 0.1},
+        },
+        "assumptions_readonly": {
+            "book_value_per_share": {"value": round(book_value, 2), "label": "Book Value Per Share", "unit": "$"},
+        },
+        "limitations": [
+            "Book value may not reflect market value of assets",
+            "Intangible assets (brand, IP, goodwill) are poorly captured",
+            "Most appropriate for financial and real estate companies with tangible asset bases",
+            "Sector medians are static benchmarks, not dynamically computed from current peers",
+        ],
     }
 
 
-# ── Model Selector ───────────────────────────────────────────────────────────
+# ── Model Selector 
 
-def select_best_model(ticker: str, tk=None, info=None) -> str:
-    """Decision tree to pick the best primary valuation model for a ticker."""
+def select_best_model(ticker: str, tk=None, info=None) -> dict:
+    """Decision tree to pick the best primary valuation model for a ticker.
+
+    Returns dict with 'model', 'reason', and 'criteria' keys.
+    """
     if tk is None or info is None:
         tk, info = _get_ticker_data(ticker)
 
@@ -532,25 +600,53 @@ def select_best_model(ticker: str, tk=None, info=None) -> str:
     revenue_growth = info.get("revenueGrowth") or 0
     fcf = info.get("freeCashflow")
     book_value = info.get("bookValue")
+    medians = _get_sector_medians(info)
 
     # Check dividend history length
     has_dividend_history = False
+    div_history_years = 0
     try:
         divs = tk.dividends
         if divs is not None and len(divs) > 0:
-            years = (divs.index[-1] - divs.index[0]).days / 365.25
-            has_dividend_history = years >= 5
+            div_history_years = round((divs.index[-1] - divs.index[0]).days / 365.25, 1)
+            has_dividend_history = div_history_years >= 5
     except Exception:
         pass
 
     # 1. Financial Services / Real Estate + positive book value -> Book Value
     if sector in ("Financial Services", "Real Estate") and _is_valid_float(book_value) and book_value > 0:
-        return "book_value"
+        return {
+            "model": "book_value",
+            "reason": (
+                f"This company operates in the {sector} sector, where asset-based valuation "
+                f"is more meaningful than earnings-based approaches. Balance sheet assets are "
+                f"central to how {sector} companies generate value. Book value per share is "
+                f"${book_value:.2f}, providing a solid basis for Price-to-Book comparison "
+                f"against the sector median P/B of {medians['pb']:.1f}x."
+            ),
+            "criteria": {
+                "sector": sector,
+                "book_value_per_share": round(book_value, 2),
+                "sector_median_pb": medians["pb"],
+            },
+        }
 
     # 2. Dividend yield >2% + 5+ years history -> DDM
     #    yfinance returns dividendYield as a percentage (e.g. 2.7 = 2.7%)
     if dividend_yield > 2.0 and has_dividend_history:
-        return "ddm"
+        return {
+            "model": "ddm",
+            "reason": (
+                f"This company has a dividend yield of {dividend_yield:.1f}% and over "
+                f"{div_history_years:.0f} years of dividend history, making the Dividend "
+                f"Discount Model appropriate. A long, consistent dividend track record "
+                f"supports estimating fair value from expected future dividend payments."
+            ),
+            "criteria": {
+                "dividend_yield_pct": round(dividend_yield, 2),
+                "dividend_history_years": div_history_years,
+            },
+        }
 
     # 3. Revenue growth >15% + (no P/E or P/E >40 or FCF <0) -> Revenue Multiple
     high_growth = revenue_growth > 0.15
@@ -558,14 +654,60 @@ def select_best_model(ticker: str, tk=None, info=None) -> str:
     high_pe = _is_valid_float(trailing_pe) and trailing_pe > 40
     negative_fcf = _is_valid_float(fcf) and fcf < 0
     if high_growth and (no_pe or high_pe or negative_fcf):
-        return "revenue_multiple"
+        earnings_issue = (
+            "no positive trailing P/E" if no_pe else
+            f"an elevated P/E of {trailing_pe:.1f}x" if high_pe else
+            "negative free cash flow"
+        )
+        return {
+            "model": "revenue_multiple",
+            "reason": (
+                f"With revenue growth of {revenue_growth:.0%} and {earnings_issue}, "
+                f"earnings-based models are unreliable for this company. Revenue Multiple "
+                f"valuation is more appropriate for high-growth companies where profitability "
+                f"has not yet stabilized, comparing against the {sector or 'market'} sector "
+                f"median P/S of {medians['ps']:.1f}x."
+            ),
+            "criteria": {
+                "revenue_growth_pct": round(revenue_growth * 100, 1),
+                "earnings_issue": earnings_issue,
+                "sector": sector or "N/A",
+                "sector_median_ps": medians["ps"],
+            },
+        }
 
     # 4. Positive trailing P/E -> P/E Comparable
     if _is_valid_float(trailing_pe) and trailing_pe > 0:
-        return "pe_comparable"
+        return {
+            "model": "pe_comparable",
+            "reason": (
+                f"This company has a positive trailing P/E of {trailing_pe:.1f}x, enabling "
+                f"direct comparison to the {sector or 'market'} sector median P/E of "
+                f"{medians['pe']:.1f}x. P/E Comparable valuation is the most straightforward "
+                f"approach when a company has stable, positive earnings."
+            ),
+            "criteria": {
+                "trailing_pe": round(trailing_pe, 1),
+                "sector": sector or "N/A",
+                "sector_median_pe": medians["pe"],
+            },
+        }
 
     # 5. Default -> DCF
-    return "dcf"
+    return {
+        "model": "dcf",
+        "reason": (
+            "No specialized model criteria were met for this company (not a financial/real "
+            "estate company, insufficient dividend history, not a high-growth pre-earnings "
+            "company, and no positive trailing P/E). Discounted Cash Flow is used as the "
+            "comprehensive default, projecting future free cash flows and discounting them "
+            "back to present value."
+        ),
+        "criteria": {
+            "sector": sector or "N/A",
+            "fallback": True,
+        },
+    }
 
 
 # ── Run All Applicable Models ────────────────────────────────────────────────
@@ -573,7 +715,8 @@ def select_best_model(ticker: str, tk=None, info=None) -> str:
 def run_all_applicable_models(ticker: str) -> dict:
     """Run all applicable valuation models and return results."""
     tk, info = _get_ticker_data(ticker)
-    primary_model = select_best_model(ticker, tk, info)
+    selection = select_best_model(ticker, tk, info)
+    primary_model = selection["model"]
 
     all_models = []
 
@@ -605,6 +748,9 @@ def run_all_applicable_models(ticker: str) -> dict:
             "upside_downside_pct": dcf_result["upside_downside_pct"],
             "confidence": dcf_result.get("dcf_confidence", "medium"),
             "warnings": dcf_result.get("dcf_warnings", []),
+            "assumptions": dcf_result.get("assumptions"),
+            "assumptions_readonly": dcf_result.get("assumptions_readonly"),
+            "limitations": dcf_result.get("limitations"),
         }
         all_models.append(dcf_normalized)
 
@@ -624,6 +770,7 @@ def run_all_applicable_models(ticker: str) -> dict:
         "primary_model": primary_model,
         "primary_result": primary_result,
         "all_models": all_models,
+        "selection_reasoning": selection,
     }
 
 
@@ -640,6 +787,8 @@ def discounted_cashflow_analysis(
     verbose: bool = True,
     tk=None,
     info=None,
+    override_growth_rate: float | None = None,
+    override_wacc: float | None = None,
 ) -> dict | None:
     """
     Full DCF analysis for a publicly traded company.
@@ -768,6 +917,12 @@ def discounted_cashflow_analysis(
               f"diverging negative projections.")
         g_near = 0.0
 
+    # ── Apply user overrides (skip computed values) ────────────────────────────
+    if override_growth_rate is not None:
+        g_near = override_growth_rate / 100
+    if override_wacc is not None:
+        wacc = override_wacc / 100
+
     # ── Project & discount FCFs ────────────────────────────────────────────────
     projected_fcfs  = project_fcfs_with_fade(free_cash_flow, g_near, terminal_growth_rate, n_years)
     discounted_fcfs = discount_cashflows(projected_fcfs, wacc)
@@ -836,6 +991,27 @@ def discounted_cashflow_analysis(
         "enterprise_value":      round(enterprise_value, 0),
         "dcf_confidence":        confidence_level,
         "dcf_warnings":          confidence_warnings,
+        "assumptions": {
+            "growth_rate":    {"value": round(g_near * 100, 2),                "label": "Near-term FCF Growth Rate",  "unit": "%",     "min": -10, "max": 50,  "step": 0.5},
+            "wacc":           {"value": round(float(wacc) * 100, 2),           "label": "Weighted Avg Cost of Capital", "unit": "%",   "min": 1,   "max": 30,  "step": 0.25},
+            "terminal_growth": {"value": round(terminal_growth_rate * 100, 2), "label": "Terminal Growth Rate",       "unit": "%",     "min": 0,   "max": 5,   "step": 0.25},
+            "projection_years": {"value": n_years,                             "label": "Projection Horizon",         "unit": "years", "min": 1,   "max": 10,  "step": 1},
+        },
+        "assumptions_readonly": {
+            "base_fcf":       {"value": f"${free_cash_flow:,.0f}",             "label": "Base Free Cash Flow",        "unit": ""},
+            "beta":           {"value": round(beta, 2),                        "label": "Beta (Raw)",                 "unit": ""},
+            "adjusted_beta":  {"value": round(adjusted_beta, 2),               "label": "Beta (Blume Adjusted)",      "unit": ""},
+            "cost_of_equity": {"value": round(coe * 100, 2),                   "label": "Cost of Equity",             "unit": "%"},
+            "cost_of_debt":   {"value": round(float(cod) * 100, 2),            "label": "Cost of Debt",               "unit": "%"},
+            "tax_rate":       {"value": round(float(tax_rate) * 100, 2),       "label": "Effective Tax Rate",         "unit": "%"},
+        },
+        "limitations": [
+            "Assumes cash flows continue indefinitely at the terminal growth rate",
+            "Highly sensitive to WACC and growth rate assumptions",
+            "Terminal value typically represents 60-90% of total estimated value",
+            "Historical growth may not reflect future performance",
+            "WACC is clamped to 5-15% range, which may not suit all companies",
+        ],
     }
 
     # ── Pretty print ───────────────────────────────────────────────────────────

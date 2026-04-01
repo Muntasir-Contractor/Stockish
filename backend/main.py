@@ -33,6 +33,10 @@ TODO: Replace hardcoded sector medians (scripts/valuation_models)
        does not emphasize an action rather that precise variables
        were used instead of fallback/default values
 
+       Explain to the user why a certain valuation model was chosen over the other
+
+       
+
 
 
 """

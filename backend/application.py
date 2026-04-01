@@ -41,19 +41,19 @@ def get_stock_price(ticker):
 
 def dcf_valuation_label(upside_pct: float) -> str:
     if upside_pct > 20:
-        return "Strong Upside Signal"
+        return "Pattern Classification: Strong Positive Gap"
     elif upside_pct > 10:
-        return "Moderate Upside Signal"
+        return "Pattern Classification: Moderate Positive Gap"
     elif upside_pct > 5:
-        return "Slight Upside Signal"
+        return "Pattern Classification: Slight Positive Gap"
     elif upside_pct < -20:
-        return "Strong Downside Signal"
+        return "Pattern Classification: Strong Negative Gap"
     elif upside_pct < -10:
-        return "Moderate Downside Signal"
+        return "Pattern Classification: Moderate Negative Gap"
     elif upside_pct < -5:
-        return "Slight Downside Signal"
+        return "Pattern Classification: Slight Negative Gap"
     else:
-        return "Near Fair Value"
+        return "Near Model Estimate"
 
 
 def get_dcf_valuation(ticker: str) -> dict | None:
@@ -175,15 +175,15 @@ def compute_final_analysis(valuation_result: dict | None, fr_prediction: float |
     composite = sum(s["score"] * s["weight"] / total_weight for s in signals)
 
     if composite > 0.50:
-        verdict = "Strong Bullish Signal"
+        verdict = "Composite Model Score: Strong"
     elif composite > 0.20:
-        verdict = "Bullish Signal"
+        verdict = "Historically Strong Pattern"
     elif composite > -0.20:
-        verdict = "Neutral Signal"
+        verdict = "Neutral Pattern"
     elif composite > -0.50:
-        verdict = "Bearish Signal"
+        verdict = "Historically Weak Pattern"
     else:
-        verdict = "Strong Bearish Signal"
+        verdict = "Composite Model Score: Weak"
 
     confidence = "High" if len(signals) >= 3 else "Medium" if len(signals) == 2 else "Low"
 

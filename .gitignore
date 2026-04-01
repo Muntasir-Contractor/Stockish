@@ -7,8 +7,9 @@ __pycache__/
 yfinance_cache/
 node_modules/
 
-# Claude
+# Claude or other mardowns
 CLAUDE.md
+Liability.md
 
 # --------------------------
 # Virtual environments

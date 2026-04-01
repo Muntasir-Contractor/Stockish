@@ -1,30 +1,36 @@
-/* Add this to src/index.css if not already there */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: system-ui, -apple-system, sans-serif;
-  background-color: #fafafa;
-  width: 100%;
-  overflow-x: hidden;
-}
-
-#root {
-  width: 100%;
-}
-
 :root {
+  /* ── Dark terminal palette ── */
+  --bg-base:         #0d1117;
+  --bg-surface:      #161b22;
+  --bg-surface-2:    #1c2128;
+  --bg-surface-3:    #21262d;
+  --border-subtle:   #30363d;
+  --border-green:    #6fbf73;
+  --green:           #6fbf73;
+  --green-dim:       #4a9e4e;
+  --green-glow:      rgba(111,191,115,0.18);
+  --green-glow-soft: rgba(111,191,115,0.08);
+  --text-primary:    #e6edf3;
+  --text-secondary:  #8b949e;
+  --text-tertiary:   #484f58;
+  --neutral:         #8b949e;
+  --blue-accent:     #388bfd;
+  --data-accent:     #388bfd;
+  --data-accent-dim: rgba(56,139,253,0.15);
+
+  color-scheme: dark;
   width: 100%;
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--text-primary);
+  background-color: var(--bg-base);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -32,16 +38,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
 body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  width: 100%;
+  overflow-x: hidden;
   margin: 0;
   display: flex;
   place-items: center;
@@ -49,39 +51,32 @@ body {
   min-height: 100vh;
 }
 
+#root {
+  width: 100%;
+}
+
+a {
+  font-weight: 500;
+  color: var(--green);
+  text-decoration: inherit;
+}
+a:hover {
+  color: var(--green-dim);
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
 }
 
-/*button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}*/
 button:hover {
-  border-color: #646cff;
+  border-color: var(--green);
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.mono {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 }

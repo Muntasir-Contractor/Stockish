@@ -232,7 +232,7 @@ function App(){
         <div className="search-form">
           <input
             type="text"
-            placeholder="Search by ticker or company name"
+            placeholder="> search ticker or company..."
             value={searchQuery}
             onChange={handleSearchChange}
             onKeyDown={handleKeyDown}
@@ -333,7 +333,7 @@ function App(){
                 />
                 <div className="stock-symbol">{u.symbol}</div>
                 <div className="stock-name">{u.name}</div>
-                <div className="stock-price">{isNaN(Number(u.price)) ? `$${u.price} USD` : `$${Number(u.price).toFixed(2)} USD`}</div>
+                <div className="stock-price mono">{isNaN(Number(u.price)) ? `$${u.price} USD` : `$${Number(u.price).toFixed(2)} USD`}</div>
                 <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
                   {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
                 </div>
@@ -359,7 +359,7 @@ function App(){
                 />
                 <div className="stock-symbol">{u.symbol}</div>
                 <div className="stock-name">{u.name}</div>
-                <div className="stock-price">{isNaN(Number(u.price)) ? `$${u.price} USD` : `$${Number(u.price).toFixed(2)} USD`}</div>
+                <div className="stock-price mono">{isNaN(Number(u.price)) ? `$${u.price} USD` : `$${Number(u.price).toFixed(2)} USD`}</div>
                 <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
                   {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
                 </div>
@@ -385,7 +385,7 @@ function App(){
                 />
                 <div className="stock-symbol">{u.symbol}</div>
                 <div className="stock-name">{u.name}</div>
-                <div className="stock-price">{isNaN(Number(u.price)) ? `$${u.price} USD` : `$${Number(u.price).toFixed(2)} USD`}</div>
+                <div className="stock-price mono">{isNaN(Number(u.price)) ? `$${u.price} USD` : `$${Number(u.price).toFixed(2)} USD`}</div>
                 <div className={`stock-change ${u.change >= 0 ? 'positive' : 'negative'}`}>
                   {u.change >= 0 ? '▲' : '▼'} {parseFloat(u.change).toFixed(2)} ({parseFloat(u.changesPercentage).toFixed(2)}%)
                 </div>

@@ -193,7 +193,7 @@ function StockDetail() {
             />
           )}
           <h1>{stockData.ticker}</h1>
-          <div className="current-price-big">
+          <div className="current-price-big mono">
             {hasCurrent ? `$${currentPrice.toFixed(2)}` : 'N/A'}
           </div>
         </div>
@@ -226,21 +226,21 @@ function StockDetail() {
             </div>
             <div className="final-analysis-signals">
               {hasUpside && (
-                <span className="signal-chip">
+                <span className="signal-chip mono">
                   {modelLabel[stockData.primary_model] || 'DCF'}: {upsidePct > 0 ? '+' : ''}{upsidePct.toFixed(1)}% gap
                 </span>
               )}
               {hasFr && (
-                <span className="signal-chip">
+                <span className="signal-chip mono">
                   Fundamentals: Decile {frPrediction}
                 </span>
               )}
               {insights ? (
-                <span className="signal-chip">
+                <span className="signal-chip mono">
                   Sentiment: {insights.scalar.toFixed(2)}
                 </span>
               ) : (
-                <span className="signal-chip signal-chip-missing">
+                <span className="signal-chip signal-chip-missing mono">
                   Sentiment: Not yet analyzed
                 </span>
               )}
@@ -422,7 +422,7 @@ function StockDetail() {
                     style={{ left: `${Math.min(Math.max((insights.scalar - 0.5) / 1.0, 0), 1) * 100}%` }}
                   />
                 </div>
-                <span className="insights-scalar-value">
+                <span className="insights-scalar-value mono">
                   {insights.scalar.toFixed(2)}
                   &nbsp;&middot;&nbsp;
                   {insights.scalar > 1.03 ? 'Historically Strong' : insights.scalar < 0.97 ? 'Historically Weak' : 'Neutral'}

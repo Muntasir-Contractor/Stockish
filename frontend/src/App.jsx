@@ -232,7 +232,7 @@ function App(){
         <div className="search-form">
           <input
             type="text"
-            placeholder="Search stocks..."
+            placeholder="Search by ticker or company name"
             value={searchQuery}
             onChange={handleSearchChange}
             onKeyDown={handleKeyDown}
@@ -294,15 +294,15 @@ function App(){
               <span className="value">${selectedStock.current_price?.toFixed(2)}</span>
             </div>
             <div className="detail-card">
-              <span className="label">Intrinsic Value</span>
+              <span className="label">Model-Estimated Fair Value</span>
               <span className="value">{selectedStock.intrinsic_value ? `$${selectedStock.intrinsic_value.toFixed(2)}` : 'N/A'}</span>
             </div>
             <div className="detail-card">
-              <span className="label">Model Signal</span>
+              <span className="label">Model Score</span>
               <span className="value">{selectedStock.valuation}</span>
             </div>
             <div className="detail-card">
-              <span className="label">Upside / Downside</span>
+              <span className="label">Model-Implied Value Gap</span>
               <span className={`value ${selectedStock.upside_pct != null ? (selectedStock.upside_pct >= 0 ? 'positive' : 'negative') : ''}`}>
                 {selectedStock.upside_pct != null ? `${selectedStock.upside_pct > 0 ? '+' : ''}${selectedStock.upside_pct.toFixed(1)}%` : 'N/A'}
               </span>

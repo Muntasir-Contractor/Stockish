@@ -35,6 +35,9 @@ TODO: - Replace hardcoded sector medians (scripts/valuation_models)
 
        - Fix info hover over stock info cards; it is going hovering outside of the screen
 
+       - FIX: When cacheing the valuation models, and extra coloumn with model type 'Primary' is
+       added with null values. Taking up unnecessary space
+
 
 
 

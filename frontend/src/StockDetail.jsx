@@ -226,9 +226,17 @@ function StockDetail() {
     const low = decile * 10;
     const high = low + 10;
     const percentile = decile === 9 ? 'top 10%' : decile === 0 ? 'bottom 10%' : `${low}\u2013${high}th percentile`;
-    return {
-      label: `Fundamentals ranked in the ${percentile} of historical patterns`,
-    };
+    let tooltipText;
+    if (decile <= 2) {
+      tooltipText = `This ticker's fundamental profile falls in the ${percentile} of historical patterns in the model's training data. Setups in this range historically showed weaker forward returns on average — this does not mean this stock will perform similarly.`;
+    } else if (decile <= 5) {
+      tooltipText = `This ticker's fundamental profile falls in the ${percentile} of historical patterns in the model's training data. Setups in this range historically showed mixed or average forward returns — this does not mean this stock will perform similarly.`;
+    } else if (decile <= 7) {
+      tooltipText = `This ticker's fundamental profile falls in the ${percentile} of historical patterns in the model's training data. Setups in this range historically showed above-average forward returns on average — this does not mean this stock will perform similarly.`;
+    } else {
+      tooltipText = `This ticker's fundamental profile falls in the ${percentile} of historical patterns in the model's training data. Setups in this range historically showed the strongest forward returns on average — this does not mean this stock will perform similarly.`;
+    }
+    return { label: `Fundamentals ranked in the ${percentile} of historical patterns`, tooltip: tooltipText };
   };
 
   return (
@@ -317,7 +325,7 @@ function StockDetail() {
         <div className="stock-info-grid">
           <div className="info-card">
             <div className="info-label">Model-Estimated Intrinsic Value ({modelLabel[stockData.primary_model] || 'DCF'})
-              <span className="info-help" tabIndex="0" aria-label="More info">&#8505;
+              <span className="info-help" aria-label="More info">&#8505;
                 <span className="tooltip">This value is produced by applying a valuation model to the selected ticker's financials. It reflects a model estimate under specific assumptions, not an objective measure of true value. It is not a price target.</span>
               </span>
             </div>
@@ -331,7 +339,7 @@ function StockDetail() {
                   {sensitivityLabel(dcfConfidence)}
                 </span>
                 {dcfWarnings.length > 0 && (
-                  <span className="info-help" tabIndex="0" aria-label="DCF warnings">&#9888;
+                  <span className="info-help" aria-label="DCF warnings">&#9888;
                     <span className="tooltip tooltip-wide">{dcfWarnings.join(' | ')}</span>
                   </span>
                 )}
@@ -341,7 +349,7 @@ function StockDetail() {
 
           <div className="info-card">
             <div className="info-label">Model Score
-              <span className="info-help" tabIndex="0" aria-label="More info">&#8505;
+              <span className="info-help" aria-label="More info">&#8505;
                 <span className="tooltip">This classification reflects how this ticker's current fundamental profile compares to historical setups in the training data. It is a pattern-matching output, not a forecast of future price movement.</span>
               </span>
             </div>
@@ -352,7 +360,7 @@ function StockDetail() {
 
           <div className="info-card">
             <div className="info-label">Model-Implied Value Gap
-              <span className="info-help" tabIndex="0" aria-label="More info">&#8505;
+              <span className="info-help" aria-label="More info">&#8505;
                 <span className="tooltip">This figure represents the percentage difference between the current market price and the model's estimated fair value. It is not a predicted return and should not be interpreted as the expected gain or loss from holding this security.</span>
               </span>
             </div>
@@ -363,8 +371,8 @@ function StockDetail() {
 
           <div className="info-card">
             <div className="info-label">Forward Return Classification
-              <span className="info-help" tabIndex="0" aria-label="More info">&#8505;
-                <span className="tooltip">This percentile reflects how this ticker's fundamental profile ranks compared to historical setups in the model's training data. Stocks in this percentile historically showed stronger forward returns on average — this does not mean this stock will perform similarly.</span>
+              <span className="info-help" aria-label="More info">&#8505;
+                <span className="tooltip">{hasFr ? frLabel(frPrediction).tooltip : 'This classification reflects how this ticker\'s fundamental profile ranks compared to historical setups in the model\'s training data.'}</span>
               </span>
             </div>
             <div className="info-value">

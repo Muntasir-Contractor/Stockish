@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import api from "./components/api.js";
 import './App.css'
 
@@ -222,9 +222,9 @@ function App(){
         <img className="logo" src="transparent-logo.png" alt="Logo" />
         <nav>
           <ul className="nav_links">
-            <li><a href="#">PlaceHolder</a></li>
-            <li><a href="#">Second PlaceHolder</a></li>
-            <li><a href="#">Third PlaceHolder</a></li>
+            <li><Link to="/guide">How to Use</Link></li>
+            <li><Link to="/model-performance">Model Performance</Link></li>
+            <li><Link to="/feedback">Feedback</Link></li>
           </ul>
         </nav>
         

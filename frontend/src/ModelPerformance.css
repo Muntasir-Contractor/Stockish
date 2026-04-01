@@ -1,0 +1,531 @@
+/* ── Navbar (re-declared from App.css) ── */
+.nav_links {
+  margin-left: auto;
+  list-style: none;
+  display: flex;
+  gap: 30px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav_links li a {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s;
+  padding: 8px 12px;
+  border-radius: 3px;
+}
+
+.nav_links li a:hover {
+  color: var(--green);
+  background-color: var(--green-glow-soft);
+}
+
+.Navbar {
+  background-color: var(--bg-surface);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 5% 20px 2%;
+  margin-top: 0;
+  top: 0;
+  left: 0;
+  color: var(--text-primary);
+  width: 100%;
+  font-size: 14px;
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  box-shadow: none;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.Navbar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--green-glow), transparent);
+}
+
+.logo {
+  margin-top: 0;
+  margin-left: 0;
+  height: 7.5em;
+  padding: 0;
+  will-change: filter;
+  transition: filter 0.2s;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em rgba(111, 191, 115, 0.4));
+}
+
+.navbar-placeholder {
+  height: 90px;
+}
+
+/* ── Page Shell ── */
+.mp-page {
+  min-height: 100vh;
+  background: var(--bg-base);
+  width: 100%;
+}
+
+.mp-container {
+  max-width: 1020px;
+  width: 95%;
+  margin: 0 auto;
+  padding: 50px 20px 80px;
+}
+
+/* ── Hero ── */
+.mp-hero {
+  text-align: center;
+  padding: 48px 20px 40px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 56px;
+}
+
+.mp-title {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--green);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  margin: 0 0 16px;
+}
+
+.mp-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  max-width: 680px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* ── Section ── */
+.mp-section {
+  margin-bottom: 64px;
+}
+
+.mp-section-header {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.mp-section-header::before {
+  content: '// ';
+  color: var(--green);
+}
+
+.mp-section-intro {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+/* ── Stat Cards ── */
+.mp-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.mp-stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.mp-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--green);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  margin-bottom: 8px;
+}
+
+.mp-stat-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  line-height: 1.4;
+}
+
+/* ── Why 15% Explainer ── */
+.mp-explainer-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 28px 32px;
+}
+
+.mp-explainer-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.mp-explainer-text strong {
+  color: var(--text-primary);
+}
+
+.mp-explainer-note {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-top: 16px;
+  line-height: 1.6;
+}
+
+.mp-accuracy-compare {
+  background: var(--bg-surface-2);
+  border-radius: 6px;
+  padding: 20px 24px;
+}
+
+.mp-accuracy-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.mp-accuracy-label {
+  width: 220px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.mp-accuracy-bar-wrap {
+  flex: 1;
+  height: 18px;
+  background: var(--bg-surface-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mp-accuracy-bar {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.mp-accuracy-baseline {
+  background: var(--text-tertiary);
+}
+
+.mp-accuracy-model {
+  background: var(--green);
+}
+
+.mp-accuracy-pct {
+  width: 64px;
+  text-align: right;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ── Feature Importance Bar Chart ── */
+.mp-feature-chart {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 24px 28px;
+  margin-bottom: 12px;
+}
+
+.mp-feature-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.mp-feature-row:last-child {
+  border-bottom: none;
+}
+
+.mp-feature-name {
+  width: 240px;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.mp-feature-bar-wrap {
+  flex: 1;
+  height: 22px;
+  background: var(--bg-surface-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mp-feature-bar {
+  height: 100%;
+  background: var(--green);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  min-width: 36px;
+}
+
+.mp-feature-bar-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bg-base);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.mp-feature-tag {
+  width: 80px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.mp-feature-tag--value    { color: #388bfd; }
+.mp-feature-tag--quality  { color: var(--green); }
+.mp-feature-tag--momentum { color: #d4a84b; }
+.mp-feature-tag--growth   { color: var(--text-secondary); }
+.mp-feature-tag--dilution { color: #e74c3c; }
+
+.mp-feature-note {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+}
+
+/* ── Train / Test Methodology ── */
+.mp-method-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 28px 32px;
+}
+
+.mp-split-visual {
+  display: flex;
+  align-items: stretch;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 28px;
+  border: 1px solid var(--border-subtle);
+}
+
+.mp-split-train {
+  flex: 4;
+  background: var(--bg-surface-2);
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.mp-split-divider {
+  width: 3px;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+.mp-split-test {
+  flex: 1;
+  background: var(--green-glow-soft);
+  padding: 20px 16px;
+  text-align: center;
+  border-left: 1px dashed var(--green);
+}
+
+.mp-split-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.mp-split-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.mp-method-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mp-method-list li {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  padding-left: 20px;
+  position: relative;
+}
+
+.mp-method-list li::before {
+  content: '//';
+  position: absolute;
+  left: 0;
+  color: var(--green);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  top: 2px;
+}
+
+.mp-method-list strong {
+  color: var(--text-primary);
+}
+
+/* ── Feature Definitions Table ── */
+.mp-feature-defs {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.mp-feature-def-header {
+  display: grid;
+  grid-template-columns: 200px 220px 80px 1fr;
+  gap: 16px;
+  padding: 12px 20px;
+  background: var(--bg-surface-2);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-tertiary);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.mp-feature-def-row {
+  display: grid;
+  grid-template-columns: 200px 220px 80px 1fr;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  align-items: start;
+}
+
+.mp-feature-def-row:last-child {
+  border-bottom: none;
+}
+
+.mp-feature-def-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  word-break: break-word;
+}
+
+.mp-feature-def-formula {
+  font-size: 12px;
+  color: var(--green);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  line-height: 1.5;
+}
+
+.mp-feature-def-category {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mp-feature-def-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ── Footer ── */
+.mp-footer {
+  margin-top: 60px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .mp-feature-def-header,
+  .mp-feature-def-row {
+    grid-template-columns: 160px 180px 70px 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .mp-feature-def-header {
+    display: none;
+  }
+
+  .mp-feature-def-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 6px;
+  }
+
+  .mp-feature-def-name { grid-column: 1 / -1; }
+  .mp-feature-def-formula { grid-column: 1 / -1; }
+  .mp-feature-def-desc { grid-column: 1 / -1; }
+
+  .mp-feature-row {
+    flex-wrap: wrap;
+  }
+
+  .mp-feature-name {
+    width: 100%;
+  }
+
+  .mp-feature-tag {
+    width: auto;
+    text-align: left;
+  }
+
+  .mp-accuracy-label {
+    width: 160px;
+    font-size: 12px;
+  }
+
+  .mp-split-test {
+    padding: 12px 8px;
+  }
+
+  .nav_links {
+    gap: 12px;
+  }
+
+  .nav_links li a {
+    font-size: 13px;
+    padding: 6px 8px;
+  }
+}

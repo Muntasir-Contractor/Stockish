@@ -1,0 +1,278 @@
+/* ── Navbar (re-declared from App.css) ── */
+.nav_links {
+  margin-left: auto;
+  list-style: none;
+  display: flex;
+  gap: 30px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav_links li a {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s;
+  padding: 8px 12px;
+  border-radius: 3px;
+}
+
+.nav_links li a:hover {
+  color: var(--green);
+  background-color: var(--green-glow-soft);
+}
+
+.Navbar {
+  background-color: var(--bg-surface);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 5% 20px 2%;
+  margin-top: 0;
+  top: 0;
+  left: 0;
+  color: var(--text-primary);
+  width: 100%;
+  font-size: 14px;
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  box-shadow: none;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.Navbar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--green-glow), transparent);
+}
+
+.logo {
+  margin-top: 0;
+  margin-left: 0;
+  height: 7.5em;
+  padding: 0;
+  will-change: filter;
+  transition: filter 0.2s;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em rgba(111, 191, 115, 0.4));
+}
+
+.navbar-placeholder {
+  height: 90px;
+}
+
+/* ── Page Shell ── */
+.fb-page {
+  min-height: 100vh;
+  background: var(--bg-base);
+  width: 100%;
+}
+
+.fb-container {
+  max-width: 680px;
+  width: 95%;
+  margin: 0 auto;
+  padding: 50px 20px 80px;
+}
+
+/* ── Hero ── */
+.fb-hero {
+  margin-bottom: 36px;
+}
+
+.fb-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--green);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  margin: 0 0 12px;
+}
+
+.fb-subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ── Form ── */
+.fb-form {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 36px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-bottom: 20px;
+}
+
+.fb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fb-label {
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.fb-input,
+.fb-select,
+.fb-textarea {
+  padding: 12px 16px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.fb-input::placeholder,
+.fb-textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.fb-input:focus,
+.fb-select:focus,
+.fb-textarea:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-glow);
+}
+
+.fb-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b949e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.fb-select option {
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+}
+
+.fb-textarea {
+  resize: vertical;
+  min-height: 140px;
+  line-height: 1.6;
+}
+
+.fb-error {
+  font-size: 12px;
+  color: #e74c3c;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.fb-submit {
+  align-self: flex-start;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 36px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.fb-submit:hover {
+  background: var(--green-dim);
+}
+
+/* ── Success State ── */
+.fb-success {
+  text-align: center;
+  padding: 80px 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  margin-top: 40px;
+}
+
+.fb-success-icon {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--green);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  margin-bottom: 20px;
+}
+
+.fb-success-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.fb-success-text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+.fb-home-link {
+  font-size: 14px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-weight: 600;
+  color: var(--green);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.fb-home-link:hover {
+  opacity: 0.8;
+}
+
+/* ── Footer note ── */
+.fb-footer {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .fb-form {
+    padding: 24px 20px;
+  }
+
+  .fb-submit {
+    width: 100%;
+    text-align: center;
+  }
+
+  .nav_links {
+    gap: 8px;
+  }
+
+  .nav_links li a {
+    font-size: 12px;
+    padding: 6px 6px;
+  }
+}

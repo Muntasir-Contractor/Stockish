@@ -1,0 +1,454 @@
+/* ── Navbar (re-declared from App.css) ── */
+.nav_links {
+  margin-left: auto;
+  list-style: none;
+  display: flex;
+  gap: 30px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav_links li a {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s;
+  padding: 8px 12px;
+  border-radius: 3px;
+}
+
+.nav_links li a:hover {
+  color: var(--green);
+  background-color: var(--green-glow-soft);
+}
+
+.Navbar {
+  background-color: var(--bg-surface);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 5% 20px 2%;
+  margin-top: 0;
+  top: 0;
+  left: 0;
+  color: var(--text-primary);
+  width: 100%;
+  font-size: 14px;
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  box-shadow: none;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.Navbar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--green-glow), transparent);
+}
+
+.logo {
+  margin-top: 0;
+  margin-left: 0;
+  height: 7.5em;
+  padding: 0;
+  will-change: filter;
+  transition: filter 0.2s;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em rgba(111, 191, 115, 0.4));
+}
+
+.navbar-placeholder {
+  height: 90px;
+}
+
+/* ── Page Shell ── */
+.guide-page {
+  min-height: 100vh;
+  background: var(--bg-base);
+  width: 100%;
+}
+
+.guide-container {
+  max-width: 960px;
+  width: 95%;
+  margin: 0 auto;
+  padding: 50px 20px 80px;
+}
+
+/* ── Hero ── */
+.guide-hero {
+  text-align: center;
+  padding: 48px 20px 40px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 56px;
+}
+
+.guide-title {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--green);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  margin: 0 0 16px;
+}
+
+.guide-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  max-width: 620px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* ── Section ── */
+.guide-section {
+  margin-bottom: 64px;
+}
+
+.guide-section-header {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.guide-section-header::before {
+  content: '// ';
+  color: var(--green);
+}
+
+.guide-section-intro {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.guide-section-body {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-top: 16px;
+}
+
+/* ── Valuation Model Cards ── */
+.guide-models-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.guide-model-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--green);
+  border-radius: 6px;
+  padding: 24px;
+}
+
+.guide-model-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  margin-bottom: 12px;
+}
+
+.guide-model-formula {
+  font-size: 12px;
+  color: var(--green);
+  background: var(--bg-surface-2);
+  padding: 10px 14px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.guide-model-subheader {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  margin: 14px 0 8px;
+}
+
+.guide-model-body p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.guide-model-body ul {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.guide-model-body li {
+  margin-bottom: 4px;
+}
+
+/* ── Upside / Downside Example Card ── */
+.guide-example-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 24px 28px;
+  max-width: 480px;
+  margin-bottom: 20px;
+}
+
+.guide-example-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 14px;
+}
+
+.guide-example-row:last-of-type {
+  border-bottom: none;
+}
+
+.guide-example-label {
+  color: var(--text-secondary);
+}
+
+.guide-example-value {
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-weight: 600;
+}
+
+.guide-example-value.positive {
+  color: var(--green);
+}
+
+.guide-formula-note {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 14px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* ── Decile Row ── */
+.guide-decile-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+
+.guide-decile-box {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.guide-decile-box.guide-decile-active {
+  background: var(--green-glow-soft);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+/* ── Sentiment Scalar Demo ── */
+.guide-scalar-demo {
+  margin: 20px 0;
+}
+
+.guide-scalar-track {
+  position: relative;
+  height: 8px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.guide-scalar-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background: var(--green);
+  border-radius: 50%;
+  border: 2px solid var(--bg-base);
+  box-shadow: 0 0 0 2px var(--green);
+}
+
+.guide-scalar-labels {
+  display: flex;
+  justify-content: space-between;
+}
+
+.guide-scalar-label-left,
+.guide-scalar-label-mid,
+.guide-scalar-label-right {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.guide-scalar-label-mid {
+  color: var(--text-secondary);
+}
+
+/* ── Composite Score Weights ── */
+.guide-weights-table {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+
+.guide-weight-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.guide-weight-row:last-child {
+  border-bottom: none;
+}
+
+.guide-weight-label {
+  width: 240px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.guide-weight-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.guide-weight-bar {
+  height: 100%;
+  background: var(--green);
+  border-radius: 4px;
+}
+
+.guide-weight-pct {
+  width: 40px;
+  text-align: right;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ── Verdict Thresholds ── */
+.guide-verdicts-table {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.guide-verdict-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 14px;
+}
+
+.guide-verdict-row:last-child {
+  border-bottom: none;
+}
+
+.guide-verdict-range {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-weight: 700;
+  font-size: 13px;
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.guide-verdict-range.positive      { color: var(--green); }
+.guide-verdict-range.positive-dim  { color: #4a9e4e; }
+.guide-verdict-range.neutral       { color: var(--text-secondary); }
+.guide-verdict-range.negative-dim  { color: #c0392b; }
+.guide-verdict-range.negative      { color: #e74c3c; }
+
+.guide-verdict-label {
+  color: var(--text-secondary);
+}
+
+/* ── Footer ── */
+.guide-footer {
+  margin-top: 60px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .guide-models-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-weight-label {
+    width: 160px;
+    font-size: 12px;
+  }
+
+  .guide-verdict-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .guide-verdict-range {
+    width: auto;
+  }
+
+  .nav_links {
+    gap: 12px;
+  }
+
+  .nav_links li a {
+    font-size: 13px;
+    padding: 6px 8px;
+  }
+}

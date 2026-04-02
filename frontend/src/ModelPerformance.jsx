@@ -208,7 +208,7 @@ function ModelPerformance() {
                 The test set represents the most recent portion of the dataset.
               </li>
               <li>
-                <strong>Target variable</strong> — 12-month forward return percentile vs. the S&amp;P 500,
+                <strong>Target variable</strong> — 12-month forward return percentile vs. the overall market,
                 binned into 10 equal deciles (0 = worst 10%, 9 = best 10%).
               </li>
               <li>

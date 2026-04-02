@@ -12,11 +12,11 @@ DAILY_LIMIT = 3
 connection_pool = pool.ThreadedConnectionPool(
     minconn=1,
     maxconn=10,
-    host="localhost",
-    dbname="postgres",
-    user="postgres",
+    host=os.getenv("DATABASE_HOST", "localhost"),
+    dbname=os.getenv("DATABASE_NAME", "postgres"),
+    user=os.getenv("DATABASE_USER", "postgres"),
     password=PASSWORD,
-    port=5432
+    port=int(os.getenv("DATABASE_PORT", "5432"))
 )
 
 def get_conn():

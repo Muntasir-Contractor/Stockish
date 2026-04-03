@@ -22,5 +22,8 @@ yfinance==0.2.66
 # AI / Sentiment
 openai==2.11.0
 
+# Rate limiting
+slowapi==0.1.9
+
 # Config
 python-dotenv==1.2.1

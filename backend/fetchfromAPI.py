@@ -15,6 +15,8 @@ async def get_insight(endpoint, amount=8):
     async with httpx.AsyncClient() as client:
         response = await client.get(endpoint)
         stocks = response.json()
+        if not isinstance(stocks, list):
+            return []
         return stocks[:amount]
 
 async def get_top_movers():

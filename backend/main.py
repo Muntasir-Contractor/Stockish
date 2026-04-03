@@ -52,11 +52,11 @@ origins = [
     "http://localhost:5174",
     "http://localhost:5173",
 ] + [o.strip() for o in extra_origins.split(",") if o.strip()]
-print(origins)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]

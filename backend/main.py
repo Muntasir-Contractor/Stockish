@@ -1,6 +1,9 @@
 import asyncio
 from fastapi import FastAPI, Response, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from fetchfromAPI import get_top_movers, get_top_losers, get_top_gainers
 import joblib
 import sys
@@ -44,7 +47,10 @@ TODO: - Replace hardcoded sector medians (scripts/valuation_models)
 
 """
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 extra_origins = os.getenv("CORS_ORIGINS", "")
 origins = [
@@ -79,20 +85,24 @@ FINANCE_API_KEY = os.getenv("FINANCE_KEY")
 def root():
     return {"Hello": "World"}
 @app.get("/topmovers")
-async def top_movers():
+@limiter.limit("30/minute")
+async def top_movers(request: Request):
     stocks = await get_top_movers()
     return stocks
 @app.get("/topgainers")
-async def top_gainers():
+@limiter.limit("30/minute")
+async def top_gainers(request: Request):
     stocks = await get_top_gainers()
     return stocks
 @app.get("/toplosers")
-async def top_losers():
+@limiter.limit("30/minute")
+async def top_losers(request: Request):
     stocks = await get_top_losers()
     return stocks
 
 @app.get("/search/{query}")
-async def search_tinker(query : str):
+@limiter.limit("20/minute")
+async def search_tinker(request: Request, query : str):
     #Have a cache for stock symbol
     try:
         async with httpx.AsyncClient() as client:
@@ -124,7 +134,8 @@ async def search_tinker(query : str):
         print(str(e))
 
 @app.get("/stock/{ticker}")
-async def get_stock_info(ticker: str):
+@limiter.limit("15/minute")
+async def get_stock_info(request: Request, ticker: str):
     try:
         current_price = get_stock_price(ticker)
 
@@ -242,7 +253,8 @@ ASSUMPTION_RANGES = {
 }
 
 @app.post("/stock/{ticker}/recalculate")
-async def recalculate_model(ticker: str, body: dict):
+@limiter.limit("15/minute")
+async def recalculate_model(request: Request, ticker: str, body: dict):
     """Recalculate a specific valuation model with user-provided assumptions."""
     model_type = body.get("model_type")
     assumptions = body.get("assumptions", {})

@@ -281,14 +281,14 @@ function StockDetail() {
               {finalAnalysis.verdict}
             </div>
             <div className="final-analysis-gauge">
-              <span className="gauge-label-left">Weak Historical Pattern</span>
+              <span className="gauge-label-left">Weak Score</span>
               <div className="gauge-track">
                 <div
                   className="gauge-marker"
                   style={{ left: `${((finalAnalysis.composite + 1) / 2) * 100}%` }}
                 />
               </div>
-              <span className="gauge-label-right">Strong Historical Pattern</span>
+              <span className="gauge-label-right">Strong Score</span>
             </div>
             <div className="final-analysis-signals">
               {hasUpside && (

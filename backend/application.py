@@ -177,15 +177,15 @@ def compute_final_analysis(valuation_result: dict | None, fr_prediction: float |
     composite = sum(s["score"] * s["weight"] / total_weight for s in signals)
 
     if composite > 0.50:
-        verdict = "Historically Very Strong Pattern"
+        verdict = "Very Strong Overall Score"
     elif composite > 0.20:
-        verdict = "Historically Strong Pattern"
+        verdict = "Strong Overall Score"
     elif composite > -0.20:
-        verdict = "Neutral Pattern"
+        verdict = "Neutral"
     elif composite > -0.50:
-        verdict = "Historically Weak Pattern"
+        verdict = "Weak Overall Score"
     else:
-        verdict = "Historically Very Weak Pattern"
+        verdict = "Very Weak Overall Score"
 
     confidence = "High" if len(signals) >= 3 else "Medium" if len(signals) == 2 else "Low"
 

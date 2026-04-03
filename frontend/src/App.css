@@ -553,3 +553,96 @@
 .stock-list.losers .company-badge {
   border-color: #e74c3c;
 }
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .Navbar {
+    padding: 10px 3% 10px 2%;
+  }
+
+  .logo {
+    height: 5em;
+    transform: scale(1);
+  }
+
+  .nav_links {
+    gap: 4px;
+  }
+
+  .nav_links li a {
+    font-size: 11px;
+    padding: 6px 4px;
+  }
+
+  .search-input {
+    width: 160px;
+    font-size: 14px;
+    padding: 8px 32px 8px 10px;
+  }
+
+  .search-btn {
+    padding: 8px 10px;
+    font-size: 12px;
+    margin-right: 8px;
+  }
+
+  .search-results {
+    max-width: 280px;
+  }
+
+  .stock-list {
+    padding: 20px 10px;
+  }
+
+  .stock-list h2 {
+    font-size: 10px;
+    margin-bottom: 16px;
+  }
+
+  .stock-card {
+    min-width: 220px;
+    padding: 16px;
+  }
+
+  .stock-symbol {
+    font-size: 20px;
+  }
+
+  .stock-price {
+    font-size: 17px;
+  }
+
+  .scroll-arrow {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+
+  .selected-stock {
+    margin: 100px 10px 20px;
+    padding: 20px;
+  }
+
+  .selected-stock h2 {
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+
+  .stock-details {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .detail-card {
+    padding: 14px;
+  }
+
+  .detail-card .value {
+    font-size: 18px;
+  }
+
+  .company-badge {
+    width: 36px;
+    height: 36px;
+  }
+}

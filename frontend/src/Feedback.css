@@ -258,21 +258,59 @@
 
 /* ── Responsive ── */
 @media (max-width: 600px) {
+  .fb-container {
+    padding: 60px 12px 60px;
+    width: 100%;
+  }
+
+  .fb-title {
+    font-size: 22px;
+  }
+
+  .fb-subtitle {
+    font-size: 13px;
+  }
+
   .fb-form {
-    padding: 24px 20px;
+    padding: 20px 16px;
+    gap: 20px;
+  }
+
+  .fb-input,
+  .fb-select,
+  .fb-textarea {
+    font-size: 16px; /* prevents iOS zoom on focus */
+    padding: 10px 12px;
   }
 
   .fb-submit {
     width: 100%;
     text-align: center;
+    padding: 14px;
+  }
+
+  .fb-label {
+    font-size: 10px;
+  }
+
+  .Navbar {
+    padding: 12px 3% 12px 2%;
+  }
+
+  .logo {
+    height: 5em;
   }
 
   .nav_links {
-    gap: 8px;
+    gap: 4px;
   }
 
   .nav_links li a {
-    font-size: 12px;
-    padding: 6px 6px;
+    font-size: 11px;
+    padding: 6px 4px;
+  }
+
+  .navbar-placeholder {
+    height: 70px;
   }
 }

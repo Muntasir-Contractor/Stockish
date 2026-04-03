@@ -80,3 +80,9 @@ button:focus-visible {
 .mono {
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 }
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.8em;
+  }
+}

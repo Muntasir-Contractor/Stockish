@@ -452,3 +452,65 @@
     padding: 6px 8px;
   }
 }
+
+@media (max-width: 600px) {
+  .Navbar {
+    padding: 10px 3% 10px 2%;
+  }
+
+  .logo {
+    height: 5em;
+  }
+
+  .nav_links {
+    gap: 4px;
+  }
+
+  .nav_links li a {
+    font-size: 11px;
+    padding: 6px 4px;
+  }
+
+  .navbar-placeholder {
+    height: 70px;
+  }
+
+  .guide-container {
+    padding: 40px 12px 60px;
+  }
+
+  .guide-title {
+    font-size: 22px;
+  }
+
+  .guide-subtitle {
+    font-size: 13px;
+  }
+
+  .guide-section-title {
+    font-size: 16px;
+  }
+
+  .guide-models-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-model-card {
+    padding: 16px;
+  }
+
+  .guide-example-card {
+    max-width: 100%;
+    padding: 16px;
+  }
+
+  .guide-weight-bar-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .guide-weight-label {
+    width: auto;
+    font-size: 11px;
+  }
+}

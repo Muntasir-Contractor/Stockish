@@ -584,21 +584,12 @@
   .search-form {
     order: 2;
     margin-left: auto;
-    position: static;
-  }
-
-  .search-input-wrapper {
-    position: static;
   }
 
   .search-input {
     width: 140px;
-    font-size: 16px;
+    font-size: 14px;
     padding: 8px 28px 8px 10px;
-  }
-
-  .search-input::placeholder {
-    font-size: 12px;
   }
 
   .search-btn {
@@ -609,13 +600,10 @@
 
   .search-results {
     position: fixed;
-    top: auto;
     left: 10px;
     right: 10px;
     max-width: none;
     width: auto;
-    z-index: 1100;
-    max-height: 60vh;
   }
 
   .stock-list {

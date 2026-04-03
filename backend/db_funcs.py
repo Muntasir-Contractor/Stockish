@@ -72,6 +72,13 @@ def _ensure_tables():
                 PRIMARY KEY (ticker, model_type)
             )
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stock (
+                ticker      TEXT PRIMARY KEY,
+                fr_class    FLOAT,
+                date_stamp  TIMESTAMP
+            )
+        """)
         cursor.close()
     finally:
         put_conn(conn)

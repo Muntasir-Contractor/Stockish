@@ -608,10 +608,10 @@
   }
 
   .search-results {
-    position: fixed;
-    top: auto;
-    left: 10px;
-    right: 10px;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
     max-width: none;
     width: auto;
     z-index: 1100;

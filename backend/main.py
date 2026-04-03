@@ -41,6 +41,9 @@ TODO: - Replace hardcoded sector medians (scripts/valuation_models)
        - FIX: When cacheing the valuation models, and extra coloumn with model type 'Primary' is
        added with null values. Taking up unnecessary space
 
+       - ADD: Caching api responses from fmp model every 30mins-1h to avoid reoccuring api calls 
+       upon every visit to the home page
+
 
 
 
@@ -57,6 +60,8 @@ origins = [
     "http://localhost:3000",
     "http://localhost:5174",
     "http://localhost:5173",
+    "https://www.stockish.ai",
+    "https://stockish.ai",
 ] + [o.strip() for o in extra_origins.split(",") if o.strip()]
 
 app.add_middleware(

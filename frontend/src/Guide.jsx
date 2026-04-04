@@ -250,7 +250,7 @@ function Guide() {
           <h2 className="guide-section-header">COMPOSITE SCORE</h2>
           <p className="guide-section-intro">
             The composite score combines all three signals into a single weighted sum ranging from
-            −1 (very weak pattern) to +1 (very strong pattern). It is computed client-side using the
+            −1 (very weak composite) to +1 (very strong composite). It is computed client-side using the
             following weights:
           </p>
           <div className="guide-weights-table">
@@ -280,23 +280,23 @@ function Guide() {
           <div className="guide-verdicts-table">
             <div className="guide-verdict-row">
               <span className="guide-verdict-range positive">&gt; 0.50</span>
-              <span className="guide-verdict-label">Historically Very Strong Pattern</span>
+              <span className="guide-verdict-label">Very Strong Composite</span>
             </div>
             <div className="guide-verdict-row">
               <span className="guide-verdict-range positive-dim">0.20 – 0.50</span>
-              <span className="guide-verdict-label">Historically Strong Pattern</span>
+              <span className="guide-verdict-label">Strong Composite</span>
             </div>
             <div className="guide-verdict-row">
               <span className="guide-verdict-range neutral">−0.20 – 0.20</span>
-              <span className="guide-verdict-label">Neutral Pattern</span>
+              <span className="guide-verdict-label">Neutral</span>
             </div>
             <div className="guide-verdict-row">
               <span className="guide-verdict-range negative-dim">−0.50 – −0.20</span>
-              <span className="guide-verdict-label">Historically Weak Pattern</span>
+              <span className="guide-verdict-label">Weak Composite</span>
             </div>
             <div className="guide-verdict-row">
               <span className="guide-verdict-range negative">&lt; −0.50</span>
-              <span className="guide-verdict-label">Historically Very Weak Pattern</span>
+              <span className="guide-verdict-label">Very Weak Composite</span>
             </div>
           </div>
           <p className="guide-section-body">

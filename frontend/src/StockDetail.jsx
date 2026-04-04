@@ -46,9 +46,9 @@ function computeFinalAnalysis(upsidePct, frPrediction, sentimentScalar, dcfConfi
 
   let verdict;
   if (composite > 0.50) verdict = 'Very Strong Composite';
-  else if (composite > 0.20) verdict = 'Historically Strong Pattern';
-  else if (composite > -0.20) verdict = 'Neutral Pattern';
-  else if (composite > -0.50) verdict = 'Historically Weak Pattern';
+  else if (composite > 0.20) verdict = 'Strong Composite';
+  else if (composite > -0.20) verdict = 'Neutral';
+  else if (composite > -0.50) verdict = 'Weak Composite';
   else verdict = 'Very Weak Composite';
 
   const confidence = signals.length >= 3 ? 'High' : signals.length === 2 ? 'Medium' : 'Low';

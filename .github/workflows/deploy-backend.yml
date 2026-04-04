@@ -8,6 +8,7 @@ on:
       - 'scripts/**'
       - 'requirements.txt'
       - 'Dockerfile'
+      - '.github/workflows/deploy-backend.yml'
 
 jobs:
   deploy:

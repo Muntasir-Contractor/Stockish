@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import api from './components/api'
 import './Feedback.css'
 
 function Feedback() {
@@ -14,14 +15,23 @@ function Feedback() {
     return e
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const errs = validate()
     if (Object.keys(errs).length > 0) {
       setErrors(errs)
       return
     }
-    setSubmitted(true)
+    try {
+      await api.post('/feedback', {
+        name: form.name,
+        feedback_type: form.type,
+        message: form.message,
+      })
+      setSubmitted(true)
+    } catch {
+      setErrors({ submit: 'Failed to submit feedback. Please try again.' })
+    }
   }
 
   const handleChange = (field) => (e) => {
@@ -118,6 +128,7 @@ function Feedback() {
             {errors.message && <span className="fb-error">{errors.message}</span>}
           </div>
 
+          {errors.submit && <span className="fb-error">{errors.submit}</span>}
           <button type="submit" className="fb-submit">Submit</button>
         </form>
 

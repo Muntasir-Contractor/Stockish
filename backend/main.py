@@ -8,6 +8,7 @@ from fetchfromAPI import get_top_movers, get_top_losers, get_top_gainers
 import joblib
 import sys
 import httpx
+from pydantic import BaseModel
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -43,6 +44,8 @@ TODO: - Replace hardcoded sector medians (scripts/valuation_models)
 
        - ADD: Caching api responses from fmp model every 30mins-1h to avoid reoccuring api calls 
        upon every visit to the home page
+
+       - To be completed: Handling feedback message and storing them 
 
        #test
 
@@ -300,6 +303,18 @@ async def recalculate_model(request: Request, ticker: str, body: dict):
         "confidence": confidence,
         "warnings": warnings,
     }
+
+class Feedback(BaseModel):
+    name: str
+    feedback_type:str
+    message:str
+    
+
+# Place holder for now
+@app.post("/feedback")
+async def submit_feedback(feedback: Feedback):
+    print(f"Feedback received from {feedback.name} ({feedback.feedback_type}): {feedback.message}")
+    return {"status": "success", "message": "Feedback received"}
 
 
 def _run_recalculation(ticker: str, model_type: str, assumptions: dict) -> dict | None:

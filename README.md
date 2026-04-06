@@ -6,6 +6,8 @@
 
 A full-stack equity research tool that estimates intrinsic value through multiple valuation models, classifies forward return potential with an XGBoost model trained on fundamental data, and surfaces AI-driven market sentiment from recent news — all in real time.
 
+**[stockish.ai](https://stockish.ai)**
+
 > **This application is for educational and research purposes only. Nothing presented by Stockish constitutes financial advice, a recommendation to buy or sell any security, or a guarantee of prediction accuracy. All model outputs are analytical estimates based on historical data and publicly available information. Always conduct your own due diligence and consult a qualified financial advisor before making any investment decisions.**
 
 [Features](#features) · [How It Works](#how-it-works) · [Tech Stack](#tech-stack) · [Getting Started](#getting-started) · [API Reference](#api-reference)
@@ -27,6 +29,10 @@ Stockish estimates a stock's fair value using five valuation methodologies, auto
 - **Book Value (P/B)** — Applies sector-median price-to-book ratios — best suited for financials, real estate, and capital-intensive industries.
 
 Each model returns a fair value estimate, a confidence level (High / Medium / Low), and any warnings about the assumptions used. The primary model is chosen by a decision tree that considers sector, dividend history, growth profile, and data availability.
+
+#### Custom Assumption Overrides
+
+Users can modify and recalculate any valuation model with custom assumptions (e.g., growth rate, WACC, terminal growth for DCF; sector multiples for P/E, P/S, P/B; dividend growth and cost of equity for DDM). Results update in real time without a full page reload.
 
 ### Forward Return Classification
 
@@ -70,8 +76,14 @@ The composite score produces a verdict ranging from historically weak to histori
 ### Market Overview & Search
 
 - **Top Movers / Gainers / Losers** — Live market data via Financial Modeling Prep
-- **Ticker Search** — Fast symbol lookup by name or ticker
+- **Ticker Search** — Fast debounced symbol lookup by name or ticker with keyboard navigation
 - **ETF Detection** — ETFs are automatically identified and excluded from valuation and classification
+
+### Additional Pages
+
+- **How to Use** — Educational guide explaining each valuation model, confidence levels, forward return features, and limitations
+- **Model Performance** — Historical accuracy metrics and backtest results for the forward return classifier
+- **Feedback** — User feedback submission form
 
 ---
 
@@ -131,7 +143,9 @@ Valuation results are cached until new financial statements are published. Forwa
 | **Data Sources** | yfinance, Financial Modeling Prep API |
 | **Database** | PostgreSQL (psycopg2) |
 | **HTTP Client** | httpx (async) |
+| **Rate Limiting** | slowapi (per-IP, per-endpoint) |
 | **Frontend** | React 19, React Router, Vite, Axios |
+| **Deployment** | Docker, GitHub Actions CI/CD, AWS EC2 (backend), Vercel (frontend) |
 
 ---
 
@@ -153,12 +167,16 @@ cd StockInsight-ML
 
 ### 2. Set up environment variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in the `backend/` directory:
 
 ```env
 OPENAI_API_KEY=your_openai_key
 FINANCE_KEY=your_financial_modeling_prep_key
-DB_PASSWORD=your_postgres_password
+DATABASE_HOST=localhost
+DATABASE_NAME=postgres
+DATABASE_USER=postgres
+PASSWORD=your_postgres_password
+DATABASE_PORT=5432
 ```
 
 ### 3. Install dependencies & start the backend
@@ -177,18 +195,29 @@ npm install
 npm run dev
 ```
 
+The frontend reads `VITE_API_URL` to locate the backend (defaults to `http://localhost:8000`).
+
+### Running with Docker
+
+```bash
+docker build -t stockish-backend .
+docker run -p 8000:8000 --env-file backend/.env stockish-backend
+```
+
 ---
 
 ## API Reference
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/stock/{ticker}` | Intrinsic value (all models), current price, valuation label, forward return decile, composite score |
-| `GET` | `/stocksentiment/{ticker}` | Sentiment scalar (0.5–1.5), structured insights, remaining daily analyses |
-| `GET` | `/search/{query}` | Symbol search results (name + ticker, deduplicated) |
-| `GET` | `/topmovers` | Most actively traded stocks |
-| `GET` | `/topgainers` | Biggest daily percentage gainers |
-| `GET` | `/toplosers` | Biggest daily percentage losers |
+| Method | Endpoint | Description | Rate Limit |
+|--------|----------|-------------|------------|
+| `GET` | `/stock/{ticker}` | Intrinsic value (all models), current price, valuation label, forward return decile, composite score | 15/min |
+| `GET` | `/stocksentiment/{ticker}` | Sentiment scalar (0.5–1.5), structured insights, remaining daily analyses | 3/day per IP |
+| `POST` | `/stock/{ticker}/recalculate` | Re-run a specific valuation model with custom assumptions | 15/min |
+| `GET` | `/search/{query}` | Symbol search results (name + ticker, deduplicated) | 20/min |
+| `GET` | `/topmovers` | Most actively traded stocks | 30/min |
+| `GET` | `/topgainers` | Biggest daily percentage gainers | 30/min |
+| `GET` | `/toplosers` | Biggest daily percentage losers | 30/min |
+| `POST` | `/feedback` | Submit user feedback | — |
 
 ---
 
@@ -197,7 +226,7 @@ npm run dev
 ```
 StockInsight-ML/
 ├── backend/
-│   ├── main.py                  # FastAPI app, CORS, route handlers
+│   ├── main.py                  # FastAPI app, CORS, route handlers, rate limiting
 │   ├── application.py           # Valuation orchestration, FR prediction, composite scoring
 │   ├── newssentiment.py         # OpenAI sentiment analysis
 │   ├── fetchnews.py             # Yahoo Finance news fetching
@@ -209,17 +238,33 @@ StockInsight-ML/
 │   ├── valuation_models.py      # DCF, P/E, P/S, DDM, P/B implementations
 │   ├── fetch_fr_stockdata.py    # Forward return feature extraction
 │   ├── train_forwardreturn_model.py  # XGBoost training + Optuna hyperparameter tuning
-│   └── ...
+│   ├── model_backtesting.py     # Historical performance testing
+│   └── dataset/
+│       └── model_data_newest_cleaned.csv
 ├── frontend/
 │   ├── src/
 │   │   ├── App.jsx              # Home page — search, market movers
 │   │   ├── StockDetail.jsx      # Detail page — valuations, FR, sentiment, composite
+│   │   ├── Guide.jsx            # How to Use documentation
+│   │   ├── ModelPerformance.jsx # Model accuracy & backtest metrics
+│   │   ├── Feedback.jsx         # User feedback form
 │   │   └── components/
 │   │       └── api.js           # Axios HTTP client
 │   └── package.json
+├── .github/workflows/
+│   └── deploy-backend.yml       # CI/CD — build & deploy backend to AWS EC2
+├── Dockerfile                   # Backend containerization
 ├── requirements.txt
 └── README.md
 ```
+
+---
+
+## Deployment
+
+The backend is containerized with Docker and deployed to AWS EC2 via GitHub Actions. The CI/CD pipeline triggers on pushes to `main` that touch `backend/`, `scripts/`, `requirements.txt`, or `Dockerfile`. It rebuilds the Docker image on the EC2 instance and restarts the container.
+
+The frontend is deployed to Vercel with automatic builds on push.
 
 ---
 

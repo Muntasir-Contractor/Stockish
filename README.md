@@ -141,11 +141,11 @@ Valuation results are cached until new financial statements are published. Forwa
 | **ML** | XGBoost (multi-class classifier), scikit-learn, joblib |
 | **AI / NLP** | OpenAI API (async) |
 | **Data Sources** | yfinance, Financial Modeling Prep API |
-| **Database** | PostgreSQL (psycopg2) |
+| **Database** | PostgreSQL on AWS RDS (psycopg2, connection pooling) |
 | **HTTP Client** | httpx (async) |
 | **Rate Limiting** | slowapi (per-IP, per-endpoint) |
 | **Frontend** | React 19, React Router, Vite, Axios |
-| **Deployment** | Docker, GitHub Actions CI/CD, AWS EC2 (backend), Vercel (frontend) |
+| **Deployment** | Docker, GitHub Actions CI/CD, AWS EC2 (backend), AWS RDS (database), Vercel (frontend) |
 
 ---
 
@@ -263,6 +263,8 @@ StockInsight-ML/
 ## Deployment
 
 The backend is containerized with Docker and deployed to AWS EC2 via GitHub Actions. The CI/CD pipeline triggers on pushes to `main` that touch `backend/`, `scripts/`, `requirements.txt`, or `Dockerfile`. It rebuilds the Docker image on the EC2 instance and restarts the container.
+
+PostgreSQL is hosted on AWS RDS with connection pooling (psycopg2 `ThreadedConnectionPool`), providing managed backups, availability, and scaling independent of the application server.
 
 The frontend is deployed to Vercel with automatic builds on push.
 

@@ -145,7 +145,7 @@ Valuation results are cached until new financial statements are published. Forwa
 | **HTTP Client** | httpx (async) |
 | **Rate Limiting** | slowapi (per-IP, per-endpoint) |
 | **Frontend** | React 19, React Router, Vite, Axios |
-| **Deployment** | Docker, GitHub Actions CI/CD, AWS EC2 (backend), AWS RDS (database), Vercel (frontend) |
+| **Deployment** | Docker, GitHub Actions CI/CD, AWS EC2 + Nginx (backend), AWS RDS (database), Vercel (frontend) |
 
 ---
 
@@ -262,7 +262,7 @@ StockInsight-ML/
 
 ## Deployment
 
-The backend is containerized with Docker and deployed to AWS EC2 via GitHub Actions. The CI/CD pipeline triggers on pushes to `main` that touch `backend/`, `scripts/`, `requirements.txt`, or `Dockerfile`. It rebuilds the Docker image on the EC2 instance and restarts the container.
+The backend is containerized with Docker and deployed to AWS EC2 via GitHub Actions. Nginx runs on the EC2 instance as a reverse proxy in front of Uvicorn, handling SSL termination and request forwarding. The CI/CD pipeline triggers on pushes to `main` that touch `backend/`, `scripts/`, `requirements.txt`, or `Dockerfile`. It rebuilds the Docker image on the EC2 instance and restarts the container.
 
 PostgreSQL is hosted on AWS RDS with connection pooling (psycopg2 `ThreadedConnectionPool`), providing managed backups, availability, and scaling independent of the application server.
 

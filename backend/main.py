@@ -2,7 +2,6 @@ import asyncio
 from fastapi import FastAPI, Response, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fetchfromAPI import get_top_movers, get_top_losers, get_top_gainers
 import joblib
@@ -54,7 +53,13 @@ TODO: - Replace hardcoded sector medians (scripts/valuation_models)
 
 """
 
-limiter = Limiter(key_func=get_remote_address)
+def get_real_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host
+
+limiter = Limiter(key_func=get_real_ip)
 app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -217,7 +222,7 @@ async def get_stock_insight(ticker: str, request: Request):
     try:
         if (is_etf(ticker))[0] == True:
             return {"Sentiment": "Cannot evaluate etf"}
-        client_ip = request.client.host
+        client_ip = get_real_ip(request)
         usage = get_daily_usage(client_ip)
         if usage >= DAILY_LIMIT:
             raise HTTPException(

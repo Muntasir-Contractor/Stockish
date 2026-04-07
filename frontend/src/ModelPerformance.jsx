@@ -3,14 +3,14 @@ import './ModelPerformance.css'
 
 const FEATURES = [
   {
-    name: 'FCF_Yield',
+    name: 'FCF Yield',
     formula: 'Free Cash Flow / Market Cap',
     category: 'Value',
     barWidth: 81,
     desc: 'How much free cash flow the company generates relative to its market value. High yield historically signals undervaluation.',
   },
   {
-    name: 'EV_to_EBITDA',
+    name: 'EV to EBITDA',
     formula: 'Enterprise Value / EBITDA',
     category: 'Value',
     barWidth: 72,
@@ -24,42 +24,42 @@ const FEATURES = [
     desc: 'Measures how efficiently a company uses its capital to generate earnings. A strong moat indicator.',
   },
   {
-    name: 'Gross_Profitability',
+    name: 'Gross Profitability',
     formula: 'Gross Profit / Total Assets',
     category: 'Quality',
     barWidth: 58,
     desc: 'Asset productivity proxy. Higher values indicate a durable competitive advantage.',
   },
   {
-    name: 'Momentum_6M',
+    name: '6M Momentum',
     formula: 'Price return over 126 trading days',
     category: 'Momentum',
     barWidth: 54,
     desc: 'Six-month price momentum. Stocks that have recently outperformed tend to continue doing so in the short term.',
   },
   {
-    name: 'Revenue_Growth_YoY',
+    name: 'Revenue Growth YoY',
     formula: 'YoY % change in revenue',
     category: 'Growth',
     barWidth: 45,
     desc: 'Year-over-year top-line growth. Captures business expansion momentum.',
   },
   {
-    name: 'Interest_Coverage',
+    name: 'Interest Coverage',
     formula: 'EBIT / Interest Expense',
     category: 'Quality',
     barWidth: 31,
     desc: 'Ability to service debt. Low coverage ratios signal financial fragility and potential distress risk.',
   },
   {
-    name: 'Accrual_Ratio',
+    name: 'Accrual Ratio',
     formula: '(Net Income − FCF) / Total Assets',
     category: 'Quality',
     barWidth: 22,
     desc: 'Earnings quality signal. High accruals suggest earnings are less backed by actual cash flow.',
   },
   {
-    name: 'Shares_Outstanding_YoY',
+    name: 'Shares Outstanding YoY',
     formula: 'YoY % change in diluted shares',
     category: 'Dilution',
     barWidth: 18,
@@ -132,7 +132,7 @@ function ModelPerformance() {
               With 10 equally-likely classes, a model that guesses randomly would achieve ~10% accuracy.
               Our model achieves ~15–16%, representing a <strong>50–60% improvement over random chance</strong>.
               While this may sound modest, predicting equity return deciles is an exceptionally difficult
-              task — financial markets are designed to be difficult to predict. Even small edges, applied
+              task. Financial markets are designed to be difficult to predict. Even small edges, applied
               consistently across large populations of stocks, compound meaningfully.
             </p>
             <div className="mp-accuracy-compare">
@@ -204,21 +204,21 @@ function ModelPerformance() {
             </div>
             <ul className="mp-method-list">
               <li>
-                <strong>Chronological split</strong> — no future data leaks into the training set.
+                <strong>Chronological split</strong>: no future data leaks into the training set.
                 The test set represents the most recent portion of the dataset.
               </li>
               <li>
-                <strong>Target variable</strong> — 12-month forward return percentile vs. the overall market,
+                <strong>Target variable</strong>: 12-month forward return percentile vs. the overall market,
                 binned into 10 equal deciles (0 = worst 10%, 9 = best 10%).
               </li>
               <li>
-                <strong>Optuna hyperparameter search</strong> — Bayesian optimisation over
+                <strong>Optuna hyperparameter search</strong>: Bayesian optimisation over
                 max_depth, learning_rate, n_estimators, subsample, colsample_bytree,
                 min_child_weight, and gamma.
               </li>
               <li>
-                <strong>Feature engineering</strong> — all features are ratio-based (not raw
-                financials) to ensure cross-sector comparability and reduce scale bias.
+                <strong>Feature engineering</strong>: all features are ratio-based (not raw
+                financials) to ensure cross-sector comparability and reduce model biasing very large numbers.
               </li>
             </ul>
           </div>

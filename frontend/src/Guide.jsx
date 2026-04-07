@@ -240,8 +240,7 @@ function Guide() {
           </div>
           <p className="guide-section-body">
             <strong>Decile 0</strong> = bottom 10% of historical setups by subsequent 12-month return
-            vs. the market. <strong>Decile 9</strong> = top 10%. The example above highlights Decile 7
-            — a stock with this score has historically tended to outperform the market in the year
+            vs. the market. <strong>Decile 9</strong> = top 10%. The example above highlights Decile 7, a stock with this score has historically tended to outperform the market in the year
             following similar fundamental conditions.
           </p>
           <p className="guide-section-body">
@@ -256,7 +255,7 @@ function Guide() {
           <h2 className="guide-section-header">MARKET SENTIMENT ANALYSIS</h2>
           <p className="guide-section-intro">
             The sentiment score reflects the current news sentiment surrounding the stock, derived
-            from recent headlines analyzed by an AI language model. It is expressed as a scalar
+            from recent headlines and news article summaries, analyzed by an AI language model. It is expressed as a scalar
             from 0.5 (strongly bearish) to 1.5 (strongly bullish), with 1.0 being neutral.
           </p>
           <div className="guide-scalar-demo">

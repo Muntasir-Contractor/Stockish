@@ -396,7 +396,7 @@ function StockDetail() {
                 onClick={handleGetInsights}
                 disabled={insightsLoading || remaining === 0}
               >
-                {insightsLoading ? 'Analyzing\u2026' : remaining === 0 ? 'Limit reached' : 'Get Sentiment Score'}
+                {insightsLoading ? 'Analyzing...' : remaining === 0 ? 'Limit reached' : 'Get Sentiment Score'}
               </button>
             )}
           </div>
@@ -560,7 +560,7 @@ function StockDetail() {
                 disabled={insightsLoading || remaining === 0}
               >
                 {insightsLoading
-                  ? 'Analyzing\u2026'
+                  ? 'Analyzing...'
                   : insights
                   ? 'Refresh Analysis'
                   : 'Get Sentiment Analysis'}
@@ -574,7 +574,7 @@ function StockDetail() {
           </div>
 
           {insightsLoading && (
-            <div className="insights-loading">Analyzing market sentiment for {ticker.toUpperCase()}\u2026</div>
+            <div className="insights-loading">Analyzing market sentiment for {ticker.toUpperCase()}...</div>
           )}
 
           {insightsError && !insightsLoading && (

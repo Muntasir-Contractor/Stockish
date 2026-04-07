@@ -598,7 +598,7 @@ function StockDetail() {
                 <span className="insights-scalar-value mono">
                   {insights.scalar.toFixed(2)}
                   &nbsp;&middot;&nbsp;
-                  {insights.scalar > 1.03 ? 'Historically Strong' : insights.scalar < 0.97 ? 'Historically Weak' : 'Neutral'}
+                  {insights.scalar > 1.03 ? 'Bullish Sentiment' : insights.scalar < 0.97 ? 'Bearish Sentiment' : 'Neutral Sentiment'}
                 </span>
               </div>
 

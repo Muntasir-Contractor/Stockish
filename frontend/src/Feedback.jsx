@@ -88,7 +88,7 @@ function Feedback() {
 
         <form className="fb-form" onSubmit={handleSubmit} noValidate>
           <div className="fb-field">
-            <label className="fb-label" htmlFor="fb-name">// NAME</label>
+            <label className="fb-label" htmlFor="fb-name">NAME</label>
             <input
               id="fb-name"
               type="text"
@@ -102,7 +102,7 @@ function Feedback() {
           </div>
 
           <div className="fb-field">
-            <label className="fb-label" htmlFor="fb-type">// TYPE</label>
+            <label className="fb-label" htmlFor="fb-type">TYPE</label>
             <select
               id="fb-type"
               className="fb-select"
@@ -116,7 +116,7 @@ function Feedback() {
           </div>
 
           <div className="fb-field">
-            <label className="fb-label" htmlFor="fb-message">// MESSAGE</label>
+            <label className="fb-label" htmlFor="fb-message">MESSAGE</label>
             <textarea
               id="fb-message"
               className="fb-textarea"

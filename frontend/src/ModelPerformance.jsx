@@ -86,7 +86,7 @@ function ModelPerformance() {
 
       <div className="mp-container">
         <div className="mp-hero">
-          <h1 className="mp-title">// model_performance</h1>
+          <h1 className="mp-title">Model Performance</h1>
           <p className="mp-subtitle">
             XGBoost 10-class forward return classifier — trained to predict which decile a stock's
             12-month return will fall into, relative to the broader market.

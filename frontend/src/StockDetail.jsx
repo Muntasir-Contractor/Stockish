@@ -248,20 +248,21 @@ function StockDetail() {
           &larr; back
         </button>
 
-        <div className="stock-header">
+        <div className="stock-identity">
           {stockData?.ticker && (
             <img
               src={getLogo(stockData.ticker)}
               alt={`${stockData.ticker} logo`}
-              className="stock-header-badge"
+              className="stock-identity-badge"
               onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(stockData.ticker); }}
               loading="lazy"
             />
           )}
-          <h1>{stockData.ticker}</h1>
-          <div className="current-price-big mono">
-            {hasCurrent ? `$${currentPrice.toFixed(2)}` : 'N/A'}
-          </div>
+          <h1 className="stock-ticker-title">{stockData.ticker}</h1>
+        </div>
+
+        <div className="current-price-big mono">
+          {hasCurrent ? `$${currentPrice.toFixed(2)}` : 'N/A'}
         </div>
 
         <div className="disclaimer-banner">
@@ -474,7 +475,7 @@ function StockDetail() {
                           {/* Editable Assumptions */}
                           {m.assumptions && Object.keys(m.assumptions).length > 0 && (
                             <div className="assumptions-block">
-                              <h4 className="details-section-title">// ADJUSTABLE ASSUMPTIONS</h4>
+                              <h4 className="details-section-title">ADJUSTABLE ASSUMPTIONS</h4>
                               {Object.entries(m.assumptions).map(([key, def]) => (
                                 <div key={key} className="assumption-row">
                                   <label className="assumption-label">{def.label}</label>
@@ -499,7 +500,7 @@ function StockDetail() {
                           {/* Read-only Assumptions */}
                           {m.assumptions_readonly && Object.keys(m.assumptions_readonly).length > 0 && (
                             <div className="assumptions-block">
-                              <h4 className="details-section-title">// MODEL INPUTS</h4>
+                              <h4 className="details-section-title">MODEL INPUTS</h4>
                               {Object.entries(m.assumptions_readonly).map(([key, def]) => (
                                 <div key={key} className="assumption-row readonly">
                                   <label className="assumption-label">{def.label}</label>
@@ -512,7 +513,7 @@ function StockDetail() {
                           {/* Limitations */}
                           {m.limitations && m.limitations.length > 0 && (
                             <div className="limitations-block">
-                              <h4 className="details-section-title">// LIMITATIONS</h4>
+                              <h4 className="details-section-title">LIMITATIONS</h4>
                               <ul className="limitations-list">
                                 {m.limitations.map((lim, i) => (
                                   <li key={i} className="limitation-item">{lim}</li>

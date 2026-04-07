@@ -11,16 +11,15 @@
 .nav_links li a {
   text-decoration: none;
   color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 15px;
-  transition: all 0.3s;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.2s;
   padding: 8px 12px;
-  border-radius: 3px;
+  border-radius: var(--radius);
 }
 
 .nav_links li a:hover {
-  color: var(--green);
-  background-color: var(--green-glow-soft);
+  color: var(--text-primary);
 }
 
 .Navbar {
@@ -38,18 +37,7 @@
   position: fixed;
   z-index: 1000;
   box-sizing: border-box;
-  box-shadow: none;
   border-bottom: 1px solid var(--border-subtle);
-}
-
-.Navbar::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--green-glow), transparent);
 }
 
 .logo {
@@ -58,11 +46,11 @@
   height: 7.5em;
   padding: 0;
   will-change: filter;
-  transition: filter 0.2s;
+  transition: opacity 0.2s;
 }
 
 .logo:hover {
-  filter: drop-shadow(0 0 2em rgba(111, 191, 115, 0.4));
+  opacity: 0.85;
 }
 
 .navbar-placeholder {
@@ -80,31 +68,32 @@
   max-width: 1020px;
   width: 95%;
   margin: 0 auto;
-  padding: 50px 20px 80px;
+  padding: 48px 24px 80px;
 }
 
 /* ── Hero ── */
 .mp-hero {
   text-align: center;
-  padding: 48px 20px 40px;
+  padding: 48px 24px 48px;
   border-bottom: 1px solid var(--border-subtle);
   margin-bottom: 56px;
 }
 
 .mp-title {
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 700;
-  color: var(--green);
+  color: var(--accent-light);
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   margin: 0 0 16px;
 }
 
 .mp-subtitle {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text-secondary);
   max-width: 680px;
   margin: 0 auto;
   line-height: 1.7;
+  font-weight: 400;
 }
 
 /* ── Section ── */
@@ -113,25 +102,26 @@
 }
 
 .mp-section-header {
-  font-size: 11px;
+  font-size: 0.75rem;
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 2.5px;
+  letter-spacing: 0.05em;
   font-weight: 600;
   margin-bottom: 20px;
 }
 
 .mp-section-header::before {
   content: '// ';
-  color: var(--green);
+  color: var(--accent-light);
 }
 
 .mp-section-intro {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-body);
   line-height: 1.7;
   margin-bottom: 24px;
+  font-weight: 400;
 }
 
 /* ── Stat Cards ── */
@@ -144,44 +134,49 @@
 .mp-stat-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 24px 16px;
   text-align: center;
 }
 
 .mp-stat-value {
   font-size: 22px;
-  font-weight: 700;
-  color: var(--green);
+  font-weight: 600;
+  color: var(--accent-light);
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-variant-numeric: tabular-nums;
   margin-bottom: 8px;
 }
 
 .mp-stat-label {
-  font-size: 11px;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.05em;
   line-height: 1.4;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 500;
 }
 
 /* ── Why 15% Explainer ── */
 .mp-explainer-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 28px 32px;
 }
 
 .mp-explainer-text {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-body);
   line-height: 1.7;
   margin-bottom: 24px;
+  font-weight: 400;
 }
 
 .mp-explainer-text strong {
   color: var(--text-primary);
+  font-weight: 600;
 }
 
 .mp-explainer-note {
@@ -193,7 +188,7 @@
 
 .mp-accuracy-compare {
   background: var(--bg-surface-2);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 20px 24px;
 }
 
@@ -209,19 +204,21 @@
   font-size: 13px;
   color: var(--text-secondary);
   flex-shrink: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 400;
 }
 
 .mp-accuracy-bar-wrap {
   flex: 1;
-  height: 18px;
+  height: 8px;
   background: var(--bg-surface-3);
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
 .mp-accuracy-bar {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .mp-accuracy-baseline {
@@ -229,7 +226,7 @@
 }
 
 .mp-accuracy-model {
-  background: var(--green);
+  background: var(--accent);
 }
 
 .mp-accuracy-pct {
@@ -239,13 +236,14 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Feature Importance Bar Chart ── */
 .mp-feature-chart {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 24px 28px;
   margin-bottom: 12px;
 }
@@ -268,20 +266,21 @@
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   color: var(--text-primary);
   flex-shrink: 0;
+  font-weight: 500;
 }
 
 .mp-feature-bar-wrap {
   flex: 1;
-  height: 22px;
+  height: 8px;
   background: var(--bg-surface-2);
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
 .mp-feature-bar {
   height: 100%;
-  background: var(--green);
-  border-radius: 3px;
+  background: var(--accent);
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -290,27 +289,27 @@
 }
 
 .mp-feature-bar-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--bg-base);
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 }
 
 .mp-feature-tag {
   width: 80px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
   text-align: right;
   flex-shrink: 0;
 }
 
-.mp-feature-tag--value    { color: #388bfd; }
-.mp-feature-tag--quality  { color: var(--green); }
+.mp-feature-tag--value    { color: var(--blue-accent); }
+.mp-feature-tag--quality  { color: var(--success); }
 .mp-feature-tag--momentum { color: #d4a84b; }
 .mp-feature-tag--growth   { color: var(--text-secondary); }
-.mp-feature-tag--dilution { color: #e74c3c; }
+.mp-feature-tag--dilution { color: var(--danger); }
 
 .mp-feature-note {
   font-size: 12px;
@@ -322,14 +321,14 @@
 .mp-method-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 28px 32px;
 }
 
 .mp-split-visual {
   display: flex;
   align-items: stretch;
-  border-radius: 4px;
+  border-radius: var(--radius);
   overflow: hidden;
   margin-bottom: 28px;
   border: 1px solid var(--border-subtle);
@@ -343,22 +342,21 @@
 }
 
 .mp-split-divider {
-  width: 3px;
-  background: var(--green);
+  width: 2px;
+  background: var(--accent);
   flex-shrink: 0;
 }
 
 .mp-split-test {
   flex: 1;
-  background: var(--green-glow-soft);
+  background: var(--accent-muted);
   padding: 20px 16px;
   text-align: center;
-  border-left: 1px dashed var(--green);
 }
 
 .mp-split-label {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 4px;
 }
@@ -380,31 +378,32 @@
 
 .mp-method-list li {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-body);
   line-height: 1.6;
   padding-left: 20px;
   position: relative;
+  font-weight: 400;
 }
 
 .mp-method-list li::before {
-  content: '//';
+  content: '\2022';
   position: absolute;
   left: 0;
-  color: var(--green);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  top: 2px;
+  color: var(--accent-light);
+  font-size: 14px;
+  top: 0;
 }
 
 .mp-method-list strong {
   color: var(--text-primary);
+  font-weight: 600;
 }
 
 /* ── Feature Definitions Table ── */
 .mp-feature-defs {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
@@ -416,9 +415,9 @@
   background: var(--bg-surface-2);
   border-bottom: 1px solid var(--border-subtle);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.05em;
   color: var(--text-tertiary);
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 }
@@ -446,22 +445,23 @@
 
 .mp-feature-def-formula {
   font-size: 12px;
-  color: var(--green);
+  color: var(--accent-light);
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   line-height: 1.5;
 }
 
 .mp-feature-def-category {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 
 .mp-feature-def-desc {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--text-body);
   line-height: 1.5;
+  font-weight: 400;
 }
 
 /* ── Footer ── */
@@ -585,10 +585,6 @@
   .mp-accuracy-label {
     width: auto;
     font-size: 11px;
-  }
-
-  .mp-section-title {
-    font-size: 16px;
   }
 
   .mp-feature-def-row {

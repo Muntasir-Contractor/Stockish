@@ -20,7 +20,7 @@ function Guide() {
 
       <div className="guide-container">
         <div className="guide-hero">
-          <h1 className="guide-title">// how_to_use_our_data</h1>
+          <h1 className="guide-title">How to Use Our Data</h1>
           <p className="guide-subtitle">
             This page explains what each output on a stock's detail page means, how it's calculated,
             and how to interpret the results given the underlying assumptions.

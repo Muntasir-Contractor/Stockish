@@ -11,16 +11,15 @@
 .nav_links li a {
   text-decoration: none;
   color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 15px;
-  transition: all 0.3s;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.2s;
   padding: 8px 12px;
-  border-radius: 3px;
+  border-radius: var(--radius);
 }
 
 .nav_links li a:hover {
-  color: var(--green);
-  background-color: var(--green-glow-soft);
+  color: var(--text-primary);
 }
 
 .Navbar {
@@ -38,18 +37,7 @@
   position: fixed;
   z-index: 1000;
   box-sizing: border-box;
-  box-shadow: none;
   border-bottom: 1px solid var(--border-subtle);
-}
-
-.Navbar::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--green-glow), transparent);
 }
 
 .logo {
@@ -58,11 +46,11 @@
   height: 7.5em;
   padding: 0;
   will-change: filter;
-  transition: filter 0.2s;
+  transition: opacity 0.2s;
 }
 
 .logo:hover {
-  filter: drop-shadow(0 0 2em rgba(111, 191, 115, 0.4));
+  opacity: 0.85;
 }
 
 .navbar-placeholder {
@@ -91,7 +79,7 @@
 .fb-title {
   font-size: 28px;
   font-weight: 700;
-  color: var(--green);
+  color: var(--accent-light);
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   margin: 0 0 12px;
 }
@@ -100,13 +88,14 @@
   font-size: 15px;
   color: var(--text-secondary);
   line-height: 1.7;
+  font-weight: 400;
 }
 
 /* ── Form ── */
 .fb-form {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 36px 40px;
   display: flex;
   flex-direction: column;
@@ -121,12 +110,12 @@
 }
 
 .fb-label {
-  font-size: 11px;
+  font-size: 0.75rem;
   font-weight: 600;
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  color: var(--green);
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.05em;
 }
 
 .fb-input,
@@ -135,12 +124,12 @@
   padding: 12px 16px;
   background: var(--bg-surface-2);
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
+  border-radius: var(--radius);
   color: var(--text-primary);
   font-size: 14px;
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s;
   width: 100%;
   box-sizing: border-box;
 }
@@ -153,14 +142,13 @@
 .fb-input:focus,
 .fb-select:focus,
 .fb-textarea:focus {
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px var(--green-glow);
+  border-color: var(--accent);
 }
 
 .fb-select {
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b949e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394A3B8' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   background-size: 12px;
@@ -181,26 +169,27 @@
 
 .fb-error {
   font-size: 12px;
-  color: #e74c3c;
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  color: var(--danger);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 400;
 }
 
 .fb-submit {
   align-self: flex-start;
-  background: var(--green);
+  background: var(--accent);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius);
   padding: 12px 36px;
-  font-size: 15px;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Inter', system-ui, sans-serif;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .fb-submit:hover {
-  background: var(--green-dim);
+  background: var(--accent-dim);
 }
 
 /* ── Success State ── */
@@ -209,14 +198,14 @@
   padding: 80px 20px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--radius);
   margin-top: 40px;
 }
 
 .fb-success-icon {
   font-size: 28px;
   font-weight: 700;
-  color: var(--green);
+  color: var(--accent-light);
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   margin-bottom: 20px;
 }
@@ -233,13 +222,14 @@
   color: var(--text-secondary);
   margin-bottom: 28px;
   line-height: 1.6;
+  font-weight: 400;
 }
 
 .fb-home-link {
   font-size: 14px;
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-family: 'Inter', system-ui, sans-serif;
   font-weight: 600;
-  color: var(--green);
+  color: var(--accent-light);
   text-decoration: none;
   transition: opacity 0.2s;
 }
@@ -279,7 +269,7 @@
   .fb-input,
   .fb-select,
   .fb-textarea {
-    font-size: 16px; /* prevents iOS zoom on focus */
+    font-size: 16px;
     padding: 10px 12px;
   }
 
@@ -294,7 +284,7 @@
   }
 
   .Navbar {
-    padding: 12px 3% 12px 2%;
+    padding: 10px 3% 10px 2%;
   }
 
   .logo {

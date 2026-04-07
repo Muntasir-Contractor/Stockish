@@ -110,7 +110,7 @@ function App(){
     return `https://images.financialmodelingprep.com/symbol/${symbol}.png`;
   };
 
-  const getAvatarFallback = (name, bg = '6fbf73') => {
+  const getAvatarFallback = (name, bg = '7C3AED') => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=128&rounded=false&color=ffffff&background=${bg}`;
   };
 
@@ -267,7 +267,7 @@ function App(){
                         src={getLogo(result.symbol)}
                         alt=""
                         className="result-logo"
-                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(result.symbol, '6fbf73'); }}
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(result.symbol, '7C3AED'); }}
                       />
                       <div className="result-main">
                         <strong>{result.symbol}</strong>
@@ -357,7 +357,7 @@ function App(){
                   src={getLogo(u.symbol)}
                   alt={u.name}
                   className="company-badge"
-                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, '6fbf73'); }}
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, '10B981'); }}
                 />
                 <div className="stock-symbol">{u.symbol}</div>
                 <div className="stock-name">{u.name}</div>
@@ -383,7 +383,7 @@ function App(){
                   src={getLogo(u.symbol)}
                   alt={u.name}
                   className="company-badge"
-                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, 'e74c3c'); }}
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = getAvatarFallback(u.name, 'EF4444'); }}
                 />
                 <div className="stock-symbol">{u.symbol}</div>
                 <div className="stock-name">{u.name}</div>

@@ -5,28 +5,46 @@
 }
 
 :root {
-  /* ── Dark terminal palette ── */
-  --bg-base:         #0d1117;
-  --bg-surface:      #161b22;
-  --bg-surface-2:    #1c2128;
-  --bg-surface-3:    #21262d;
-  --border-subtle:   #30363d;
-  --border-green:    #6fbf73;
-  --green:           #6fbf73;
-  --green-dim:       #4a9e4e;
-  --green-glow:      rgba(111,191,115,0.18);
-  --green-glow-soft: rgba(111,191,115,0.08);
-  --text-primary:    #e6edf3;
-  --text-secondary:  #8b949e;
-  --text-tertiary:   #484f58;
-  --neutral:         #8b949e;
-  --blue-accent:     #388bfd;
-  --data-accent:     #388bfd;
-  --data-accent-dim: rgba(56,139,253,0.15);
+  /* ── Institutional dark palette (Slate) ── */
+  --bg-base:         #0F172A;
+  --bg-surface:      #1E293B;
+  --bg-surface-2:    #334155;
+  --bg-surface-3:    #475569;
+  --border-subtle:   rgba(255, 255, 255, 0.05);
+
+  /* ── Interactive accent (desaturated purple) ── */
+  --accent:          #8B5CF6;
+  --accent-light:    #A78BFA;
+  --accent-dim:      #7C3AED;
+  --accent-muted:    rgba(139, 92, 246, 0.12);
+
+  /* ── Semantic data colors (desaturated) ── */
+  --success:         #34D399;
+  --success-dim:     #10B981;
+  --success-muted:   rgba(52, 211, 153, 0.10);
+  --danger:          #F87171;
+  --danger-dim:      #EF4444;
+  --danger-muted:    rgba(248, 113, 113, 0.10);
+  --neutral-data:    #94A3B8;
+
+  /* ── Informational ── */
+  --blue-accent:     #60A5FA;
+  --data-accent:     #60A5FA;
+  --data-accent-dim: rgba(96, 165, 250, 0.10);
+
+  /* ── Text (rgba for institutional feel) ── */
+  --text-primary:    rgba(255, 255, 255, 0.87);
+  --text-secondary:  rgba(255, 255, 255, 0.60);
+  --text-tertiary:   rgba(255, 255, 255, 0.40);
+  --text-body:       rgba(255, 255, 255, 0.70);
+  --neutral:         rgba(255, 255, 255, 0.60);
+
+  /* ── Radius ── */
+  --radius: 8px;
 
   color-scheme: dark;
   width: 100%;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color: var(--text-primary);
@@ -39,7 +57,7 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-base);
   color: var(--text-primary);
   width: 100%;
@@ -57,11 +75,12 @@ body {
 
 a {
   font-weight: 500;
-  color: var(--green);
+  color: var(--accent-light);
   text-decoration: inherit;
+  transition: color 0.2s;
 }
 a:hover {
-  color: var(--green-dim);
+  color: var(--accent);
 }
 
 h1 {
@@ -70,15 +89,17 @@ h1 {
 }
 
 button:hover {
-  border-color: var(--green);
+  border-color: var(--accent);
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .mono {
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 600px) {

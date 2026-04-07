@@ -43,7 +43,7 @@ def get_ticker_news(ticker):
 """
 
 if __name__ == "__main__":
-    news = get_ticker_newss("NVDA")
+    news = get_ticker_news("NVDA")
     new_news = news_toString(news)
     print(new_news)
     

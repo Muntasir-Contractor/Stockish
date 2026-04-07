@@ -1,7 +1,25 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import './Guide.css'
 
+const NAV_ITEMS = [
+  { label: 'Valuation Models',              id: 'section-valuation' },
+  { label: 'Forward Return Classification', id: 'section-forward-return' },
+  { label: 'Market Sentiment Analysis',     id: 'section-sentiment' },
+  { label: 'Composite Score',               id: 'section-composite' },
+]
+
 function Guide() {
+  const [navOpen, setNavOpen] = useState(false)
+
+  const scrollTo = (id) => {
+    setNavOpen(false)
+    const el = document.getElementById(id)
+    if (!el) return
+    const top = el.getBoundingClientRect().top + window.scrollY - 155
+    window.scrollTo({ top, behavior: 'smooth' })
+  }
+
   return (
     <div className="guide-page">
       <div className="Navbar">
@@ -18,7 +36,24 @@ function Guide() {
       </div>
       <div className="navbar-placeholder"></div>
 
+      {/* ── Fixed side nav (outside container so position:fixed works) ── */}
+      <button className="guide-hamburger" onClick={() => setNavOpen(o => !o)} aria-label="Open navigation">
+        <span /><span /><span />
+      </button>
+
+      <div className={`guide-sidenav${navOpen ? ' open' : ''}`}>
+        <p className="guide-sidenav-label">Jump to section</p>
+        {NAV_ITEMS.map(item => (
+          <button key={item.id} className="guide-sidenav-item" onClick={() => scrollTo(item.id)}>
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      {navOpen && <div className="guide-sidenav-backdrop" onClick={() => setNavOpen(false)} />}
+
       <div className="guide-container">
+
         <div className="guide-hero">
           <h1 className="guide-title">How to Use Our Data</h1>
           <p className="guide-subtitle">
@@ -28,7 +63,7 @@ function Guide() {
         </div>
 
         {/* ── Valuation Models ── */}
-        <section className="guide-section">
+        <section id="section-valuation" className="guide-section">
           <h2 className="guide-section-header">VALUATION MODELS</h2>
           <p className="guide-section-intro">
             For each stock we run up to 5 valuation models in parallel and select the most appropriate
@@ -189,7 +224,7 @@ function Guide() {
         </section>
 
         {/* ── Forward Return Classification ── */}
-        <section className="guide-section">
+        <section id="section-forward-return" className="guide-section">
           <h2 className="guide-section-header">FORWARD RETURN CLASSIFICATION</h2>
           <p className="guide-section-intro">
             This output is the predicted <strong>decile rank</strong> produced by a trained XGBoost
@@ -217,7 +252,7 @@ function Guide() {
         </section>
 
         {/* ── Market Sentiment Analysis ── */}
-        <section className="guide-section">
+        <section id="section-sentiment" className="guide-section">
           <h2 className="guide-section-header">MARKET SENTIMENT ANALYSIS</h2>
           <p className="guide-section-intro">
             The sentiment score reflects the current news sentiment surrounding the stock, derived
@@ -246,7 +281,7 @@ function Guide() {
         </section>
 
         {/* ── Composite Score ── */}
-        <section className="guide-section">
+        <section id="section-composite" className="guide-section">
           <h2 className="guide-section-header">COMPOSITE SCORE</h2>
           <p className="guide-section-intro">
             The composite score combines all three signals into a single weighted sum ranging from

@@ -1,4 +1,4 @@
-/* ── Navbar (re-declared from App.css) ── */
+
 .nav_links {
   margin-left: auto;
   list-style: none;
@@ -27,7 +27,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 5% 20px 2%;
+  padding: 10px 5% 10px 2%;
   margin-top: 0;
   top: 0;
   left: 0;
@@ -43,7 +43,7 @@
 .logo {
   margin-top: 0;
   margin-left: 0;
-  height: 7.5em;
+  height: 5em;
   padding: 0;
   will-change: filter;
   transition: opacity 0.2s;
@@ -54,10 +54,10 @@
 }
 
 .navbar-placeholder {
-  height: 90px;
+  height: 62px;
 }
 
-/* ── Page Shell ── */
+/*Page Shell*/
 .guide-page {
   min-height: 100vh;
   background: var(--bg-base);
@@ -71,7 +71,7 @@
   padding: 48px 24px 80px;
 }
 
-/* ── Hero ── */
+/* Hero */
 .guide-hero {
   text-align: center;
   padding: 48px 24px 48px;
@@ -87,6 +87,102 @@
   margin: 0 0 16px;
 }
 
+/* Hamburger button */
+.guide-hamburger {
+  position: fixed;
+  top: 18px;
+  right: 24px;
+  z-index: 1100;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.2s;
+}
+
+.guide-hamburger:hover {
+  border-color: var(--accent);
+}
+
+.guide-hamburger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--text-secondary);
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+
+.guide-hamburger:hover span {
+  background: var(--text-primary);
+}
+
+/* Sliding side panel */
+.guide-sidenav {
+  position: fixed;
+  top: 0;
+  right: -280px;
+  width: 260px;
+  height: 100vh;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-subtle);
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  padding: 100px 0 40px;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -8px 0 32px rgba(0,0,0,0.4);
+}
+
+.guide-sidenav.open {
+  right: 0;
+}
+
+.guide-sidenav-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  padding: 0 24px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin: 0 0 8px;
+}
+
+.guide-sidenav-item {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 14px 24px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  border-left: 3px solid transparent;
+}
+
+.guide-sidenav-item:hover {
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+  border-left-color: var(--accent);
+}
+
+/* Backdrop */
+.guide-sidenav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  background: rgba(0, 0, 0, 0.4);
+}
+
 .guide-subtitle {
   font-size: 15px;
   color: var(--text-secondary);
@@ -94,6 +190,7 @@
   margin: 0 auto;
   line-height: 1.7;
   font-weight: 400;
+  text-align: center;
 }
 
 /* ── Section ── */

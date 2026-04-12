@@ -37,13 +37,14 @@ jobs:
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
-            --timeout-seconds 600 \
+            --timeout-seconds 900 \
             --parameters 'commands=[
               "set -e",
               "export HOME=/root",
               "git config --global --add safe.directory /home/ubuntu/Stockish",
               "cd /home/ubuntu/Stockish",
               "git pull origin main",
+              "docker system prune -f",
               "docker build -t stockish-api .",
               "docker stop stockish-api || true",
               "docker rm stockish-api || true",

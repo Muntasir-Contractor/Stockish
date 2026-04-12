@@ -42,7 +42,7 @@ TODO: - Replace hardcoded sector medians (scripts/valuation_models)
        added with null values. Taking up unnecessary space
 
        - ADD: Caching api responses from fmp model every 30mins-1h to avoid reoccuring api calls 
-       upon every visit to the home page
+       upon every visit to the home page: Radis?
 
        - To be completed: Handling feedback message and storing them 
 

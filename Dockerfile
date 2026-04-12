@@ -7,10 +7,9 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends libpq-dev gcc && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies (split heavy packages to reduce peak memory)
+# Install Python dependencies (exclude CUDA packages - not needed on CPU instance)
 COPY requirements.txt .
-RUN pip install --no-cache-dir numpy pandas && \
-    pip install --no-cache-dir scikit-learn xgboost && \
+RUN pip install --no-cache-dir xgboost --no-deps && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy backend and scripts (both needed at runtime)

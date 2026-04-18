@@ -137,7 +137,7 @@ Valuation results are cached until new financial statements are published. Forwa
 
 | Layer | Tools |
 |---|---|
-| **Backend** | Python 3.10+, FastAPI, Uvicorn |
+| **Backend** | Python 3.11+, FastAPI, Uvicorn |
 | **ML** | XGBoost (multi-class classifier), scikit-learn, joblib |
 | **AI / NLP** | OpenAI API (async) |
 | **Data Sources** | yfinance, Financial Modeling Prep API |

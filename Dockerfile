@@ -7,10 +7,9 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends libpq-dev gcc && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies (exclude CUDA packages - not needed on CPU instance)
+# Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir xgboost --no-deps && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend and scripts (both needed at runtime)
 # backend/main.py does sys.path.insert(0, parent_dir) to import from scripts/

@@ -4,7 +4,7 @@
 
 ### Multi-Model Valuation | Forward Return Classification | AI Sentiment Analysis
 
-A full-stack equity research tool that estimates intrinsic value through multiple valuation models, classifies forward return potential with an XGBoost model trained on fundamental data, and surfaces AI-driven market sentiment from recent news — all in real time.
+A full-stack equity research tool that estimates intrinsic value through multiple valuation models, classifies forward return potential with an XGBoost model trained on fundamental data, and surfaces AI-driven market sentiment from recent news. All in real time.
 
 **[stockish.ai](https://stockish.ai)**
 

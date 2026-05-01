@@ -29,6 +29,8 @@ TODO: - Replace hardcoded sector medians (scripts/valuation_models)
        with medians of top 5-15 companies in that sector, caching,
        and refetching every quarter.
 
+       - Add "Suggested Stocks to view" (referring to the etfs top stock allocation %) when a user clicks on an etf
+
        - Have a 'How to interpret the output' (replacing placeholder 1) section that explains throughouly
        the fr classification, the features it is trained on, and what the output means
 

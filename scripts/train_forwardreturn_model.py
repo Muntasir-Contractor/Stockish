@@ -3,7 +3,6 @@ import xgboost
 import joblib
 import optuna
 from sklearn.metrics import accuracy_score, classification_report
-import matplotlib.pyplot as plt
 
 def save_model(model, path=r'model/XGBoost_newestfr_model.joblib'):
     joblib.dump(model, path)

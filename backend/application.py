@@ -41,17 +41,17 @@ def get_stock_price(ticker):
 
 def dcf_valuation_label(upside_pct: float) -> str:
     if upside_pct > 20:
-        return "Pattern Classification: Strong Positive Gap"
+        return "Strong Positive Gap"
     elif upside_pct > 10:
-        return "Pattern Classification: Moderate Positive Gap"
+        return "Moderate Positive Gap"
     elif upside_pct > 5:
-        return "Pattern Classification: Slight Positive Gap"
+        return "Slight Positive Gap"
     elif upside_pct < -20:
-        return "Pattern Classification: Strong Negative Gap"
+        return "Strong Negative Gap"
     elif upside_pct < -10:
-        return "Pattern Classification: Moderate Negative Gap"
+        return "Moderate Negative Gap"
     elif upside_pct < -5:
-        return "Pattern Classification: Slight Negative Gap"
+        return "Slight Negative Gap"
     else:
         return "Near Model Estimate"
 

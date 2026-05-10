@@ -72,6 +72,17 @@ def _ensure_tables():
                 PRIMARY KEY (ticker, model_type)
             )
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stock (
+                ticker               TEXT PRIMARY KEY,
+                fr_class             FLOAT,
+                date_stamp           DATE,
+                price_at_prediction  FLOAT
+            )
+        """)
+        cursor.execute("""
+            ALTER TABLE stock ADD COLUMN IF NOT EXISTS price_at_prediction FLOAT
+        """)
         cursor.close()
     finally:
         put_conn(conn)
@@ -247,12 +258,34 @@ def fetch_fr_class(ticker : str) -> float:
     finally:
         put_conn(conn)
 
-def insert_stockfr(ticker : str, fr_class : float):
+def fetch_fr_row(ticker: str):
+    """Return (fr_class, price_at_prediction, date_stamp) in one query, or None."""
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT fr_class, price_at_prediction, date_stamp FROM stock WHERE ticker = %s",
+            (ticker,)
+        )
+        row = cursor.fetchone()
+        cursor.close()
+        if row is None:
+            return None
+        fr_class, price_at_prediction, d = row
+        date_stamp = datetime(d.year, d.month, d.day) if d is not None else None
+        return fr_class, price_at_prediction, date_stamp
+    finally:
+        put_conn(conn)
+
+def insert_stockfr(ticker : str, fr_class : float, price_at_prediction: float | None = None):
     conn = get_conn()
     try:
         cursor = conn.cursor()
         d = datetime.today()
-        cursor.execute("INSERT INTO stock (ticker, fr_class, date_stamp) VALUES(%s, %s, %s)", (ticker, fr_class, d))
+        cursor.execute(
+            "INSERT INTO stock (ticker, fr_class, date_stamp, price_at_prediction) VALUES(%s, %s, %s, %s)",
+            (ticker, fr_class, d, price_at_prediction)
+        )
         cursor.close()
     finally:
         put_conn(conn)
@@ -268,11 +301,27 @@ def get_date_stamp(ticker : str):
     finally:
         put_conn(conn)
 
-def update_stock(ticker : str, fr_class, date_stamp):
+def update_stock(ticker : str, fr_class, date_stamp, price_at_prediction: float | None = None):
     conn = get_conn()
     try:
         cursor = conn.cursor()
-        cursor.execute("UPDATE stock SET fr_class = %s , date_stamp = %s WHERE ticker = %s", (fr_class, date_stamp, ticker))
+        cursor.execute(
+            "UPDATE stock SET fr_class = %s, date_stamp = %s, price_at_prediction = %s WHERE ticker = %s",
+            (fr_class, date_stamp, price_at_prediction, ticker)
+        )
+        cursor.close()
+    finally:
+        put_conn(conn)
+
+def update_stock_price(ticker: str, price_at_prediction: float):
+    """Backfill only the price column without touching fr_class or date_stamp."""
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE stock SET price_at_prediction = %s WHERE ticker = %s",
+            (price_at_prediction, ticker)
+        )
         cursor.close()
     finally:
         put_conn(conn)

@@ -212,6 +212,8 @@ function StockDetail() {
   const intrinsicValue = stockData?.intrinsic_value;
   const upsidePct = stockData?.upside_pct;
   const frPrediction = stockData?.fr_prediction;
+  const priceAtPrediction = stockData?.price_at_prediction;
+  const predictionDate = stockData?.prediction_date;
 
   const dcfConfidence = stockData?.dcf_confidence;
   const dcfWarnings = stockData?.dcf_warnings || [];
@@ -379,6 +381,11 @@ function StockDetail() {
             <div className="info-value">
               {hasFr ? frLabel(frPrediction).label : isEtf ? 'Cannot classify ETF' : 'N/A'}
             </div>
+            {hasFr && priceAtPrediction != null && predictionDate && (
+              <p className="assumption-subtext">
+                Predicted at ${priceAtPrediction.toFixed(2)} on {predictionDate}
+              </p>
+            )}
           </div>
 
           <div className="info-card">

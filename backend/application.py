@@ -3,12 +3,12 @@ import pandas as pd
 from scripts.fetch_fr_stockdata import get_stock_data_fr
 from scripts.valuation_models import discounted_cashflow_analysis, run_all_applicable_models
 from db_funcs import (
-    exists_in_stockdb, insert_stockfr, fetch_fr_class, get_date_stamp, update_stock,
+    exists_in_stockdb, insert_stockfr, fetch_fr_row, update_stock, update_stock_price,
     exists_in_dcfdb, insert_dcf, fetch_dcf, get_dcf_date_stamp, update_dcf,
     exists_in_valuations, insert_valuation, fetch_all_valuations,
     update_valuation, get_valuation_date_stamp,
 )
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def is_ticker(ticker):
@@ -199,24 +199,62 @@ def compute_final_analysis(valuation_result: dict | None, fr_prediction: float |
 
 # ── Forward Return Classification ─────────────────────────────────────────────
 
-async def get_fr_prediction(ticker: str, model) -> float:
+async def get_fr_prediction(ticker: str, model) -> dict | None:
+    """Return {fr_class, price_at_prediction, prediction_date} or None for ETFs."""
     if (is_etf(ticker))[0]:
         return None
+
     if exists_in_stockdb(ticker):
         latest_income_statement_date = (str((yf.Ticker(ticker).financials.columns)[0]).split(" "))[0]
         latest_income_statement_date = datetime.strptime(latest_income_statement_date, "%Y-%m-%d")
-        if latest_income_statement_date > get_date_stamp(ticker):
+        cached = fetch_fr_row(ticker)
+        cached_fr, cached_price, cached_date = cached if cached else (None, None, None)
+
+        if cached_date is None or latest_income_statement_date > cached_date:
             data = await get_stock_data_fr(ticker)
             data = pd.DataFrame([data]).astype(float)
             fr = float(model.predict(data)[0])
-            update_stock(ticker, fr, latest_income_statement_date)
-            return fr
-        else:
-            fr = fetch_fr_class(ticker)
-            return fr
+            price_at = get_stock_price(ticker)
+            update_stock(ticker, fr, latest_income_statement_date, price_at)
+            return {
+                "fr_class": fr,
+                "price_at_prediction": price_at,
+                "prediction_date": latest_income_statement_date.strftime("%Y-%m-%d"),
+            }
+
+        price_at = cached_price
+        if price_at is None:
+            price_at = get_price_predicted_at(ticker, cached_date)
+            if price_at is not None:
+                update_stock_price(ticker, price_at)
+        return {
+            "fr_class": cached_fr,
+            "price_at_prediction": price_at,
+            "prediction_date": cached_date.strftime("%Y-%m-%d"),
+        }
+
+    data = await get_stock_data_fr(ticker)
+    data = pd.DataFrame([data]).astype(float)
+    fr = float(model.predict(data)[0])
+    price_at = get_stock_price(ticker)
+    insert_stockfr(ticker, fr, price_at)
+    return {
+        "fr_class": fr,
+        "price_at_prediction": price_at,
+        "prediction_date": datetime.today().strftime("%Y-%m-%d"),
+    }
+
+
+"""We want to keep track of at what price the ML model outputs the Forward Return Classification. To let
+the user know when the prediction was made vs when they are currently viewing it
+"""
+def get_price_predicted_at(ticker: str, date_string) -> float | None:
+    if isinstance(date_string, datetime):
+        target = date_string
     else:
-        data = await get_stock_data_fr(ticker)
-        data = pd.DataFrame([data]).astype(float)
-        fr = float(model.predict(data)[0])
-        insert_stockfr(ticker, fr)
-        return fr
+        target = datetime.strptime(date_string, "%Y-%m-%d")
+    hist = yf.Ticker(ticker).history(start=target, end=target + timedelta(days=5))
+    if hist.empty:
+        return None
+    return float(hist["Close"].iloc[0])
+

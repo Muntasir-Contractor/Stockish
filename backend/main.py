@@ -154,10 +154,14 @@ async def get_stock_info(request: Request, ticker: str):
     try:
         current_price = get_stock_price(ticker)
 
-        valuation_data, fr_prediction = await asyncio.gather(
+        valuation_data, fr_data = await asyncio.gather(
             asyncio.to_thread(get_valuation, ticker),
             get_fr_prediction(ticker, fr_MODEL),
         )
+
+        fr_prediction = fr_data["fr_class"] if fr_data else None
+        price_at_prediction = fr_data["price_at_prediction"] if fr_data else None
+        prediction_date = fr_data["prediction_date"] if fr_data else None
 
         intrinsic_value = None
         upside_pct = None
@@ -208,6 +212,8 @@ async def get_stock_info(request: Request, ticker: str):
             "wacc": wacc,
             "growth_rate": growth_rate,
             "fr_prediction": fr_prediction,
+            "price_at_prediction": price_at_prediction,
+            "prediction_date": prediction_date,
             "final_analysis": final_analysis,
             "dcf_confidence": dcf_confidence,
             "dcf_warnings": dcf_warnings,

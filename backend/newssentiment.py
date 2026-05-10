@@ -4,12 +4,22 @@ import os
 from dotenv import load_dotenv
 from fetchnews import get_ticker_news, news_toString
 from db_funcs import *
-import json
 import asyncio
+from pydantic import BaseModel, Field
+from typing import Literal
 
 load_dotenv()
 
 API_KEY = os.getenv("OPENAI_API_KEY")
+
+class Insight(BaseModel):
+    insight: str
+    sentiment: Literal["Bullish", "Bearish", "Neutral"]
+    reasoning: str
+
+class SentimentResult(BaseModel):
+    scalar: float = Field(ge=0.5,le=1.5)
+    insights: list[Insight]
 
 
 ### HELPER FUNCTION, NEVER ACTUALLY USE THIS, USE get_news_analysis
@@ -75,15 +85,17 @@ async def get_news_sentiment(ticker):
 
     client = AsyncOpenAI(api_key=API_KEY)
 
-    response = await client.responses.create(
+    response = await client.responses.parse(
         model="gpt-5-mini",
         input=prompt,
+        text_format=SentimentResult,
         store=True,
     )
-
-    result = json.loads(response.output_text.strip())
-    scalar = float(result["scalar"])
-    sentiment = result["insights"]
+    result = response.output_parsed
+    if result is None:
+        return None,None,None
+    scalar = result.scalar
+    sentiment = [i.model_dump() for i in result.insights]
 
     token_usage = response.usage
     return scalar, sentiment, token_usage

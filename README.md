@@ -1,177 +1,149 @@
-<div align="center">
-
 # Stockish
 
-### Multi-Model Valuation | Forward Return Classification | AI Sentiment Analysis
+**Multi-model equity valuation, forward-return classification, and news sentiment in one view.**
 
-A full-stack equity research tool that estimates intrinsic value through multiple valuation models, classifies forward return potential with an XGBoost model trained on fundamental data, and surfaces AI-driven market sentiment from recent news. All in real time.
+Live at **[stockish.ai](https://stockish.ai)**
 
-**[stockish.ai](https://stockish.ai)**
+Stockish takes a ticker and answers three questions a value-minded investor actually asks: *What is this company worth? What have fundamentals like these returned historically? And what is the news saying right now?* It estimates intrinsic value across five valuation models, classifies forward 1-year return potential with an XGBoost model trained on fundamentals, and pulls a structured sentiment read from recent headlines. The three signals are blended into a single composite score.
 
-> **This application is for educational and research purposes only. Nothing presented by Stockish constitutes financial advice, a recommendation to buy or sell any security, or a guarantee of prediction accuracy. All model outputs are analytical estimates based on historical data and publicly available information. Always conduct your own due diligence and consult a qualified financial advisor before making any investment decisions.**
-
-[Features](#features) · [How It Works](#how-it-works) · [Tech Stack](#tech-stack) · [Getting Started](#getting-started) · [API Reference](#api-reference)
+> Built for educational and research purposes. Nothing here is financial advice or a recommendation to buy or sell any security. Model outputs are analytical estimates from historical and public data, and may be wrong. Do your own research.
 
 ---
 
-</div>
+## Why I built it
 
-## Features
+I wanted a tool that didn't just throw a single number at you. Most retail stock tools either show a black-box "fair value" or a wall of raw fundamentals. Stockish makes the *reasoning* visible: which valuation model was chosen and why, what assumptions went into it, how confident the estimate is, and how the model would change if you tweak the inputs yourself.
 
-### Multi-Model Intrinsic Value Estimation
+---
 
-Stockish estimates a stock's fair value using five valuation methodologies, automatically selecting the most appropriate model based on the company's financial profile:
+## What it does
 
-- **DCF (Discounted Cash Flow)** — Projects future free cash flows, discounts them to present value using WACC, and adds a terminal value via the Gordon Growth Model. Includes Blume beta adjustment, FCF growth fade, and multi-tier fallback growth rates.
-- **P/E Comparable** — Applies sector-median trailing P/E multiples to the company's earnings per share.
-- **Revenue Multiple (P/S)** — Values the company on revenue rather than earnings — useful for high-growth or pre-profit companies where P/E is unreliable.
-- **Dividend Discount Model (DDM)** — For dividend-paying stocks with 5+ years of history, estimates fair value as the present value of expected future dividends.
-- **Book Value (P/B)** — Applies sector-median price-to-book ratios — best suited for financials, real estate, and capital-intensive industries.
+### Five valuation models, one chosen automatically
 
-Each model returns a fair value estimate, a confidence level (High / Medium / Low), and any warnings about the assumptions used. The primary model is chosen by a decision tree that considers sector, dividend history, growth profile, and data availability.
+For any stock, Stockish runs up to five models and selects the most appropriate one based on the company's sector, dividend history, growth profile, and what data is actually available:
 
-#### Custom Assumption Overrides
+- **DCF** — projects free cash flows, discounts them at WACC, and adds a Gordon-Growth terminal value. Includes Blume-adjusted beta, FCF growth fade, and tiered fallback growth rates when history is thin.
+- **P/E comparable** — applies a sector-median trailing P/E to EPS.
+- **Revenue multiple (P/S)** — values on revenue instead of earnings, for high-growth or pre-profit names where P/E breaks down.
+- **Dividend Discount Model** — present value of expected dividends, for payers with 5+ years of history.
+- **Book value (P/B)** — sector-median price-to-book, suited to financials, REITs, and capital-heavy industries.
 
-Users can modify and recalculate any valuation model with custom assumptions (e.g., growth rate, WACC, terminal growth for DCF; sector multiples for P/E, P/S, P/B; dividend growth and cost of equity for DDM). Results update in real time without a full page reload.
+Each model returns a fair value, a confidence level, and any warnings about the assumptions it had to make. A decision tree picks the primary model and explains its choice in plain language.
 
-### Forward Return Classification
+**You can override any assumption** (growth rate, WACC, terminal growth, sector multiples, cost of equity...) and recalculate a single model in place, with server-side range validation on every input.
 
-An XGBoost classifier trained on historical fundamental data predicts which decile (0–9) a stock's forward 1-year return is likely to fall into. The model uses nine features:
+### Forward-return classification
 
-| Feature | What It Captures |
+An XGBoost classifier predicts which decile (0–9) a stock's forward 1-year return is likely to land in, from nine fundamental features:
+
+| Feature | Captures |
 |---|---|
-| Gross Profitability | Earning power relative to assets |
-| ROIC | Capital allocation efficiency |
-| FCF Yield | Cash generation relative to market cap |
-| Revenue Growth YoY | Top-line momentum |
-| 6-Month Price Momentum | Recent price trend |
-| EV/EBITDA | Enterprise valuation multiple |
-| Accrual Ratio | Earnings quality |
-| Interest Coverage | Debt servicing capacity |
-| Shares Outstanding Growth | Dilution or buyback activity |
+| Gross profitability | Earning power vs. assets |
+| ROIC | Capital-allocation efficiency |
+| FCF yield | Cash generation vs. market cap |
+| Revenue growth YoY | Top-line momentum |
+| 6-month price momentum | Recent trend |
+| EV/EBITDA | Valuation multiple |
+| Accrual ratio | Earnings quality |
+| Interest coverage | Debt-servicing capacity |
+| Shares outstanding growth | Dilution vs. buybacks |
 
-A stock classified in decile 9, for example, means its current fundamentals historically correspond to the top 10% of forward returns.
+Decile 9 means the current fundamentals historically lined up with the top 10% of forward returns. The model is trained with Optuna-tuned hyperparameters and backtested against held-out history.
 
-### AI Market Sentiment Analysis
+### News sentiment, as structured output
 
-Recent headlines are fetched from third party sources and analyzed by OpenAI, which returns:
+Recent headlines are summarized by an LLM into a Pydantic-validated response:
 
-- A **sentiment scalar** (0.5–1.5) representing how current news should adjust fair value expectations (1.0 = neutral)
-- **Structured insights** — 3 to 5 thematic summaries, each tagged Bullish, Bearish, or Neutral with reasoning grounded in the actual headlines
+- a **sentiment scalar** (0.5–1.5) that nudges fair-value expectations, where 1.0 is neutral
+- **3–5 themed insights**, each tagged Bullish / Bearish / Neutral with reasoning grounded in the actual headlines
 
-Sentiment results are cached per ticker for 24 hours. Analysis is rate-limited to 3 requests per IP per day.
+Results are cached per ticker for 24 hours and rate-limited to 3 analyses per IP per day.
 
-### Composite Model Score
+### Composite score
 
-All three signals — valuation gap, forward return decile, and sentiment scalar — are combined into a single weighted composite score (-1 to +1):
+Valuation gap, forward-return decile, and sentiment scalar combine into one score from -1 to +1:
 
 | Signal | Weight |
 |---|---|
-| Valuation (upside/downside %) | 50% (adjusted by confidence) |
-| Forward Return Classification | 30% |
-| AI Sentiment | 20% |
+| Valuation upside/downside | 50% (scaled by confidence) |
+| Forward-return decile | 30% |
+| Sentiment | 20% |
 
-The composite score produces a verdict ranging from historically weak to historically strong patterns, with a confidence level based on how many signals are available.
+The score maps to a verdict with a confidence level that reflects how many of the three signals were actually available.
 
-### Market Overview & Search
+### Plus
 
-- **Top Movers / Gainers / Losers** — Live market data via Financial Modeling Prep
-- **Ticker Search** — Fast debounced symbol lookup by name or ticker with keyboard navigation
-- **ETF Detection** — ETFs are automatically identified and excluded from valuation and classification
-
-### Additional Pages
-
-- **How to Use** — Educational guide explaining each valuation model, confidence levels, forward return features, and limitations
-- **Model Performance** — Historical accuracy metrics and backtest results for the forward return classifier
-- **Feedback** — User feedback submission form
+Live top movers / gainers / losers, debounced ticker search with keyboard nav, automatic ETF detection (ETFs skip valuation and classification), and an in-app guide explaining every model, feature, and limitation.
 
 ---
 
-## How It Works
+## Architecture
 
 ```
-User searches for a stock
-         │
-         ▼
-┌─────────────────────────────────────────────┐
-│              FastAPI Backend                 │
-│                                             │
-│  ┌─────────────┐  ┌──────────────────────┐  │
-│  │  yfinance    │  │  Financial Modeling   │  │
-│  │  (live data) │  │  Prep API            │  │
-│  └──────┬──────┘  └──────────┬───────────┘  │
-│         │                    │               │
-│         ▼                    ▼               │
-│  ┌─────────────────────────────────────┐     │
-│  │     Valuation Engine                │     │
-│  │  DCF · P/E · P/S · DDM · P/B       │     │
-│  └─────────────────┬───────────────────┘     │
-│                    │                         │
-│  ┌─────────────────┴───────────────────┐     │
-│  │  XGBoost Forward Return Classifier  │     │
-│  │  (9 fundamental features → decile)  │     │
-│  └─────────────────┬───────────────────┘     │
-│                    │                         │
-│  ┌─────────────────┴───────────────────┐     │
-│  │  OpenAI Sentiment Analysis          │     │
-│  │  (news headlines → scalar + insights)│    │
-│  └─────────────────┬───────────────────┘     │
-│                    │                         │
-│         ┌──────────┴──────────┐              │
-│         │  Composite Score    │              │
-│         │  (weighted blend)   │              │
-│         └──────────┬──────────┘              │
-│                    │                         │
-│              PostgreSQL Cache                │
-└────────────────────┬────────────────────────┘
-                     │
-                     ▼
-          React Frontend (Vite)
+React (Vite, Vercel)
+        │  HTTPS
+        ▼
+Cloudflare (DNS, CDN, SSL, proxy)
+        │
+        ▼
+Nginx ──► FastAPI (Uvicorn, Docker on EC2)
+        │
+        ├─ Valuation engine        DCF · P/E · P/S · DDM · P/B
+        ├─ XGBoost classifier      9 features → forward-return decile
+        ├─ LLM sentiment           headlines → scalar + structured insights
+        └─ Composite scoring       weighted blend → verdict
+        │
+        ▼
+PostgreSQL (AWS RDS)   sentiment cache · daily rate limits · cached valuations
 ```
 
-Valuation results are cached until new financial statements are published. Forward return classification and sentiment are fetched asynchronously in parallel for fast response times.
+Valuation, forward-return prediction, and sentiment are fetched concurrently, and CPU-bound valuation work is offloaded off the event loop. Valuations are cached until a company reports new statements. Tickers are validated against a strict pattern before any upstream call, malformed input returns `422`, and upstream failures degrade to `502` rather than leaking a `500`.
 
 ---
 
-## Tech Stack
+## Tech stack
 
 | Layer | Tools |
 |---|---|
-| **Backend** | Python 3.11+, FastAPI, Uvicorn |
-| **ML** | XGBoost (multi-class classifier), scikit-learn, joblib |
-| **AI / NLP** | OpenAI API (async) |
-| **Data Sources** | yfinance, Financial Modeling Prep API |
-| **Database** | PostgreSQL on AWS RDS (psycopg2, connection pooling) |
-| **HTTP Client** | httpx (async) |
-| **Rate Limiting** | slowapi (per-IP, per-endpoint) |
-| **Frontend** | React 19, React Router, Vite, Axios |
-| **Deployment** | Docker, GitHub Actions CI/CD, AWS EC2 + Nginx (backend), AWS RDS (database), Vercel (frontend) |
+| Backend | Python 3.13, FastAPI, Uvicorn, httpx (async) |
+| ML | XGBoost, scikit-learn, Optuna, joblib |
+| Sentiment | LLM with Pydantic-enforced structured output |
+| Data | yfinance, Financial Modeling Prep |
+| Database | PostgreSQL on AWS RDS (psycopg2 threaded pool) |
+| Rate limiting | slowapi (per-IP, per-endpoint) |
+| Frontend | React 19, React Router 7, Vite, Axios |
+| Tests | pytest (fully mocked, offline) |
+| Infra | Docker, GitHub Actions, AWS EC2 + Nginx, Cloudflare, Vercel |
 
 ---
 
-## Getting Started
+## Testing & CI/CD
 
-### Prerequisites
-- Python 3.10+
-- Node.js
-- PostgreSQL
-- OpenAI API key
-- Financial Modeling Prep API key
+The backend has a pytest suite covering health checks, the happy-path response contract, input-validation boundaries (malformed tickers, out-of-range assumptions), graceful upstream-failure handling, and the rate-limit / ETF / no-news edge cases.
 
-### 1. Clone the repo
+Every external seam — FMP, the LLM, yfinance, Postgres, and the XGBoost model — is mocked, so the suite is deterministic and runs offline in CI with **no secrets and no live database**.
+
+Two GitHub Actions workflows:
+
+- **CI** runs the suite on every push and PR to `main`.
+- **Deploy** reruns the tests and only deploys if they pass. Deployment is a tests-gated job that ships the new image to EC2 over AWS SSM (no inbound SSH), rebuilds the Docker container, and verifies it's healthy before finishing. It triggers only when backend code, scripts, dependencies, or the Dockerfile change.
+
+---
+
+## Running locally
+
+**Prerequisites:** Python 3.11+, Node.js, PostgreSQL, plus an LLM API key and a Financial Modeling Prep key.
 
 ```bash
-git clone https://github.com/Muntasir-Contractor/StockInsight-ML.git
-cd StockInsight-ML
+git clone https://github.com/Muntasir-Contractor/Stockish.git
+cd Stockish
 ```
 
-### 2. Set up environment variables
-
-Create a `.env` file in the `backend/` directory:
+Create `backend/.env`:
 
 ```env
-OPENAI_API_KEY=your_openai_key
-FINANCE_KEY=your_financial_modeling_prep_key
+OPENAI_API_KEY=your_key
+FINANCE_KEY=your_fmp_key
 DATABASE_HOST=localhost
 DATABASE_NAME=postgres
 DATABASE_USER=postgres
@@ -179,7 +151,7 @@ PASSWORD=your_postgres_password
 DATABASE_PORT=5432
 ```
 
-### 3. Install dependencies & start the backend
+Backend:
 
 ```bash
 pip install -r requirements.txt
@@ -187,7 +159,7 @@ cd backend
 uvicorn main:app --reload
 ```
 
-### 4. Start the frontend
+Frontend (reads `VITE_API_URL`, defaults to `http://localhost:8000`):
 
 ```bash
 cd frontend
@@ -195,91 +167,65 @@ npm install
 npm run dev
 ```
 
-The frontend reads `VITE_API_URL` to locate the backend (defaults to `http://localhost:8000`).
-
-### Running with Docker
+Run the tests (no keys or DB required):
 
 ```bash
-docker build -t stockish-backend .
-docker run -p 8000:8000 --env-file backend/.env stockish-backend
+pytest -v
+```
+
+Or build the backend container:
+
+```bash
+docker build -t stockish-api .
+docker run -p 8000:8000 --env-file backend/.env stockish-api
 ```
 
 ---
 
-## API Reference
+## API
 
-| Method | Endpoint | Description | Rate Limit |
-|--------|----------|-------------|------------|
-| `GET` | `/stock/{ticker}` | Intrinsic value (all models), current price, valuation label, forward return decile, composite score | 15/min |
-| `GET` | `/stocksentiment/{ticker}` | Sentiment scalar (0.5–1.5), structured insights, remaining daily analyses | 3/day per IP |
-| `POST` | `/stock/{ticker}/recalculate` | Re-run a specific valuation model with custom assumptions | 15/min |
-| `GET` | `/search/{query}` | Symbol search results (name + ticker, deduplicated) | 20/min |
-| `GET` | `/topmovers` | Most actively traded stocks | 30/min |
-| `GET` | `/topgainers` | Biggest daily percentage gainers | 30/min |
-| `GET` | `/toplosers` | Biggest daily percentage losers | 30/min |
-| `POST` | `/feedback` | Submit user feedback | — |
+| Method | Endpoint | Description | Limit |
+|---|---|---|---|
+| `GET` | `/stock/{ticker}` | All valuation models, current price, valuation label, forward-return decile, composite score | 15/min |
+| `POST` | `/stock/{ticker}/recalculate` | Re-run one model with custom, range-validated assumptions | 15/min |
+| `GET` | `/stocksentiment/{ticker}` | Sentiment scalar, structured insights, remaining daily analyses | 3/day per IP |
+| `GET` | `/search/{query}` | Deduplicated symbol search | 20/min |
+| `GET` | `/topmovers` · `/topgainers` · `/toplosers` | Live market movers | 30/min |
+| `GET` | `/health` | Liveness check | — |
+| `POST` | `/feedback` | Submit feedback | — |
 
 ---
 
-## Project Structure
+## Project layout
 
 ```
-StockInsight-ML/
+Stockish/
 ├── backend/
-│   ├── main.py                  # FastAPI app, CORS, route handlers, rate limiting
-│   ├── application.py           # Valuation orchestration, FR prediction, composite scoring
-│   ├── newssentiment.py         # OpenAI sentiment analysis
-│   ├── fetchnews.py             # Yahoo Finance news fetching
-│   ├── fetchfromAPI.py          # Financial Modeling Prep API client
-│   ├── db_funcs.py              # PostgreSQL operations (sentiment, rate limits, valuations)
-│   └── model/
-│       └── XGBoost_newestfr_model.joblib
+│   ├── main.py            FastAPI app: routes, CORS, validation, rate limiting
+│   ├── application.py     Valuation orchestration, FR prediction, composite scoring
+│   ├── newssentiment.py   LLM sentiment analysis (structured output)
+│   ├── fetchnews.py       Headline fetching
+│   ├── fetchfromAPI.py    Financial Modeling Prep client
+│   ├── db_funcs.py        PostgreSQL: cache, rate limits, valuations
+│   ├── model/             Serialized XGBoost classifier
+│   └── tests/             pytest suite + fixtures (fully mocked)
 ├── scripts/
-│   ├── valuation_models.py      # DCF, P/E, P/S, DDM, P/B implementations
-│   ├── fetch_fr_stockdata.py    # Forward return feature extraction
-│   ├── train_forwardreturn_model.py  # XGBoost training + Optuna hyperparameter tuning
-│   ├── model_backtesting.py     # Historical performance testing
-│   └── dataset/
-│       └── model_data_newest_cleaned.csv
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx              # Home page — search, market movers
-│   │   ├── StockDetail.jsx      # Detail page — valuations, FR, sentiment, composite
-│   │   ├── Guide.jsx            # How to Use documentation
-│   │   ├── ModelPerformance.jsx # Model accuracy & backtest metrics
-│   │   ├── Feedback.jsx         # User feedback form
-│   │   └── components/
-│   │       └── api.js           # Axios HTTP client
-│   └── package.json
-├── .github/workflows/
-│   └── deploy-backend.yml       # CI/CD — build & deploy backend to AWS EC2
-├── Dockerfile                   # Backend containerization
-├── requirements.txt
-└── README.md
+│   ├── valuation_models.py    DCF · P/E · P/S · DDM · P/B
+│   ├── fetch_fr_stockdata.py  Forward-return feature extraction
+│   ├── train_model.py         XGBoost training + Optuna tuning
+│   └── *_backtesting.py       Historical performance testing
+├── frontend/              React 19 + Vite app
+├── .github/workflows/     CI + tests-gated backend deploy
+├── Dockerfile
+└── requirements.txt
 ```
-
----
-
-## Deployment
-
-The backend is containerized with Docker and deployed to AWS EC2 via GitHub Actions. Nginx runs on the EC2 instance as a reverse proxy in front of Uvicorn, handling SSL termination and request forwarding. The CI/CD pipeline triggers on pushes to `main` that touch `backend/`, `scripts/`, `requirements.txt`, or `Dockerfile`. It rebuilds the Docker image on the EC2 instance and restarts the container.
-
-PostgreSQL is hosted on AWS RDS with connection pooling (psycopg2 `ThreadedConnectionPool`), providing managed backups, availability, and scaling independent of the application server.
-
-The frontend is deployed to Vercel with automatic builds on push.
 
 ---
 
 ## Disclaimer
 
-> **Stockish is built for educational and research purposes only.** It is not a registered investment advisor and does not provide financial advice. All valuation estimates, forward return classifications, and sentiment analyses are model-generated outputs based on historical data and publicly available information. They should not be interpreted as buy, sell, or hold recommendations. Model outputs may be inaccurate, incomplete, or based on stale data. Past patterns do not guarantee future results. Always do your own research and consult a qualified financial professional before making investment decisions.
+Stockish is not a registered investment advisor and does not provide financial advice. Every valuation, classification, and sentiment read is a model-generated estimate from historical and public data — it may be inaccurate, incomplete, or stale, and past patterns don't guarantee future results. Always do your own research and consult a qualified professional before investing.
 
 ---
 
-<div align="center">
-
-**Built by Muntasir Contractor**
-
-[muntasir.contractor06@gmail.com](mailto:muntasir.contractor06@gmail.com) · [LinkedIn](https://www.linkedin.com/in/muntasir-contractor06) · [GitHub](https://github.com/Muntasir-Contractor)
-
-</div>
+Built by **Muntasir Contractor** · [Email](mailto:muntasir.contractor06@gmail.com) · [LinkedIn](https://www.linkedin.com/in/muntasir-contractor06) · [GitHub](https://github.com/Muntasir-Contractor)

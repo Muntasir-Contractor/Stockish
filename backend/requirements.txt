@@ -13,3 +13,4 @@ slowapi==0.1.9
 uvicorn==0.40.0
 xgboost==3.1.2
 yfinance==0.2.66
+pytest==9.1.1

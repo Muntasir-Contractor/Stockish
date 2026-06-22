@@ -61,6 +61,16 @@ def get_real_ip(request: Request) -> str:
         return forwarded.split(",")[0].strip()
     return request.client.host
 
+import re
+# A ticker is 1-10 chars: a leading letter followed by letters, dots or hyphens
+# (e.g. AAPL, BRK.B, RDS-A). Anything else is rejected before we hit upstream.
+_TICKER_RE = re.compile(r"^[A-Za-z][A-Za-z.\-]{0,9}$")
+
+def _validate_ticker(ticker: str) -> str:
+    if not _TICKER_RE.match(ticker or ""):
+        raise HTTPException(status_code=422, detail=f"Invalid ticker format: {ticker!r}")
+    return ticker.upper()
+
 limiter = Limiter(key_func=get_real_ip)
 app = FastAPI()
 app.state.limiter = limiter
@@ -99,6 +109,9 @@ FINANCE_API_KEY = os.getenv("FINANCE_KEY")
 @app.get("/")
 def root():
     return {"Hello": "World"}
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 @app.get("/topmovers")
 @limiter.limit("30/minute")
 async def top_movers(request: Request):
@@ -146,11 +159,13 @@ async def search_tinker(request: Request, query : str):
                 "results": merged[:10]
             }
     except Exception as e:
-        print(str(e))
+        print(f"/search/{query} error: {e}")
+        return {"query": query, "results": []}
 
 @app.get("/stock/{ticker}")
 @limiter.limit("15/minute")
 async def get_stock_info(request: Request, ticker: str):
+    _validate_ticker(ticker)
     try:
         current_price = get_stock_price(ticker)
 
@@ -221,11 +236,15 @@ async def get_stock_info(request: Request, ticker: str):
             "models": models,
             "selection_reasoning": selection_reasoning,
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        raise Exception(e)
+        print(f"/stock/{ticker} upstream error: {e}")
+        raise HTTPException(status_code=502, detail="Upstream data provider error")
 
 @app.get("/stocksentiment/{ticker}")
 async def get_stock_insight(ticker: str, request: Request):
+    _validate_ticker(ticker)
     try:
         if (is_etf(ticker))[0] == True:
             return {"Sentiment": "Cannot evaluate etf"}
@@ -246,9 +265,9 @@ async def get_stock_insight(ticker: str, request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        raise Exception(e)
-        
-    
+        print(f"/stocksentiment/{ticker} upstream error: {e}")
+        raise HTTPException(status_code=502, detail="Upstream sentiment provider error")
+
 
 
 ASSUMPTION_RANGES = {

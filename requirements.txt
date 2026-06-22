@@ -31,3 +31,7 @@ slowapi==0.1.9
 
 # Config
 python-dotenv==1.2.1
+
+# Testing
+pytest==9.1.1
+

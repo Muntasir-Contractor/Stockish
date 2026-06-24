@@ -88,7 +88,11 @@ function StockDetail() {
         setStockData(response.data);
       } catch (err) {
         console.error("Failed to fetch stock:", err);
-        setError("Failed to load stock data");
+        if (err.response?.status === 422) {
+          setError(`"${ticker.toUpperCase()}" isn't a valid ticker symbol.`);
+        } else {
+          setError("Failed to load stock data");
+        }
       } finally {
         setLoading(false);
       }
